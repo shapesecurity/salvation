@@ -6,7 +6,6 @@ import com.shapesecurity.csp.directives.*;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
@@ -100,7 +99,7 @@ public class ParserTest {
     private void failsToParse(String policy) {
         try {
             Parser.parse(policy);
-        } catch (ParseException | TokeniserException ignored) {
+        } catch (ParseException | TokeniserException | IllegalArgumentException ignored) {
             return;
         }
         fail();
@@ -167,21 +166,32 @@ public class ParserTest {
     }
 
     @Test
-    public void testHash() throws ParseException, TokeniserException {
-        failsToParse("sandbox a!*\n");
-        //failsToParse("sandbox a!*\^");
-        assertEquals("directive-name, directive-value", "sandbox abc", Parser.parse("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
+    public void testHashSource() throws ParseException, TokeniserException {
+        failsToParse("script-src 'self' https://example.com 'sha255-RUM5 encoded hash'");
+        //assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
 
     }
 
-//    @Test
-//    public void testRealData() throws ParseException, TokeniserException, FileNotFoundException {
-//        Scanner sc = new Scanner(new File("data/csp.txt"));
-//        while (sc.hasNextLine()) {
-//            Policy p;
-//            String[] line = sc.nextLine().split(":", 2);
-//            p = Parser.parse(line[1]);
-//            assertNotNull(String.format("policy should not be null: %s", line[0]), p);
-//        }
-//    }
+    @Test
+    public void testNonceSource() throws ParseException, TokeniserException {
+        failsToParse("script-src 'self' https://example.com 'nonce-Nc3n83cnSAd3wc3Sasdfn939hc3'");
+        //assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", Parser.parse("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
+
+    }
+
+    @Test
+    public void testRealData() throws FileNotFoundException {
+        Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
+        while (sc.hasNextLine()) {
+            Policy p;
+            String[] line = sc.nextLine().split(":", 2);
+            try {
+                p = Parser.parse(line[1]);
+                assertNotNull(String.format("policy should not be null: %s", line[0]), p);
+            } catch (ParseException | TokeniserException | IllegalArgumentException e) {
+                System.out.println(line[0]);
+                System.out.println(e);
+            }
+        }
+    }
 }

@@ -274,7 +274,7 @@ public class Parser {
         throw this.createError("expecting uri-reference but found " + token);
     }
 
-    public static class ParseException extends Throwable {
+    public static class ParseException extends Exception {
         private ParseException(@Nonnull String message) {
             super(message);
         }

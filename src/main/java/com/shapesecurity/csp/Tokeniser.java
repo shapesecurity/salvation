@@ -68,7 +68,7 @@ public class Tokeniser {
         return this.tokens.toArray(tokensArray);
     }
 
-    public static class TokeniserException extends Throwable {
+    public static class TokeniserException extends Exception {
         public TokeniserException(@Nonnull String message) {
             super(message);
         }

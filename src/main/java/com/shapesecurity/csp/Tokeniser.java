@@ -21,7 +21,7 @@ public class Tokeniser {
     private static final Pattern wsp = Pattern.compile("[ \t]|(?=;)");
     private static final Pattern semi = Pattern.compile(";");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
-    private static final Pattern directiveValuePattern = Pattern.compile("[^\\s;,\0- \\x7F]+");
+    private static final Pattern directiveValuePattern = Pattern.compile("[^;,\0- \\x7F]+");
 
     private Tokeniser(@Nonnull String sourceText) {
         this.scanner = new Scanner(sourceText);

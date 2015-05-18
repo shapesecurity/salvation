@@ -167,7 +167,13 @@ public class Parser {
                 return KeywordSource.UnsafeRedirect;
             default:
                 if (token.startsWith("'nonce-")) {
-                    return new NonceSource(new Base64Value(token.substring(7, token.length() - 1)));
+                    Base64Value b;
+                    try {
+                        b = new Base64Value(token.substring(7, token.length() - 1));
+                    } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                        throw this.createError(e.getMessage());
+                    }
+                    return new NonceSource(b);
                 } else if (token.startsWith("'sha")) {
                     HashSource.HashAlgorithm algo;
                     switch (token.substring(4, 7)) {
@@ -183,7 +189,13 @@ public class Parser {
                         default:
                             throw this.createError("unrecognised hash algorithm " + token.substring(1, 7));
                     }
-                    return new HashSource(algo, new Base64Value(token.substring(8, token.length() - 1)));
+                    Base64Value b;
+                    try {
+                        b = new Base64Value(token.substring(8, token.length() - 1));
+                    } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                        throw this.createError(e.getMessage());
+                    }
+                    return new HashSource(algo, b);
                 } else if (token.matches("^" + schemePart + ":$")) {
                     return new SchemeSource(token.substring(0, token.length() - 1));
                 } else {

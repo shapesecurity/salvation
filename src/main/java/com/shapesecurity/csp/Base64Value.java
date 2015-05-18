@@ -7,8 +7,9 @@ public class Base64Value implements Show {
     @Nonnull
     private final String value;
 
-    public Base64Value(@Nonnull String value) {
+    public Base64Value(@Nonnull String value) throws IllegalArgumentException {
         char[] chars = value.toCharArray();
+        // TODO: loosen this restriction
         if (chars.length % 4 != 0) {
             throw new IllegalArgumentException("invalid base64 string (should be multiple of 4 bytes: " + chars.length + "): " + value);
         }
@@ -29,7 +30,8 @@ public class Base64Value implements Show {
         return '0' <= ch && ch <= '9' ||
             'A' <= ch && ch <= 'Z' ||
             'a' <= ch && ch <= 'z' ||
-            ch == '/' || ch == '+';
+            ch == '/' || ch == '+' ||
+            ch == '-' || ch == '_';
     }
 
     @Override
@@ -46,6 +48,12 @@ public class Base64Value implements Show {
     @Nonnull
     @Override
     public String show() {
-        return this.value;
+        return this.value.replace('-', '+').replace('_', '/');
+    }
+
+    public class IllegalArgumentException extends Exception {
+        IllegalArgumentException(String message) {
+            super(message);
+        }
     }
 }

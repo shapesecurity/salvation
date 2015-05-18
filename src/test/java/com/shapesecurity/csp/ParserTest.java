@@ -180,18 +180,13 @@ public class ParserTest {
     }
 
     @Test
-    public void testRealData() throws FileNotFoundException {
+    public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {
             Policy p;
             String[] line = sc.nextLine().split(":", 2);
-            try {
-                p = Parser.parse(line[1]);
-                assertNotNull(String.format("policy should not be null: %s", line[0]), p);
-            } catch (ParseException | TokeniserException | IllegalArgumentException e) {
-                System.out.println(line[0]);
-                System.out.println(e);
-            }
+            p = Parser.parse(line[1]);
+            assertNotNull(String.format("policy should not be null: %s", line[0]), p);
         }
     }
 }

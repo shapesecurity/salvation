@@ -20,7 +20,7 @@ public class HashSource implements SourceExpression {
     @Nonnull
     @Override
     public String show() {
-        return "'" + this.algorithm + "-" + this.value + "'";
+        return "'" + this.algorithm.show() + "-" + this.value.show() + "'";
     }
 
 
@@ -38,9 +38,9 @@ public class HashSource implements SourceExpression {
 
 
     public enum HashAlgorithm implements Show {
-        SHA256("SHA256"),
-        SHA384("SHA384"),
-        SHA512("SHA512");
+        SHA256("sha256"),
+        SHA384("sha384"),
+        SHA512("sha512");
 
         @Nonnull
         private final String value;

@@ -168,14 +168,14 @@ public class ParserTest {
     @Test
     public void testHashSource() throws ParseException, TokeniserException {
         failsToParse("script-src 'self' https://example.com 'sha255-RUM5 encoded hash'");
-        //assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
 
     }
 
     @Test
     public void testNonceSource() throws ParseException, TokeniserException {
         failsToParse("script-src 'self' https://example.com 'nonce-Nc3n83cnSAd3wc3Sasdfn939hc3'");
-        //assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", Parser.parse("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", Parser.parse("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
 
     }
 

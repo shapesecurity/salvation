@@ -27,6 +27,6 @@ public class NonceSource implements SourceExpression {
     @Nonnull
     @Override
     public String show() {
-        return "'nonce-" + this.value + "'";
+        return "'nonce-" + this.value.show() + "'";
     }
 }

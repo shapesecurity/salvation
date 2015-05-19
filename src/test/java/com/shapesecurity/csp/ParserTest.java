@@ -222,8 +222,13 @@ public class ParserTest {
             String[] line = sc.nextLine().split(":", 2);
             // do not process commented lines
             if(!line[0].startsWith("//")) {
-                p = Parser.parse(line[1]);
-                assertNotNull(String.format("policy should not be null: %s", line[0]), p);
+                try {
+                    p = Parser.parse(line[1]);
+                    assertNotNull(String.format("policy should not be null: %s", line[0]), p);
+                } catch (ParseException | TokeniserException | IllegalArgumentException e) {
+                    System.out.println(line[0]);
+                    System.out.println(e);
+                }
             }
         }
     }

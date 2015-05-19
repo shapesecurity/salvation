@@ -6,8 +6,6 @@ import com.shapesecurity.csp.directives.*;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
-import javax.swing.text.Style;
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
@@ -184,7 +182,7 @@ public class ParserTest {
     @Test
     public void testSandboxParsing() throws ParseException, TokeniserException {
         failsToParse("sandbox a!*\n");
-        //failsToParse("sandbox a!*^");
+        failsToParse("sandbox a!*^:");
         assertEquals("directive-name, directive-value", "sandbox abc", Parser.parse("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
         Policy p;
         p = Parser.parse("sandbox a");
@@ -196,7 +194,6 @@ public class ParserTest {
         assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(SandboxDirective.class)));
         d.merge(q.getDirectiveByType(SandboxDirective.class));
         assertEquals("directive-name, directive-value", "sandbox a b", d.show());
-        assertEquals("hash code matches", 479535340, q.hashCode());
     }
 
     @Test
@@ -212,8 +209,7 @@ public class ParserTest {
         Directive d = p.getDirectiveByType(ScriptSrcDirective.class);
         assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         q = Parser.parse("script-src 'sha512-eHV5'");
-        assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-        assertEquals("hash code matches", 1313313782, q.hashCode());
+        assertFalse("hash-source !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
 
     }
 
@@ -247,8 +243,6 @@ public class ParserTest {
         Policy p;
         p = Parser.parse("script-src a");
         Policy q = Parser.parse("script-src b");
-        assertEquals("hash code matches", -1813219144, p.hashCode());
-        assertNotEquals("hash code is content-based", q.hashCode(), p.hashCode());
     }
 
     @Test
@@ -266,11 +260,11 @@ public class ParserTest {
             Policy p;
             String[] line = sc.nextLine().split(":", 2);
             // do not process commented lines
-            if(!line[0].startsWith("//")) {
+            if (!line[0].startsWith("//")) {
                 try {
                     p = Parser.parse(line[1]);
                     assertNotNull(String.format("policy should not be null: %s", line[0]), p);
-                } catch (ParseException | TokeniserException | IllegalArgumentException e) {
+                } catch (ParseException | TokeniserException e) {
                     System.out.println(line[0]);
                     System.out.println(e);
                 }

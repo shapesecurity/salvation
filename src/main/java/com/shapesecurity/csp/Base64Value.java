@@ -22,7 +22,7 @@ public class Base64Value implements Show {
             if (!isBase64Chars(chars[i]) && chars[i] != '=') {
                 throw new IllegalArgumentException("invalid base64 string padding (illegal characters): " + value);
             }
-            if(i == chars.length - 1 && chars[i - 1] == '=' && chars[i] != '=') {
+            if (i == chars.length - 1 && chars[i - 1] == '=' && chars[i] != '=') {
                 throw new IllegalArgumentException("invalid base64 string padding (illegal last character): " + value);
             }
         }

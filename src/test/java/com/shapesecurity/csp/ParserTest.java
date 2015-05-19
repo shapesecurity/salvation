@@ -178,22 +178,42 @@ public class ParserTest {
         Directive d1 = p.getDirectiveByType(PluginTypesDirective.class);
         Directive d2 = q.getDirectiveByType(PluginTypesDirective.class);
         d1.merge(d2);
-        d1.show();
         assertEquals("directive-name, directive-value", "plugin-types a/b c/d", d1.show());
     }
 
     @Test
     public void testSandboxParsing() throws ParseException, TokeniserException {
         failsToParse("sandbox a!*\n");
-        //failsToParse("sandbox a!*\^");
+        //failsToParse("sandbox a!*^");
         assertEquals("directive-name, directive-value", "sandbox abc", Parser.parse("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
-
+        Policy p;
+        p = Parser.parse("sandbox a");
+        Policy q;
+        q = Parser.parse("sandbox a");
+        Directive d = p.getDirectiveByType(SandboxDirective.class);
+        assertTrue("sandbox equals", d.equals(q.getDirectiveByType(SandboxDirective.class)));
+        q = Parser.parse("sandbox b");
+        assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(SandboxDirective.class)));
+        d.merge(q.getDirectiveByType(SandboxDirective.class));
+        assertEquals("directive-name, directive-value", "sandbox a b", d.show());
+        assertEquals("hash code matches", 479535340, q.hashCode());
     }
 
     @Test
     public void testHashSource() throws ParseException, TokeniserException {
         failsToParse("script-src 'self' https://example.com 'sha255-RUM5 encoded hash'");
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha384-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha384-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha512-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha512-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
+        Policy p;
+        p = Parser.parse("script-src 'sha512-RUM5'");
+        Policy q;
+        q = Parser.parse("script-src 'sha512-RUM5'");
+        Directive d = p.getDirectiveByType(ScriptSrcDirective.class);
+        assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        q = Parser.parse("script-src 'sha512-eHV5'");
+        assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        assertEquals("hash code matches", 1313313782, q.hashCode());
 
     }
 
@@ -201,6 +221,24 @@ public class ParserTest {
     public void testNonceSource() throws ParseException, TokeniserException {
         failsToParse("script-src 'self' https://example.com 'nonce-Nc3n83cnSAd3wc3Sasdfn939hc3'");
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", Parser.parse("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
+        Policy p;
+        p = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
+        Policy q;
+        q = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
+        Directive d = p.getDirectiveByType(ScriptSrcDirective.class);
+        assertTrue("nonce-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        q = Parser.parse("script-src 'nonce-aGVsbG8gd29ybGQ='");
+        assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        assertEquals("hash code matches", 1953573235, q.hashCode());
+    }
+
+    @Test
+    public void testBase64Value() throws ParseException, TokeniserException {
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='", Parser.parse("script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='").getDirectiveByType(ScriptSrcDirective.class).show());
+        failsToParse("script-src 'self' https://example.com 'nonce-123'"); // illegal length
+        failsToParse("script-src 'self' https://example.com 'nonce-123^'"); // illegal chars
+        failsToParse("script-src 'self' https://example.com 'nonce-12=+'"); // illegal padding
+
 
     }
 
@@ -211,7 +249,14 @@ public class ParserTest {
         Policy q = Parser.parse("script-src b");
         assertEquals("hash code matches", -1813219144, p.hashCode());
         assertNotEquals("hash code is content-based", q.hashCode(), p.hashCode());
+    }
 
+    @Test
+    public void testKeywordSource() throws ParseException, TokeniserException {
+        assertEquals("directive-name, directive-value", "img-src example.com 'self'", Parser.parse("img-src example.com 'self'").getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-inline'", Parser.parse("img-src example.com 'unsafe-inline'").getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-eval'", Parser.parse("img-src example.com 'unsafe-eval'").getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-redirect'", Parser.parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
     }
 
     @Test

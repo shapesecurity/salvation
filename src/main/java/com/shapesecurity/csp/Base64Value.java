@@ -20,7 +20,10 @@ public class Base64Value implements Show {
         }
         for (int i = chars.length - 2; i < chars.length; i++) {
             if (!isBase64Chars(chars[i]) && chars[i] != '=') {
-                throw new IllegalArgumentException("invalid base64 string (illegal characters): " + value);
+                throw new IllegalArgumentException("invalid base64 string padding (illegal characters): " + value);
+            }
+            if(i == chars.length - 1 && chars[i - 1] == '=' && chars[i] != '=') {
+                throw new IllegalArgumentException("invalid base64 string padding (illegal last character): " + value);
             }
         }
         this.value = value;

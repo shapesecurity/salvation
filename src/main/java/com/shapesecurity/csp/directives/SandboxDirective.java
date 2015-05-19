@@ -55,5 +55,15 @@ public class SandboxDirective extends Directive {
         public String show() {
             return this.value;
         }
+
+        @Override
+        public int hashCode() {
+            return this.value.hashCode();
+        }
+
+        @Override
+        public boolean equals(@Nonnull Object obj) {
+            return obj instanceof SandboxToken && ((SandboxToken) obj).value.equals(this.value);
+        }
     }
 }

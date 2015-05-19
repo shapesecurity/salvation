@@ -33,7 +33,7 @@ public class HashSource implements SourceExpression {
 
     @Override
     public int hashCode() {
-        return (this.algorithm.hashCode() ^ 0xFE608B8F) ^ (this.value.hashCode() ^ 0x01D77E94);
+        return (this.algorithm.getHashCode() ^ 0xFE608B8F) ^ (this.value.hashCode() ^ 0x01D77E94);
     }
 
 
@@ -47,6 +47,10 @@ public class HashSource implements SourceExpression {
 
         HashAlgorithm(@Nonnull String value) {
             this.value = value;
+        }
+
+        public int getHashCode() {
+            return this.value.hashCode();
         }
 
         @Nonnull

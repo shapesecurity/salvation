@@ -10,7 +10,7 @@ public class SandboxDirective extends Directive {
     private List<SandboxToken> sandboxTokens;
 
     @Nonnull
-    public static final String name = "sandbox";
+    private static final String name = "sandbox";
 
     public SandboxDirective(@Nonnull List<SandboxToken> sandboxTokens) {
         super(SandboxDirective.name);

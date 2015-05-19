@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ObjectSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "object-src";
+    private static final String name = "object-src";
 
     public ObjectSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(ObjectSrcDirective.name, sourceExpressions);

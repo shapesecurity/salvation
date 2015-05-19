@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ConnectSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "connect-src";
+    private static final String name = "connect-src";
 
     public ConnectSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(ConnectSrcDirective.name, sourceExpressions);

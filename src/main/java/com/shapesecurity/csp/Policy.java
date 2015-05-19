@@ -18,9 +18,7 @@ public class Policy implements Show {
     }
 
     public void merge(@Nonnull Policy other) {
-        for (Directive d : other.getDirectives()) {
-            this.mergeDirective(d);
-        }
+        other.getDirectives().forEach(this::mergeDirective);
     }
 
     // merge a directive if it does not exist; used for policy manipulation and composition

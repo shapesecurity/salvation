@@ -7,7 +7,7 @@ import java.util.List;
 
 public class FrameSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "frame-src";
+    private static final String name = "frame-src";
 
     public FrameSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(FrameSrcDirective.name, sourceExpressions);

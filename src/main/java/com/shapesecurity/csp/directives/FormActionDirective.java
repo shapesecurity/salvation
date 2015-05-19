@@ -7,7 +7,7 @@ import java.util.List;
 
 public class FormActionDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "form-action";
+    private static final String name = "form-action";
 
     public FormActionDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(FormActionDirective.name, sourceExpressions);

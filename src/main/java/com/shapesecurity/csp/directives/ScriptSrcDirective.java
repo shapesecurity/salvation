@@ -7,7 +7,7 @@ import java.util.List;
 
 public class ScriptSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "script-src";
+    private static final String name = "script-src";
 
     public ScriptSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(ScriptSrcDirective.name, sourceExpressions);

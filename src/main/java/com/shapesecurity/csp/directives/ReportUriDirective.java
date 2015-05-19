@@ -12,7 +12,7 @@ public class ReportUriDirective extends Directive {
     private List<URI> uris;
 
     @Nonnull
-    public static final String name = "report-uri";
+    private static final String name = "report-uri";
 
     public ReportUriDirective(@Nonnull List<URI> uris) {
         super(ReportUriDirective.name);

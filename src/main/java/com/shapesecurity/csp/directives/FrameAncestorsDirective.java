@@ -7,7 +7,7 @@ import java.util.List;
 
 public class FrameAncestorsDirective extends AncestorSourceListDirective {
     @Nonnull
-    public static final String name = "frame-ancestors";
+    private static final String name = "frame-ancestors";
 
     public FrameAncestorsDirective(@Nonnull List<AncestorSource> ancestorSources) {
         super(FrameAncestorsDirective.name, ancestorSources);

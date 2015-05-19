@@ -5,7 +5,7 @@ import java.util.List;
 
 public class PluginTypesDirective extends MediaTypeListDirective {
     @Nonnull
-    public static final String name = "plugin-types";
+    private static final String name = "plugin-types";
 
     public PluginTypesDirective(@Nonnull List<MediaType> mediaTypes) {
         super(PluginTypesDirective.name, mediaTypes);

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class DefaultSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "default-src";
+    private static final String name = "default-src";
 
     public DefaultSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(DefaultSrcDirective.name, sourceExpressions);

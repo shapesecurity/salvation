@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 public abstract class Directive implements Show {
     @Nonnull
-    public final String name;
+    private final String name;
 
     Directive(@Nonnull String name) {
         this.name = name;
@@ -20,12 +20,12 @@ public abstract class Directive implements Show {
 
     public abstract void merge(@Nonnull Directive other);
 
-    public boolean equalsHelper(@Nonnull Directive other) {
+    boolean equalsHelper(@Nonnull Directive other) {
         return this.values().count() == other.values().count() &&
             this.values().allMatch((m) -> other.values().anyMatch((n) -> n.equals(m)));
     }
 
-    public int hashCodeHelper(int seed) {
+    int hashCodeHelper(int seed) {
         return this.values().map(Object::hashCode).reduce(seed, (a, b) -> a ^ b);
     }
 

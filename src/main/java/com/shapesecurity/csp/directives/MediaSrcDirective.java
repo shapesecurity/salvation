@@ -7,7 +7,7 @@ import java.util.List;
 
 public class MediaSrcDirective extends SourceListDirective {
     @Nonnull
-    public static final String name = "media-src";
+    private static final String name = "media-src";
 
     public MediaSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
         super(MediaSrcDirective.name, sourceExpressions);

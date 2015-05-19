@@ -18,11 +18,13 @@ public class Tokeniser {
         return new Tokeniser(sourceText).tokenise();
     }
 
-    private static final Pattern empty = Pattern.compile("^\\s*$");
-    private static final Pattern wsp = Pattern.compile("[ \t]+");
     private static final Pattern semi = Pattern.compile(";");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern directiveValuePattern = Pattern.compile("[^;,\0- \\x7F]+");
+
+    private static boolean isWhitespace(char ch) {
+        return ch == ' ' || ch == '\t';
+    }
 
     private Tokeniser(@Nonnull String sourceText) {
         this.tokens = new ArrayList<>();
@@ -48,9 +50,7 @@ public class Tokeniser {
     }
 
     private void eatWhitespace() {
-        while (this.hasNext()) {
-            char ch = this.sourceText.charAt(this.index);
-            if (ch != ' ' && ch != '\t') return;
+        while (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
             ++this.index;
         }
     }
@@ -66,7 +66,7 @@ public class Tokeniser {
         int i = this.index;
         while (i < this.length) {
             char ch = this.sourceText.charAt(i);
-            if (ch != ' ' && ch != '\t' && ch != ';') break;
+            if (!Tokeniser.isWhitespace(ch) && ch != ';') break;
             ++i;
         }
         return this.sourceText.substring(this.index, i);

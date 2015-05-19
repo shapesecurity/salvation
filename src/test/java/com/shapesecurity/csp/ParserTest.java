@@ -6,6 +6,8 @@ import com.shapesecurity.csp.directives.*;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
+import javax.swing.text.Style;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 
@@ -125,6 +127,16 @@ public class ParserTest {
         assertEquals("directive-name, path-part", "base-uri */abc", createAndShow("base-uri */abc"));
         failsToParse("base-uri *\n");
         assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert", createAndShow("base-uri https://a.com:888/ert"));
+
+        assertEquals("directive-name, no directive-value", "child-src *", Parser.parse("child-src *").getDirectiveByType(ChildSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "connect-src *", Parser.parse("connect-src *").getDirectiveByType(ConnectSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "default-src *", Parser.parse("default-src *").getDirectiveByType(DefaultSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "font-src *", Parser.parse("font-src *").getDirectiveByType(FontSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "img-src *", Parser.parse("img-src *").getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "media-src *", Parser.parse("media-src *").getDirectiveByType(MediaSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "object-src *", Parser.parse("object-src *").getDirectiveByType(ObjectSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "script-src *", Parser.parse("script-src *").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "style-src *", Parser.parse("style-src *").getDirectiveByType(StyleSrcDirective.class).show());
     }
 
     @Test
@@ -158,6 +170,19 @@ public class ParserTest {
     }
 
     @Test
+    public void testMediaTypeMerge() throws ParseException, TokeniserException {
+        Policy p;
+        p = Parser.parse("plugin-types a/b");
+        Policy q;
+        q = Parser.parse("plugin-types c/d");
+        Directive d1 = p.getDirectiveByType(PluginTypesDirective.class);
+        Directive d2 = q.getDirectiveByType(PluginTypesDirective.class);
+        d1.merge(d2);
+        d1.show();
+        assertEquals("directive-name, directive-value", "plugin-types a/b c/d", d1.show());
+    }
+
+    @Test
     public void testSandboxParsing() throws ParseException, TokeniserException {
         failsToParse("sandbox a!*\n");
         //failsToParse("sandbox a!*\^");
@@ -180,13 +205,26 @@ public class ParserTest {
     }
 
     @Test
+    public void testHashCode() throws ParseException, TokeniserException {
+        Policy p;
+        p = Parser.parse("script-src a");
+        Policy q = Parser.parse("script-src b");
+        assertEquals("hash code matches", -1813219144, p.hashCode());
+        assertNotEquals("hash code is content-based", q.hashCode(), p.hashCode());
+
+    }
+
+    @Test
     public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {
             Policy p;
             String[] line = sc.nextLine().split(":", 2);
-            p = Parser.parse(line[1]);
-            assertNotNull(String.format("policy should not be null: %s", line[0]), p);
+            // do not process commented lines
+            if(!line[0].startsWith("//")) {
+                p = Parser.parse(line[1]);
+                assertNotNull(String.format("policy should not be null: %s", line[0]), p);
+            }
         }
     }
 }

@@ -73,6 +73,13 @@ public class Parser {
         while (this.hasNext()) {
             if (this.eat(";")) continue;
             policy.addDirective(this.parseDirective());
+            if (!this.eat(";")) {
+                if (this.hasNext()) {
+                    throw this.createError("expecting semicolon or end of policy but found " + this.advance());
+                } else {
+                    break;
+                }
+            }
         }
         return policy;
     }
@@ -114,12 +121,12 @@ public class Parser {
             case "style-src":
                 return new StyleSrcDirective(this.parseSourceList());
         }
-        throw this.createError("expecting directive but found " + token);
+        throw this.createError("expecting directive-name but found " + token);
     }
 
     @Nonnull
-    private List<MediaListDirective.MediaType> parseMediaTypeList() throws ParseException {
-        ArrayList<MediaListDirective.MediaType> mediaTypes = new ArrayList<>();
+    private List<MediaTypeListDirective.MediaType> parseMediaTypeList() throws ParseException {
+        ArrayList<MediaTypeListDirective.MediaType> mediaTypes = new ArrayList<>();
         if (!this.hasNext() || this.hasNext(";")) {
             throw this.createError("media-type-list must contain at least one media-type");
         }
@@ -131,11 +138,11 @@ public class Parser {
     }
 
     @Nonnull
-    private MediaListDirective.MediaType parseMediaType() throws ParseException {
+    private MediaTypeListDirective.MediaType parseMediaType() throws ParseException {
         String token = this.advance();
         Matcher matcher = mediaTypePattern.matcher(token);
         if (matcher.find()) {
-            return new MediaListDirective.MediaType(matcher.group("type"), matcher.group("subtype"));
+            return new MediaTypeListDirective.MediaType(matcher.group("type"), matcher.group("subtype"));
         }
         throw this.createError("expecting media-type but found " + token);
     }

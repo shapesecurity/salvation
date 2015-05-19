@@ -5,13 +5,13 @@ import javax.annotation.Nullable;
 import java.util.List;
 import java.util.stream.Stream;
 
-public abstract class MediaListDirective extends Directive {
+public abstract class MediaTypeListDirective extends Directive {
 
     @Nonnull
     // @Nonempty
     private List<MediaType> mediaTypes;
 
-    MediaListDirective(@Nonnull String name, @Nonnull List<MediaType> mediaTypes) {
+    MediaTypeListDirective(@Nonnull String name, @Nonnull List<MediaType> mediaTypes) {
         super(name);
         this.mediaTypes = mediaTypes;
     }
@@ -24,10 +24,10 @@ public abstract class MediaListDirective extends Directive {
 
     @Override
     public void merge(@Nonnull Directive other) {
-        if (!(other instanceof MediaListDirective)) {
-            throw new Error("MediaListDirective can only be merged with other MediaListDirectives");
+        if (!(other instanceof MediaTypeListDirective)) {
+            throw new Error("MediaTypeListDirective can only be merged with other MediaTypeListDirectives");
         }
-        this.mediaTypes = Directive.merge(this.mediaTypes, ((MediaListDirective) other).mediaTypes);
+        this.mediaTypes = Directive.merge(this.mediaTypes, ((MediaTypeListDirective) other).mediaTypes);
     }
 
     public boolean matches(@Nonnull MediaType mediaType) {
@@ -36,8 +36,8 @@ public abstract class MediaListDirective extends Directive {
 
     @Override
     public boolean equals(@Nullable Object other) {
-        if (other == null || !(other instanceof MediaListDirective)) return false;
-        return this.equalsHelper((MediaListDirective) other);
+        if (other == null || !(other instanceof MediaTypeListDirective)) return false;
+        return this.equalsHelper((MediaTypeListDirective) other);
     }
 
     @Override

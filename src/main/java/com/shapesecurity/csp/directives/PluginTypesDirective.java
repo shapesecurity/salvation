@@ -3,7 +3,7 @@ package com.shapesecurity.csp.directives;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class PluginTypesDirective extends MediaListDirective {
+public class PluginTypesDirective extends MediaTypeListDirective {
     @Nonnull
     public static final String name = "plugin-types";
 

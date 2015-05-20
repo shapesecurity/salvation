@@ -23,7 +23,7 @@ public class Policy implements Show {
 
     // merge a directive if it does not exist; used for policy manipulation and composition
     private void mergeDirective(@Nonnull Directive d) {
-        if (!this.directives.containsKey(d.getClass())) {
+        if (this.directives.containsKey(d.getClass())) {
             this.directives.get(d.getClass()).merge(d);
         } else {
             this.directives.put(d.getClass(), d);
@@ -70,7 +70,7 @@ public class Policy implements Show {
         }
         boolean first = true;
         for (Directive d : this.directives.values()) {
-            if (!first) sb.append(" ;");
+            if (!first) sb.append("; ");
             first = false;
             sb.append(d.show());
         }

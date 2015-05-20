@@ -93,7 +93,8 @@ public class ParserTest {
         p = Parser.parse("style-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
+        failsToParse("abc");
+        failsToParse("script-src *, ");
     }
 
     private void failsToParse(String policy) {
@@ -165,9 +166,25 @@ public class ParserTest {
         d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
         assertTrue("ancestor-source equality", d1.equals(d2));
         assertEquals("ancestor-source hashcode equality", d1.hashCode(), d2.hashCode());
+    }
 
+    @Test
+    public void testPolicy() throws ParseException, TokeniserException {
+        Policy p;
+        p = Parser.parse("");
+        assertEquals("policy show", "", p.show());
+        p = Parser.parse("style-src *");
+        assertEquals("policy show", "style-src *", p.show());
+        Policy q;
+        q = Parser.parse("style-src *");
+        assertTrue("policy equality", p.equals(q));
+        q = Parser.parse("script-src *");
+        p.merge(q);
+        assertEquals("policy merge", "style-src *; script-src *", p.show());
 
-
+        q = Parser.parse("script-src abc");
+        p.merge(q);
+        assertEquals("policy merge", "style-src *; script-src * abc", p.show());
     }
 
     @Test

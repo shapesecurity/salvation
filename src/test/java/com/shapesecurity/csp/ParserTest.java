@@ -187,7 +187,7 @@ public class ParserTest {
         assertEquals("policy merge", "style-src *; script-src * abc", p.show());
     }
 
-    @Test
+    @Test()
     public void testPluginTypesParsing() throws ParseException, TokeniserException {
         failsToParse("plugin-types");
         // XXX: technically allowed via ietf-token if an RFC introduces a type/subtype that is empty
@@ -196,6 +196,24 @@ public class ParserTest {
         assertEquals("directive-name, directive-value", "plugin-types a/b c/d", Parser.parse("plugin-types a/b c/d").getDirectiveByType(PluginTypesDirective.class).show());
         assertEquals("directive-name, directive-value", "plugin-types x-a/x-b", Parser.parse("plugin-types x-a/x-b").getDirectiveByType(PluginTypesDirective.class).show());
         assertEquals("directive-name, directive-value", "plugin-types X-A/X-B", Parser.parse("plugin-types X-A/X-B").getDirectiveByType(PluginTypesDirective.class).show());
+
+        Policy p;
+        p = Parser.parse("plugin-types a/b");
+        Policy q;
+        q = Parser.parse("plugin-types c/d; script-src *");
+
+        Directive d1 = p.getDirectiveByType(PluginTypesDirective.class);
+        Directive d2 = q.getDirectiveByType(PluginTypesDirective.class);
+        Directive d3 = q.getDirectiveByType(ScriptSrcDirective.class);
+        try {
+            d1.merge(d3);
+        } catch (Error e) {
+            assertEquals("plugin-types merge failure", "MediaTypeListDirective can only be merged with other MediaTypeListDirectives", e.getMessage());
+        }
+
+        d1.merge(d2);
+        assertEquals("plugin-types merge", "plugin-types a/b c/d", d1.show());
+
     }
 
     @Test
@@ -213,8 +231,8 @@ public class ParserTest {
 
         p = Parser.parse("report-uri  a");
         q = Parser.parse("report-uri a ");
-        // TODO: assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());
-        // TODO: assertTrue("report-uri equals", p.equals(q));
+        assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());
+        assertTrue("report-uri equals", p.equals(q));
     }
 
     @Test

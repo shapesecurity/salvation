@@ -52,6 +52,17 @@ public class ReportUriDirective extends Directive {
             this.value = value;
         }
 
+        @Override
+        public int hashCode() {
+            return this.value.hashCode();
+        }
+
+        @Override
+        public boolean equals(@Nullable Object other) {
+            if (other == null || !(other instanceof URI)) return false;
+            return this.value.equals(((URI) other).value);
+        }
+
         @Nonnull
         @Override
         public String show() {

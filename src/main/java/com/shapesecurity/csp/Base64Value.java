@@ -39,8 +39,7 @@ public class Base64Value implements Show {
 
     @Override
     public boolean equals(@Nullable Object other) {
-        if (other == null || !(other instanceof Base64Value)) return false;
-        return this.value.equals(((Base64Value) other).value);
+        return !(other == null || !(other instanceof Base64Value)) && this.value.equals(((Base64Value) other).value);
     }
 
     @Override

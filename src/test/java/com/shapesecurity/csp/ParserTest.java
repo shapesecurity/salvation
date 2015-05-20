@@ -141,6 +141,33 @@ public class ParserTest {
     public void testAncestorSourceParsing() throws ParseException, TokeniserException {
         assertEquals("directive-name, no directive-value", "frame-ancestors", Parser.parse("frame-ancestors").getDirectiveByType(FrameAncestorsDirective.class).show());
         assertEquals("directive-name, directive-value", "frame-ancestors 'none'", Parser.parse("frame-ancestors 'none'").getDirectiveByType(FrameAncestorsDirective.class).show());
+
+        Policy p;
+        p = Parser.parse("frame-ancestors https://example.com");
+        Policy q;
+        q = Parser.parse("script-src abc; frame-ancestors http://example.com");
+        Directive d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
+        Directive d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
+        Directive d3 = q.getDirectiveByType(ScriptSrcDirective.class);
+        try {
+            d1.merge(d3);
+        } catch (Error e) {
+            assertEquals("merge failure", "AncestorSourceListDirective can only be merged with other AncestorSourceListDirectives", e.getMessage());
+        }
+
+        d1.merge(d2);
+        assertEquals("ancestor-source merge", "frame-ancestors https://example.com http://example.com", d1.show());
+        assertFalse("ancestor-source inequality", d1.equals(d2));
+
+        p = Parser.parse("frame-ancestors http://example.com");
+        q = Parser.parse("frame-ancestors http://example.com");
+        d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
+        d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
+        assertTrue("ancestor-source equality", d1.equals(d2));
+        assertEquals("ancestor-source hashcode equality", d1.hashCode(), d2.hashCode());
+
+
+
     }
 
     @Test

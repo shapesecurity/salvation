@@ -280,6 +280,9 @@ public class Parser {
         while (this.hasNext() && !this.hasNext(";")) {
             uriList.add(this.parseUri());
         }
+        if (uriList.isEmpty()) {
+            throw this.createError("report-uri must contain at least one uri-reference");
+        }
         return uriList;
     }
 

@@ -7,9 +7,9 @@ import java.util.List;
 
 public class ChildSrcDirective extends SourceListDirective {
     @Nonnull
-    private static final String name = "child-src";
+    private static final String NAME = "child-src";
 
     public ChildSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
-        super(ChildSrcDirective.name, sourceExpressions);
+        super(ChildSrcDirective.NAME, sourceExpressions);
     }
 }

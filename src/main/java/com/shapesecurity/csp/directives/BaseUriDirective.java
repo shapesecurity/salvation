@@ -7,9 +7,9 @@ import java.util.List;
 
 public class BaseUriDirective extends SourceListDirective {
     @Nonnull
-    private static final String name = "base-uri";
+    private static final String NAME = "base-uri";
 
     public BaseUriDirective(@Nonnull List<SourceExpression> sourceExpressions) {
-        super(BaseUriDirective.name, sourceExpressions);
+        super(BaseUriDirective.NAME, sourceExpressions);
     }
 }

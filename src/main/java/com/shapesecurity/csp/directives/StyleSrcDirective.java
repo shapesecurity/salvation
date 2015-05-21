@@ -7,9 +7,9 @@ import java.util.List;
 
 public class StyleSrcDirective extends SourceListDirective {
     @Nonnull
-    private static final String name = "style-src";
+    private static final String NAME = "style-src";
 
     public StyleSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
-        super(StyleSrcDirective.name, sourceExpressions);
+        super(StyleSrcDirective.NAME, sourceExpressions);
     }
 }

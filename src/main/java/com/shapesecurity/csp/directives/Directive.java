@@ -3,26 +3,41 @@ package com.shapesecurity.csp.directives;
 import com.shapesecurity.csp.Show;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class Directive implements Show {
+public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull
     private final String name;
 
-    Directive(@Nonnull String name) {
+    @Nonnull
+    // @Nonempty
+    protected List<Value> values;
+
+    protected Directive(@Nonnull String name, @Nonnull List<Value> values) {
         this.name = name;
+        this.values = values;
     }
 
     @Nonnull
-    abstract Stream<? extends DirectiveValue> values();
+    public final Stream<Value> values() {
+        return values.stream();
+    }
 
-    public abstract void merge(@Nonnull Directive other);
+    public final void merge(@Nonnull Directive<Value> other) {
+        if (other.getClass() != this.getClass()) {
+            throw new IllegalArgumentException(other.getClass() + " can only be merged with other " + other.getClass() + "s. " +
+                    "But " + other.getClass() + " is found.");
+        }
+        this.values = Directive.merge(this.values, other.values);
+    }
 
-    boolean equalsHelper(@Nonnull Directive other) {
+    boolean equalsHelper(@Nonnull Directive<Value> other) {
         return this.values().count() == other.values().count() &&
-            this.values().allMatch((m) -> other.values().anyMatch((n) -> n.equals(m)));
+                this.values().allMatch((m) -> other.values().anyMatch((n) -> n.equals(m)));
     }
 
     int hashCodeHelper(int seed) {
@@ -31,13 +46,8 @@ public abstract class Directive implements Show {
 
     @Nonnull
     @Override
-    public String show() {
-        return this.values().map(Show::show).reduce(this.name, (a, b) -> a + " " + b);
-    }
-
-    @Nonnull
-    static <T> Stream<T> merge(@Nonnull Stream<T> a, @Nonnull Stream<T> b) {
-        return Stream.concat(a, b.filter((x) -> a.anyMatch(x::equals)));
+    public String show()  {
+        return  Stream.concat(Stream.of(this.name), this.values().map(Show::show)).collect(Collectors.joining(" "));
     }
 
     @Nonnull
@@ -52,5 +62,21 @@ public abstract class Directive implements Show {
             }
         }
         return list;
+    }
+
+    public final boolean contains(@Nonnull DirectiveValue mediaType) {
+        return values().anyMatch(mediaType::equals);
+    }
+
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public final boolean equals(@Nullable Object other) {
+        return other != null && other.getClass() == this.getClass() && this.equalsHelper((Directive<Value>) other);
+    }
+
+    @Override
+    public final int hashCode() {
+        return this.hashCodeHelper(this.getClass().getCanonicalName().hashCode());
     }
 }

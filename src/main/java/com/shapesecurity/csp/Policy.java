@@ -1,6 +1,7 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.directives.Directive;
+import com.shapesecurity.csp.directives.DirectiveValue;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,7 +12,7 @@ import java.util.Map;
 public class Policy implements Show {
 
     @Nonnull
-    private final Map<Class<? extends Directive>, Directive> directives;
+    private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
 
     public Policy() {
         this.directives = new LinkedHashMap<>();
@@ -22,38 +23,42 @@ public class Policy implements Show {
     }
 
     // merge a directive if it does not exist; used for policy manipulation and composition
-    private void mergeDirective(@Nonnull Directive d) {
-        if (this.directives.containsKey(d.getClass())) {
-            this.directives.get(d.getClass()).merge(d);
+    @SuppressWarnings("unchecked")
+    private <V extends DirectiveValue, T extends Directive<V>> void mergeDirective(@Nonnull T directive) {
+        T oldDirective = (T) this.directives.get(directive.getClass());
+        if (oldDirective != null) {
+            oldDirective.merge(directive);
         } else {
-            this.directives.put(d.getClass(), d);
+            this.directives.put(directive.getClass(), directive);
         }
     }
 
     // only add a directive if it doesn't exist; used for handling duplicate directives in CSP headers
-    public void addDirective(@Nonnull Directive d) {
-        if (!this.directives.containsKey(d.getClass())) {
+    public <V extends DirectiveValue, T extends Directive<V>> void addDirective(@Nonnull T d) {
+        Directive<? extends DirectiveValue> directive = this.directives.get(d.getClass());
+        if (directive == null) {
             this.directives.put(d.getClass(), d);
         }
     }
 
     @Nonnull
-    public Collection<Directive> getDirectives() {
+    public Collection<Directive<? extends DirectiveValue>> getDirectives() {
         return this.directives.values();
     }
 
+    @SuppressWarnings("unchecked")
     @Nullable
-    public <T extends Directive> T getDirectiveByType(@Nonnull Class<T> type) {
-        Directive d = this.directives.get(type);
+    public <V extends DirectiveValue, T extends Directive<V>> T getDirectiveByType(@Nonnull Class<T> type) {
+        T d = (T) this.directives.get(type);
         if (d == null) return null;
-        return (T) d;
+        return d;
     }
 
     @Override
     public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof Policy)) return false;
         return this.directives.size() == ((Policy) other).directives.size() &&
-            this.directives.equals(((Policy) other).directives);
+                this.directives.equals(((Policy) other).directives);
     }
 
     @Override
@@ -69,7 +74,7 @@ public class Policy implements Show {
             return "";
         }
         boolean first = true;
-        for (Directive d : this.directives.values()) {
+        for (Directive<?> d : this.directives.values()) {
             if (!first) sb.append("; ");
             first = false;
             sb.append(d.show());

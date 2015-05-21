@@ -13,17 +13,22 @@ public class Base64Value implements Show {
         if (chars.length % 4 != 0) {
             throw new IllegalArgumentException("invalid base64 string (should be multiple of 4 bytes: " + chars.length + "): " + value);
         }
-        for (int i = 0; i < chars.length - 2; i++) {
+
+        int i;
+        for (i = 0; i < chars.length; i++) {
+            if (chars[i] == '=') {
+                break;
+            }
             if (!isBase64Chars(chars[i])) {
                 throw new IllegalArgumentException("invalid base64 string (illegal characters): " + value);
             }
         }
-        for (int i = chars.length - 2; i < chars.length; i++) {
-            if (!isBase64Chars(chars[i]) && chars[i] != '=') {
+        if (i < chars.length - 2) {
+            throw new IllegalArgumentException("invalid base64 string (illegal characters): " + value);
+        }
+        for (; i < chars.length; i++) {
+            if (chars[i] != '=') {
                 throw new IllegalArgumentException("invalid base64 string padding (illegal characters): " + value);
-            }
-            if (i == chars.length - 1 && chars[i - 1] == '=' && chars[i] != '=') {
-                throw new IllegalArgumentException("invalid base64 string padding (illegal last character): " + value);
             }
         }
         this.value = value;

@@ -85,7 +85,7 @@ public class Parser {
     }
 
     @Nonnull
-    private Directive parseDirective() throws ParseException {
+    private Directive<?> parseDirective() throws ParseException {
         String token = this.advance();
         switch (token.toLowerCase()) {
             case "base-uri":
@@ -120,8 +120,9 @@ public class Parser {
                 return new ScriptSrcDirective(this.parseSourceList());
             case "style-src":
                 return new StyleSrcDirective(this.parseSourceList());
+            default:
+                throw this.createError("expecting directive-name but found " + token);
         }
-        throw this.createError("expecting directive-name but found " + token);
     }
 
     @Nonnull
@@ -199,7 +200,7 @@ public class Parser {
                     Base64Value b;
                     try {
                         b = new Base64Value(token.substring(8, token.length() - 1));
-                    } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                    } catch (Base64Value.IllegalArgumentException e) {
                         throw this.createError(e.getMessage());
                     }
                     return new HashSource(algo, b);

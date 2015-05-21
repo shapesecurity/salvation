@@ -12,7 +12,7 @@ import java.util.Scanner;
 import static org.junit.Assert.*;
 
 public class ParserTest {
-    private static int countIterable(Iterable<Directive> a) {
+    private static int countIterable(Iterable<Directive<?>> a) {
         int count = 0;
         for (Object b : a) {
             ++count;
@@ -31,65 +31,59 @@ public class ParserTest {
     }
 
     @Test
+    public void testTokeniser() throws ParseException, TokeniserException {
+        failsToParse("_sand _box   ;   ");
+    }
+
+    @Test
     public void testDuplicates() throws ParseException, TokeniserException {
         Policy p;
         p = Parser.parse("img-src a ;;; img-src b");
         assertNotNull("policy should not be null", p);
         assertEquals("", 1, countIterable(p.getDirectives()));
-        Directive firstDirective = p.getDirectives().iterator().next();
+        Directive<?> firstDirective = p.getDirectives().iterator().next();
         ImgSrcDirective imgSrcDirective = p.getDirectiveByType(ImgSrcDirective.class);
         assertEquals("", imgSrcDirective, firstDirective);
-        assertEquals("", "img-src", imgSrcDirective.name);
+        assertEquals("", "img-src", ImgSrcDirective.name);
         assertEquals("", "img-src a", imgSrcDirective.show());
     }
 
     @Test
     public void testParser() throws ParseException, TokeniserException {
-        Policy p;
-        p = Parser.parse("font-src *");
+
+        Policy p = Parser.parse("font-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("form-action *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("frame-ancestors 'none'");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("frame-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("img-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("media-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("object-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("plugin-types */*");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("report-uri https://example.com/report");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("sandbox allow-scripts");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("script-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-
         p = Parser.parse("style-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
@@ -148,14 +142,9 @@ public class ParserTest {
         p = Parser.parse("frame-ancestors https://example.com");
         Policy q;
         q = Parser.parse("script-src abc; frame-ancestors http://example.com");
-        Directive d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
-        Directive d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
-        Directive d3 = q.getDirectiveByType(ScriptSrcDirective.class);
-        try {
-            d1.merge(d3);
-        } catch (Error e) {
-            assertEquals("merge failure", "AncestorSourceListDirective can only be merged with other AncestorSourceListDirectives", e.getMessage());
-        }
+        FrameAncestorsDirective d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
+        FrameAncestorsDirective d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
+        ScriptSrcDirective d3 = q.getDirectiveByType(ScriptSrcDirective.class);
 
         d1.merge(d2);
         assertEquals("ancestor-source merge", "frame-ancestors https://example.com http://example.com", d1.show());
@@ -207,14 +196,9 @@ public class ParserTest {
         Policy q;
         q = Parser.parse("plugin-types c/d; script-src *");
 
-        Directive d1 = p.getDirectiveByType(PluginTypesDirective.class);
-        Directive d2 = q.getDirectiveByType(PluginTypesDirective.class);
-        Directive d3 = q.getDirectiveByType(ScriptSrcDirective.class);
-        try {
-            d1.merge(d3);
-        } catch (Error e) {
-            assertEquals("plugin-types merge failure", "MediaTypeListDirective can only be merged with other MediaTypeListDirectives", e.getMessage());
-        }
+        PluginTypesDirective d1 = p.getDirectiveByType(PluginTypesDirective.class);
+        PluginTypesDirective d2 = q.getDirectiveByType(PluginTypesDirective.class);
+        ScriptSrcDirective d3 = q.getDirectiveByType(ScriptSrcDirective.class);
 
         d1.merge(d2);
         assertEquals("plugin-types merge", "plugin-types a/b c/d", d1.show());
@@ -237,16 +221,20 @@ public class ParserTest {
         p = Parser.parse("report-uri a");
         Policy q;
         q = Parser.parse("report-uri b");
-        Directive d = p.getDirectiveByType(ReportUriDirective.class);
-        assertFalse("report-uri !equals", d.equals(q.getDirectiveByType(ReportUriDirective.class)));
-        d.merge(q.getDirectiveByType(ReportUriDirective.class));
-        assertEquals("report-uri merge", "report-uri a b", d.show());
+        ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
+        assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
+        d1.merge(q.getDirectiveByType(ReportUriDirective.class));
+        assertEquals("report-uri merge", "report-uri a b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
 
         p = Parser.parse("report-uri  a");
-        q = Parser.parse("report-uri a ");
+        q = Parser.parse("report-uri a; ");
         assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());
         assertTrue("report-uri equals", p.equals(q));
+        q = Parser.parse("report-uri a; sandbox 4");
+        d1 = q.getDirectiveByType(ReportUriDirective.class);
+        SandboxDirective d2 = q.getDirectiveByType(SandboxDirective.class);
+
     }
 
     @Test
@@ -255,8 +243,8 @@ public class ParserTest {
         p = Parser.parse("plugin-types a/b");
         Policy q;
         q = Parser.parse("plugin-types c/d");
-        Directive d1 = p.getDirectiveByType(PluginTypesDirective.class);
-        Directive d2 = q.getDirectiveByType(PluginTypesDirective.class);
+        PluginTypesDirective d1 = p.getDirectiveByType(PluginTypesDirective.class);
+        PluginTypesDirective d2 = q.getDirectiveByType(PluginTypesDirective.class);
         d1.merge(d2);
         assertEquals("directive-name, directive-value", "plugin-types a/b c/d", d1.show());
     }
@@ -270,7 +258,7 @@ public class ParserTest {
         p = Parser.parse("sandbox a");
         Policy q;
         q = Parser.parse("sandbox a");
-        Directive d1 = p.getDirectiveByType(SandboxDirective.class);
+        SandboxDirective d1 = p.getDirectiveByType(SandboxDirective.class);
         assertTrue("sandbox equals", d1.equals(q.getDirectiveByType(SandboxDirective.class)));
         assertEquals("sandbox hashcode equality", p.hashCode(), q.hashCode());
         q = Parser.parse("sandbox b; script-src a");
@@ -278,48 +266,34 @@ public class ParserTest {
         d1.merge(q.getDirectiveByType(SandboxDirective.class));
         assertEquals("sandbox merge", "sandbox a b", d1.show());
         assertNotEquals("sandbox hashcode inequality", p.hashCode(), q.hashCode());
-        Directive d2 = q.getDirectiveByType(ScriptSrcDirective.class);
-        try {
-            d1.merge(d2);
-        } catch (Error e) {
-            assertEquals("sandbox merge failure", "SandboxDirective can only be merged with other SandboxDirectives", e.getMessage());
-        }
+        ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
     }
 
     @Test
     public void testHashSource() throws ParseException, TokeniserException {
-        failsToParse("script-src 'self' https://example.com 'sha255-RUM5 encoded hash'");
+        failsToParse("script-src 'self' https://example.com 'sha255-RUM5'");
+        failsToParse("script-src 'self' https://example.com 'sha256-333'");
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha384-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha384-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha512-RUM5'", Parser.parse("script-src 'self' https://example.com 'sha512-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
-        Policy p;
-        p = Parser.parse("script-src 'sha512-RUM5'");
-        Policy q;
-        q = Parser.parse("script-src 'sha512-RUM5'");
-        Directive d = p.getDirectiveByType(ScriptSrcDirective.class);
+        Policy p = Parser.parse("script-src 'sha512-RUM5'");
+        Policy q = Parser.parse("script-src 'sha512-RUM5'");
+        assertEquals("hash-source hashcode equality", p.hashCode(), q.hashCode());
+        ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
         assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         q = Parser.parse("script-src 'sha512-eHV5'");
         assertFalse("hash-source inequality", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-        assertEquals("hash-source hashcode euqlity", p.hashCode(), q.hashCode());
-
     }
 
     @Test
     public void sourceListTest() throws ParseException, TokeniserException {
-        Policy p;
-        p = Parser.parse("script-src http://a https://b; style-src http://e");
-        Policy q;
-        q = Parser.parse("script-src c d");
-        Directive d1 = p.getDirectiveByType(ScriptSrcDirective.class);
+        Policy p = Parser.parse("script-src http://a https://b; style-src http://e");
+        Policy q = Parser.parse("script-src c d");
+        ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         assertFalse("source-list inequality", d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         d1.merge(q.getDirectiveByType(ScriptSrcDirective.class));
         assertEquals("source-list merge", "script-src http://a https://b c d", d1.show());
-        Directive d2 = q.getDirectiveByType(ScriptSrcDirective.class);
-        try {
-            d2.merge(q.getDirectiveByType(StyleSrcDirective.class));
-        } catch (Error e) {
-            assertEquals("source-list merge failure", "SourceListDirective can only be merged with other SourceListDirectives", e.getMessage());
-        }
+        ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         p = Parser.parse("script-src http://a https://b");
         q = Parser.parse("script-src http://a https://b");
         d1 = p.getDirectiveByType(ScriptSrcDirective.class);
@@ -331,16 +305,13 @@ public class ParserTest {
     public void testNonceSource() throws ParseException, TokeniserException {
         failsToParse("script-src 'self' https://example.com 'nonce-Nc3n83cnSAd3wc3Sasdfn939hc3'");
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", Parser.parse("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
-        Policy p;
-        p = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
-        Policy q;
-        q = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
-        Directive d = p.getDirectiveByType(ScriptSrcDirective.class);
+        Policy p = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
+        Policy q = Parser.parse("script-src 'nonce-MTIzNDU2Nw=='");
+        ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
         assertEquals("hash code matches", p.hashCode(), q.hashCode());
         assertTrue("nonce-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         q = Parser.parse("script-src 'nonce-aGVsbG8gd29ybGQ='");
         assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-
     }
 
     @Test
@@ -349,15 +320,10 @@ public class ParserTest {
         failsToParse("script-src 'self' https://example.com 'nonce-123'"); // illegal length
         failsToParse("script-src 'self' https://example.com 'nonce-123^'"); // illegal chars
         failsToParse("script-src 'self' https://example.com 'nonce-12=+'"); // illegal padding
+        failsToParse("script-src 'self' https://example.com 'nonce-1^=='"); // illegal chars
+        failsToParse("script-src 'self' https://example.com 'nonce-1==='"); // illegal chars
 
 
-    }
-
-    @Test
-    public void testHashCode() throws ParseException, TokeniserException {
-        Policy p;
-        p = Parser.parse("script-src a");
-        Policy q = Parser.parse("script-src b");
     }
 
     @Test

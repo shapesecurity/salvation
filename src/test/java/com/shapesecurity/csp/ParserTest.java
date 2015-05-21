@@ -3,7 +3,9 @@ package com.shapesecurity.csp;
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.directives.*;
+import com.shapesecurity.csp.sources.SourceExpression;
 import org.junit.Test;
+import sun.jvm.hotspot.runtime.solaris_x86.SolarisX86JavaThreadPDAccess;
 
 import javax.annotation.Nonnull;
 import java.io.FileNotFoundException;
@@ -90,6 +92,16 @@ public class ParserTest {
         failsToParse("abc");
         failsToParse("script-src *, ");
         failsToParse("zzscript-src *; bla");
+
+        p = Parser.parse("style-src *");
+        Policy q = Parser.parse("script-src *");
+        StyleSrcDirective d1 = p.getDirectiveByType(StyleSrcDirective.class);
+        ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
+        try {
+            d1.merge(d2);
+        } catch (IllegalArgumentException e) {
+            assertEquals("class com.shapesecurity.csp.directives.ScriptSrcDirective can be merged with class com.shapesecurity.csp.directives.ScriptSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
+        }
     }
 
     private void failsToParse(String policy) {
@@ -332,6 +344,21 @@ public class ParserTest {
         assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-inline'", Parser.parse("img-src example.com 'unsafe-inline'").getDirectiveByType(ImgSrcDirective.class).show());
         assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-eval'", Parser.parse("img-src example.com 'unsafe-eval'").getDirectiveByType(ImgSrcDirective.class).show());
         assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-redirect'", Parser.parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
+    }
+
+    @Test
+    public void testContains() throws ParseException, TokeniserException {
+        Policy p = Parser.parse("script-src a b c");
+        Policy q = Parser.parse("script-src a");
+        Policy r = Parser.parse("script-src m");
+        ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
+        ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
+        DirectiveValue value = d2.values().iterator().next();
+        assertTrue("directive contains", d1.contains(value));
+        ScriptSrcDirective d3 = r.getDirectiveByType(ScriptSrcDirective.class);
+        value = d3.values().iterator().next();
+        assertFalse("directive doesn't contain", d1.contains(value));
+
     }
 
     @Test

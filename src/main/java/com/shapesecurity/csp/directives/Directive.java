@@ -29,8 +29,8 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     public final void merge(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
-            throw new IllegalArgumentException(other.getClass() + " can only be merged with other " + other.getClass() + "s. " +
-                    "But " + other.getClass() + " is found.");
+            throw new IllegalArgumentException(other.getClass() + " can be merged with " + other.getClass() +
+                    ", but found " + other.getClass());
         }
         this.values = Directive.merge(this.values, other.values);
     }
@@ -64,8 +64,8 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         return list;
     }
 
-    public final boolean contains(@Nonnull DirectiveValue mediaType) {
-        return values().anyMatch(mediaType::equals);
+    public boolean contains(@Nonnull DirectiveValue value) {
+        return values().anyMatch(value::equals);
     }
 
 

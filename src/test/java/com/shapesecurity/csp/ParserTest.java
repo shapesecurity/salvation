@@ -351,6 +351,7 @@ public class ParserTest {
         Policy p = Parser.parse("script-src a b c");
         Policy q = Parser.parse("script-src a");
         Policy r = Parser.parse("script-src m");
+        Policy s = Parser.parse("report-uri z");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         DirectiveValue value = d2.values().iterator().next();
@@ -358,7 +359,9 @@ public class ParserTest {
         ScriptSrcDirective d3 = r.getDirectiveByType(ScriptSrcDirective.class);
         value = d3.values().iterator().next();
         assertFalse("directive doesn't contain", d1.contains(value));
-
+        ReportUriDirective d4 = s.getDirectiveByType(ReportUriDirective.class);
+        value = d3.values().iterator().next();
+        assertFalse("directive doesn't contain", d1.contains(value));
     }
 
     @Test

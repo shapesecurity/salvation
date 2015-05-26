@@ -29,7 +29,7 @@ public class Parser {
     private static final String pathPart = "(?:/" + pchar + "*)*";
     private static final Pattern hostSourcePattern = Pattern.compile("^(?<scheme>" + schemePart + "://)?(?<host>" + hostPart + ")(?<port>" + portPart + ")?(?<path>" + pathPart + ")?$");
     private static final Pattern sandboxTokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
-    private static final Pattern uriPattern = Pattern.compile("^(?:(?:[^:/?#]+):)?(?://(?:[^/?#]*))?(?:[^?#]*)(?:\\?(?:[^#]*))?(?:#(?:.*))?");
+    private static final Pattern uriPattern = Pattern.compile("^(?:(?:[^:/?#]+):)?(?://(?:[^/?#]*))?(?:[^?#]+)(?:\\?(?:[^#]*))?(?:#(?:.*))?");
     private static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
 
     @Nonnull

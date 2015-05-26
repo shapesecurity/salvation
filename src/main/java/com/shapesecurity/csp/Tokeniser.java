@@ -59,14 +59,12 @@ public class Tokeniser {
         return this.index < this.length;
     }
 
+    // invariant: hasNext has been called and returned true; next has not been called since; eat has not returned true since
     private String next() {
-        if (!this.hasNext()) {
-            throw new IndexOutOfBoundsException("check hasNext before calling next");
-        }
         int i = this.index;
         while (i < this.length) {
             char ch = this.sourceText.charAt(i);
-            if (!Tokeniser.isWhitespace(ch) && ch != ';') break;
+            if (Tokeniser.isWhitespace(ch) || ch == ';') break;
             ++i;
         }
         return this.sourceText.substring(this.index, i);

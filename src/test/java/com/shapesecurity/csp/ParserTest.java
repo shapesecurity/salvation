@@ -124,6 +124,9 @@ public class ParserTest {
         assertEquals("directive-name, host-part *", "base-uri *", createAndShow("base-uri *"));
         assertEquals("directive-name, host-part *.", "base-uri *.a", createAndShow("base-uri *.a"));
 
+        failsToParse("connect-src 'none' scheme:");
+        failsToParse("connect-src scheme: 'none'");
+
         // XXX: these two tests are actually valid according to the CSP spec, but we choose not to support paths other than path-abempty
         failsToParse("base-uri abc_");
         failsToParse("base-uri abc..");
@@ -172,6 +175,8 @@ public class ParserTest {
         q = Parser.parse("frame-ancestors http:");
         assertTrue("ancestor-source scheme-source equality", p.equals(q));
         assertEquals("ancestor-source scheme-source equality", p.hashCode(), q.hashCode());
+
+        failsToParse("frame-ancestors scheme::");
     }
 
     @Test
@@ -229,6 +234,7 @@ public class ParserTest {
     @Test
     public void testReportUri() throws ParseException, TokeniserException {
         failsToParse("report-uri ");
+        failsToParse("report-uri #");
         Policy p;
         p = Parser.parse("report-uri a");
         Policy q;

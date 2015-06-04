@@ -1,0 +1,34 @@
+{
+  "name": "csp-parser-web-demo",
+  "version": "0.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel --auxiliary-comment 'istanbul ignore next' --modules commonStrict --no-non-standard --blacklist regenerator --source-maps-inline --out-dir dist src",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/shapesecurity/csp-parser.git"
+  },
+  "keywords": [
+    "CSP",
+    "parser",
+    "web",
+    "demo"
+  ],
+  "author": "Shape Security Labs",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/shapesecurity/csp-parser/issues"
+  },
+  "homepage": "https://github.com/shapesecurity/csp-parser#readme",
+  "dependencies": {
+    "core-js": "0.9.13",
+    "java": "0.5.4",
+    "koa-route": "2.4.1"
+  },
+  "devDependencies": {
+    "babel": "5.4.7"
+  }
+}

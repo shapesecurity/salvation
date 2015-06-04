@@ -2,3 +2,5 @@
 target
 .idea
 .editorconfig
+node_modules
+demo/dist

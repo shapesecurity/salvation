@@ -24,17 +24,29 @@ app.use(rateLimit({
 
 // routes
 
-app.use(route.get("/", requestInput));
-app.use(route.get("/fetchHeader", fetchHeader));
-app.use(route.get("/directHeader", directHeader));
+function composeAppLogicAndView(appLogic, view) {
+  return function*(next) {
+    view.call(this, yield* appLogic.call(this));
+    yield next;
+  };
+}
+
+app.use(route.get("/", composeAppLogicAndView(requestInput, requestInputView)));
+app.use(route.get("/fetchHeader", composeAppLogicAndView(fetchHeader, fetchHeaderView)));
+app.use(route.get("/directHeader", composeAppLogicAndView(directHeader, directHeaderView)));
 
 // application logic
 
-function* fetchHeader(next) {
-  let policyResult;
+function* fetchHeader() {
   let url = this.query.url;
   let client = url.startsWith("https:") ? https : http;
-  let headerPairs = yield next => client.get(this.query.url, res => {
+  let headers = yield next => client.get(this.query.url, res => {
+    if (res.statusCode >= 300 && res.statusCode < 400) {
+      if (!{}.hasOwnProperty.call(res.headers, 'location'))
+        return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
+      this.redirect(`/fetchHeader?url=${encodeURIComponent(res.headers.location)}`);
+      return next(null, []);
+    }
     if (res.statusCode < 200 || res.statusCode >= 400)
       return next(new Error(res.statusMessage));
     let headers = [];
@@ -42,38 +54,42 @@ function* fetchHeader(next) {
       let headerName = res.rawHeaders[i].toLowerCase();
       if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
         headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
-        try {
-          let policy = Parser.parseSync(res.rawHeaders[i + 1]);
-          policyResult = 'Policy is valid: ' + policy.showSync();
-        } catch(ex) {
-          console.log(ex.cause.getMessageSync());
-          policyResult = 'Error: ' + ex.cause.getMessageSync();
-        }
       }
     }
     next(null, headers);
   })
-  fetchHeaderView.call(this, policyResult);
-  yield next;
+  if (headers.length < 1) {
+    return { error: true, message: "no CSP headers found" };
+  } else {
+    let policy = Parser.parseSync("");
+    for (let header of headers) {
+      try {
+        policy.mergeSync(Parser.parseSync(header.value));
+      } catch(ex) {
+        console.log(ex.cause.getMessageSync());
+        return { error: true, message: 'Error: ' + ex.cause.getMessageSync() };
+      }
+    }
+    return { message: 'policy is valid: ' + policy.showSync() };
+  }
 }
 
-function* requestInput(next) {
-  requestInputView.call(this);
-  yield next;
+function* requestInput() {
 }
 
-function* directHeader(next){
-  let policyResult;
+function* directHeader(){
+  let info = { error: true, message: "unknown error" };
+  if (!{}.hasOwnProperty.call(this.query, 'headerValue[]')) {
+    return { error: true, message: "no headerValue[] request parameter given" }
+  };
   try {
-    console.log('value is: ' + this.query['headerValue[]']);
     let policy = Parser.parseSync(this.query['headerValue[]']);
-    policyResult = 'Policy is valid: ' + policy.showSync();
+    info = { message: 'Policy is valid: ' + policy.showSync() };
   } catch(ex) {
     console.log(ex.cause.getMessageSync());
-    policyResult = 'Error: ' + ex.cause.getMessageSync();
+    info = { error: true, message: 'Error: ' + ex.cause.getMessageSync() };
   }
-  directHeaderView.call(this, policyResult);
-  yield next;
+  return info;
 };
 
 // go!

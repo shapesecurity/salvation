@@ -1,6 +1,6 @@
 import {html} from "../util";
 
-export default function(policyResult) {
+export default function(info) {
   switch (this.accepts("html", "json", "text")) {
     case "html":
       this.response.type = "text/html; charset=utf-8";
@@ -13,16 +13,16 @@ export default function(policyResult) {
     </style>
   </head>
   <body>
-  ${JSON.stringify(policyResult)}
+  ${info.message}
   </body>
 </html>`;
       return;
     case "json":
       // TODO: design a JSON API
-      this.body = { message: policyResult };
+      this.body = info;
       return;
     default:
-      this.body = policyResult;
+      this.body = info.message;
       return;
   }
 }

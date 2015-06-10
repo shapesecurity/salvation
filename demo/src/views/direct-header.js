@@ -1,16 +1,16 @@
 import {html} from "../util";
 
-export default function(policyResult) {
+export default function(info) {
   switch (this.accepts("html", "json", "text")) {
     case "html":
       this.response.type = "text/html; charset=utf-8";
-      this.body = html`${policyResult}`;
+      this.body = html`${info.message}`;
       return;
     case "json":
-      this.body = { message: policyResult };
+      this.body = info;
       return;
     default:
-      this.body = policyResult;
+      this.body = info.message;
       return;
   }
 }

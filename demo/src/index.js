@@ -5,16 +5,20 @@ import * as https from "https";
 
 import * as koa from "koa";
 import * as route from "koa-route";
+import * as java from "java";
+
 
 // initialise
+java.classpath.push(__dirname + '/../../target/csp-parser-0.0.1.jar');
 
+var Parser = java.import('com.shapesecurity.csp.Parser');
 let app = koa();
 
 // routes
 
 app.use(route.get("/", requestInput));
 app.use(route.get("/fetchHeader", fetchHeader));
-app.use(route.get("/hello", helloWorld));
+app.use(route.get("/directHeader", directHeader));
 
 // helper garbage
 
@@ -54,6 +58,7 @@ let js = escapeUsing(s => s.replace(/<\/script>/g, c => `\\u${hex4(c[0])}${c.sli
 
 function* fetchHeader(next) {
   this.response.type = "text/html; charset=utf-8";
+  let policyResult;
   let url = this.query.url;
   let client = url.startsWith("https:") ? https : http;
   let headerPairs = yield next => client.get(this.query.url, res => {
@@ -62,8 +67,16 @@ function* fetchHeader(next) {
     let headers = [];
     for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
       let headerName = res.rawHeaders[i].toLowerCase();
-      if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only")
+      if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
         headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
+        try {
+          let policy = Parser.parseSync(res.rawHeaders[i + 1]);
+          policyResult = policy.show();
+        } catch(ex) {
+          console.log(ex.cause.getMessageSync());
+          policyResult = ex.cause.getMessageSync();
+        }
+      }
     }
     next(null, headers);
   })
@@ -77,7 +90,7 @@ function* fetchHeader(next) {
     </style>
   </head>
   <body>
-  ${JSON.stringify(headerPairs)}
+  ${JSON.stringify(policyResult)}
   </body>
 </html>`;
   yield next;
@@ -139,17 +152,26 @@ function* requestInput(next) {
   yield next;
 }
 
-function* helloWorld(){
+function* directHeader(){
+  let policyResult;
+  try {
+    let policy = Parser.parseSync(this.query['headerValue[]']);
+    policyResult = policy.show();
+
+  } catch(ex) {
+    console.log(ex.cause.getMessageSync());
+    policyResult = ex.cause.getMessageSync();
+  }
   switch (this.accepts("html", "json", "text")) {
     case "html":
       this.response.type = "text/html; charset=utf-8";
-      this.body = html`Hello, ${this.params.name}.`;
+      this.body = html`Hello, ${policyResult}.`;
       return;
     case "json":
-      this.body = { message: `Hello, ${this.params.name}.` };
+      this.body = { message: `Hello, ${policyResult}.` };
       return;
     default:
-      this.body = `Hello, ${this.params.name}.`;
+      this.body = `Hello, ${policyResult}.`;
       return;
   }
 };

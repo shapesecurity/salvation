@@ -71,10 +71,10 @@ function* fetchHeader(next) {
         headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
         try {
           let policy = Parser.parseSync(res.rawHeaders[i + 1]);
-          policyResult = policy.show();
+          policyResult = 'Policy is valid: ' + policy.showSync();
         } catch(ex) {
           console.log(ex.cause.getMessageSync());
-          policyResult = ex.cause.getMessageSync();
+          policyResult = 'Error: ' + ex.cause.getMessageSync();
         }
       }
     }
@@ -155,23 +155,24 @@ function* requestInput(next) {
 function* directHeader(){
   let policyResult;
   try {
+    console.log('value is: ' + this.query['headerValue[]']);
     let policy = Parser.parseSync(this.query['headerValue[]']);
-    policyResult = policy.show();
+    policyResult = 'Policy is valid: ' + policy.showSync();
 
   } catch(ex) {
     console.log(ex.cause.getMessageSync());
-    policyResult = ex.cause.getMessageSync();
+    policyResult = 'Error: ' + ex.cause.getMessageSync();
   }
   switch (this.accepts("html", "json", "text")) {
     case "html":
       this.response.type = "text/html; charset=utf-8";
-      this.body = html`Hello, ${policyResult}.`;
+      this.body = html`${policyResult}.`;
       return;
     case "json":
-      this.body = { message: `Hello, ${policyResult}.` };
+      this.body = { message: `${policyResult}.` };
       return;
     default:
-      this.body = `Hello, ${policyResult}.`;
+      this.body = `${policyResult}.`;
       return;
   }
 };

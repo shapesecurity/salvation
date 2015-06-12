@@ -3,9 +3,7 @@ package com.shapesecurity.csp;
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.sources.SourceExpression;
 import org.junit.Test;
-import sun.jvm.hotspot.runtime.solaris_x86.SolarisX86JavaThreadPDAccess;
 
 import javax.annotation.Nonnull;
 import java.io.FileNotFoundException;

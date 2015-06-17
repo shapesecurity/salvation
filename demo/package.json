@@ -26,6 +26,7 @@
   "dependencies": {
     "core-js": "0.9.13",
     "java": "0.5.4",
+    "koa": "^0.21.0",
     "koa-better-ratelimit": "^2.1.2",
     "koa-route": "2.4.1"
   },

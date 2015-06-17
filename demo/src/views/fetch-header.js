@@ -19,9 +19,11 @@ export default function(info) {
       return;
     case "json":
       // TODO: design a JSON API
-      this.body = info;
+      this.response.type = "application/json; charset=utf-8";
+      this.body = JSON.stringify(info);
       return;
     default:
+      this.response.type = "text/plain; charset=utf-8";
       this.body = info.message;
       return;
   }

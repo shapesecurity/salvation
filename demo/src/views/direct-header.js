@@ -7,9 +7,11 @@ export default function(info) {
       this.body = html`${info.message}`;
       return;
     case "json":
-      this.body = info;
+    this.response.type = "application/json; charset=utf-8";
+      this.body = JSON.stringify(info);
       return;
     default:
+      this.response.type = "text/plain; charset=utf-8";
       this.body = info.message;
       return;
   }

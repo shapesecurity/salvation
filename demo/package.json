@@ -30,6 +30,6 @@
     "koa-route": "2.4.1"
   },
   "devDependencies": {
-    "babel": "5.4.7"
+    "babel": "5.5.8"
   }
 }

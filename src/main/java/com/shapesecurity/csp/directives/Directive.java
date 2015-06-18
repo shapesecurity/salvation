@@ -29,7 +29,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     public final void merge(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
-            throw new IllegalArgumentException(other.getClass() + " can be merged with " + other.getClass() +
+            throw new IllegalArgumentException(this.getClass() + " can be merged with " + this.getClass() +
                     ", but found " + other.getClass());
         }
         this.values = Directive.merge(this.values, other.values);
@@ -46,7 +46,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull
     @Override
-    public String show()  {
+    public String show() {
         return  Stream.concat(Stream.of(this.name), this.values().map(Show::show)).collect(Collectors.joining(" "));
     }
 
@@ -67,7 +67,6 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     public boolean contains(@Nonnull DirectiveValue value) {
         return values().anyMatch(value::equals);
     }
-
 
     @SuppressWarnings("unchecked")
     @Override

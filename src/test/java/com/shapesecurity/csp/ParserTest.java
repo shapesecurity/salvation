@@ -98,7 +98,7 @@ public class ParserTest {
         try {
             d1.merge(d2);
         } catch (IllegalArgumentException e) {
-            assertEquals("class com.shapesecurity.csp.directives.ScriptSrcDirective can be merged with class com.shapesecurity.csp.directives.ScriptSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
+            assertEquals("class com.shapesecurity.csp.directives.StyleSrcDirective can be merged with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
         }
     }
 

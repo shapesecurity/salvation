@@ -6,7 +6,7 @@ import com.shapesecurity.csp.Show;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class HashSource implements SourceExpression {
+public class HashSource implements SourceExpression, MatchesHash {
     @Nonnull
     private final HashAlgorithm algorithm;
     @Nonnull
@@ -34,6 +34,10 @@ public class HashSource implements SourceExpression {
     @Override
     public int hashCode() {
         return (this.algorithm.hashCode() ^ 0xFE608B8F) ^ (this.value.hashCode() ^ 0x01D77E94);
+    }
+
+    public boolean matchesHash(@Nonnull HashAlgorithm algorithm,@Nonnull Base64Value value) {
+        return this.algorithm == algorithm && this.value.equals(value);
     }
 
 

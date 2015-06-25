@@ -1,7 +1,9 @@
 package com.shapesecurity.csp;
 
-import com.shapesecurity.csp.directives.Directive;
-import com.shapesecurity.csp.directives.DirectiveValue;
+import com.shapesecurity.csp.directives.*;
+import com.shapesecurity.csp.sources.HashSource;
+import com.shapesecurity.csp.sources.HashSource.HashAlgorithm;
+import com.shapesecurity.csp.sources.KeywordSource;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -14,8 +16,21 @@ public class Policy implements Show {
     @Nonnull
     private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
 
-    public Policy() {
+    @Nonnull
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(@Nonnull String origin) {
+        this.origin = origin;
+    }
+
+    @Nonnull
+    private String origin;
+
+    public Policy(@Nonnull String origin) {
         this.directives = new LinkedHashMap<>();
+        this.origin = origin;
     }
 
     public void merge(@Nonnull Policy other) {
@@ -80,5 +95,63 @@ public class Policy implements Show {
             sb.append(d.show());
         }
         return sb.toString();
+    }
+
+
+    private boolean defaultsAllowHash(HashAlgorithm algorithm, Base64Value hashValue) {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return true;
+        }
+        return defaultSrcDirective.matchesHash(algorithm, hashValue);
+    }
+
+    private boolean defaultsAllowSource(@Nonnull String s) {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return true;
+        }
+        return defaultSrcDirective.matchesUrl(this.origin, s);
+    }
+
+    private boolean defaultsAllowUnsafeInline() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return true;
+        }
+        return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+
+    public boolean allowsImageFromSource(@Nonnull String url) {
+        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
+        if (imgSrcDirective == null) {
+            return this.defaultsAllowSource(url);
+        }
+        return imgSrcDirective.matchesUrl(this.origin, url);
+    }
+
+    public boolean allowsImageWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
+        if (imgSrcDirective == null) {
+            return this.defaultsAllowHash(algorithm, hashValue);
+        }
+        return imgSrcDirective.matchesHash(algorithm, hashValue);
+    }
+
+    public boolean allowsUnsafeInlineScript() {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsAllowUnsafeInline();
+        }
+        return scriptSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    public boolean allowsUnsafeInlineStyle() {
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
+            return this.defaultsAllowUnsafeInline();
+        }
+        return styleSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
     }
 }

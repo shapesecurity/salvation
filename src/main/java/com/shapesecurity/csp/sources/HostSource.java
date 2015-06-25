@@ -41,6 +41,11 @@ public class HostSource implements SourceExpression, AncestorSource {
         return h;
     }
 
+    @Override
+    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
+        return true;
+    }
+
     @Nonnull
     @Override
     public String show() {

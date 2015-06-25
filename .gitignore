@@ -4,3 +4,4 @@ target
 .editorconfig
 node_modules
 demo/dist
+npm-debug.log

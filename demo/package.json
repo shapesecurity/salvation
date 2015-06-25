@@ -28,7 +28,8 @@
     "java": "0.5.4",
     "koa": "^0.21.0",
     "koa-better-ratelimit": "^2.1.2",
-    "koa-route": "2.4.1"
+    "koa-route": "2.4.1",
+    "koa-static": "^1.4.9"
   },
   "devDependencies": {
     "babel": "5.5.8"

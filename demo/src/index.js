@@ -22,6 +22,8 @@ app.use(rateLimit({
   max: 100,
 }));
 
+app.use(require('koa-static')(__dirname + '/../src/static'));
+
 // routes
 
 function composeAppLogicAndView(appLogic, view) {

@@ -31,24 +31,35 @@ export default function() {
         font-size: x-large;
       }
     </style>
+    <link href="/css/bootstrap.css" type="text/css" rel="stylesheet"/>
   </head>
   <body>
     <form action="/fetchHeader">
-      <p>
-        <input type="url" name="url" placeholder="https://..." />
-        <button>Go</button>
-      </p>
+      <div class="row">
+        <div class="col-md-4">
+          <input type="url" name="url" placeholder="https://..." class="form-control"/>
+        </div>
+        <div class="col-md-4">
+          <button class="form-control">Go</button>
+        </div>
+      </div>
     </form>
     <p class="or"> OR </p>
     <form action="/directHeader">
-      <p>
-        <select name="headerName[]">
-          <option>Content-Security-Policy:</option>
-          <option>Content-Security-Policy-Report-Only:</option>
-        </select>
-        <input type="text" name="headerValue[]" width="120" />
-        <button>Go</button>
-      </p>
+      <div class="row">
+        <div class="col-md-4">
+          <select name="headerName[]" class="form-control">
+            <option>Content-Security-Policy:</option>
+            <option>Content-Security-Policy-Report-Only:</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <input type="text" name="headerValue[]" width="120" class="form-control"/>
+        </div>
+        <div class="col-md-2">
+          <button class="form-control">Go</button>
+        </div>
+      </div>
     </form>
   </body>
 </html>`;

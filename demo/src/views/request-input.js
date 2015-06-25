@@ -32,6 +32,8 @@ export default function() {
       }
     </style>
     <link href="/css/bootstrap.css" type="text/css" rel="stylesheet"/>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/validator.js"></script>
   </head>
   <body>
     <form action="/fetchHeader">
@@ -61,6 +63,9 @@ export default function() {
         </div>
       </div>
     </form>
+    <!-- TODO: make this pretty -->
+    <div id="output">
+    </div>
   </body>
 </html>`;
 }

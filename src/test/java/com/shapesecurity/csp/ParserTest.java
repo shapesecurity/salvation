@@ -369,6 +369,13 @@ public class ParserTest {
     }
 
     @Test
+    public void testMatches() throws ParseException, TokeniserException, IllegalArgumentException {
+        Policy p = Parser.parse("img-src a b c");
+
+        //assertFalse("directive doesn't contain", p.allowsImageFromSource("http://a.com/12"));
+    }
+
+    @Test
     public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {

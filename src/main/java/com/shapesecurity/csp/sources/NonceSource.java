@@ -5,7 +5,7 @@ import com.shapesecurity.csp.Base64Value;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class NonceSource implements SourceExpression {
+public class NonceSource implements SourceExpression, MatchesNonce {
     @Nonnull
     private final Base64Value value;
 
@@ -22,6 +22,10 @@ public class NonceSource implements SourceExpression {
     @Override
     public int hashCode() {
         return this.value.hashCode();
+    }
+
+    public boolean matchesNonce(@Nonnull Base64Value nonce) {
+        return this.value.equals(value);
     }
 
     @Nonnull

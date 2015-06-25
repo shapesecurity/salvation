@@ -9,28 +9,18 @@ import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Parser {
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText)).parse();
+        return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate("https://www.example.com");
     }
 
-    private static final String schemePart = "[a-zA-Z][a-zA-Z0-9+\\-.]*";
-    private static final String hostPart = "\\*|(?:\\*\\.)?[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*";
-    private static final String portPart = ":(?:[0-9]+|\\*)";
-    private static final String unreserved = "[a-zA-Z0-9\\-._~]";
-    private static final String pctEncoded = "%[a-fA-F0-9]{2}";
-    private static final String subDelims = "[!$&'()*+,;=]";
-    private static final String pchar = "(?:" + unreserved + "|" + pctEncoded + "|" + subDelims + "|[:@])";
-    // XXX: divergence from spec; uses path-abempty from RFC3986 instead of path
-    private static final String pathPart = "(?:/" + pchar + "*)*";
-    private static final Pattern hostSourcePattern = Pattern.compile("^(?<scheme>" + schemePart + "://)?(?<host>" + hostPart + ")(?<port>" + portPart + ")?(?<path>" + pathPart + ")?$");
-    private static final Pattern sandboxTokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
-    private static final Pattern uriPattern = Pattern.compile("^(?:(?:[^:/?#]+):)?(?://(?:[^/?#]*))?(?:[^?#]+)(?:\\?(?:[^#]*))?(?:#(?:.*))?");
-    private static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate(origin);
+    }
 
     @Nonnull
     private final String[] tokens;
@@ -68,8 +58,8 @@ public class Parser {
     }
 
     @Nonnull
-    private Policy parse() throws ParseException {
-        Policy policy = new Policy();
+    private Policy parsePrivate(@Nonnull String origin) throws ParseException {
+        Policy policy = new Policy(origin);
         while (this.hasNext()) {
             if (this.eat(";")) continue;
             policy.addDirective(this.parseDirective());
@@ -141,7 +131,7 @@ public class Parser {
     @Nonnull
     private MediaTypeListDirective.MediaType parseMediaType() throws ParseException {
         String token = this.advance();
-        Matcher matcher = mediaTypePattern.matcher(token);
+        Matcher matcher = Utils.mediaTypePattern.matcher(token);
         if (matcher.find()) {
             return new MediaTypeListDirective.MediaType(matcher.group("type"), matcher.group("subtype"));
         }
@@ -204,10 +194,10 @@ public class Parser {
                         throw this.createError(e.getMessage());
                     }
                     return new HashSource(algo, b);
-                } else if (token.matches("^" + schemePart + ":$")) {
+                } else if (token.matches("^" + Utils.schemePart + ":$")) {
                     return new SchemeSource(token.substring(0, token.length() - 1));
                 } else {
-                    Matcher matcher = hostSourcePattern.matcher(token);
+                    Matcher matcher = Utils.hostSourcePattern.matcher(token);
                     if (matcher.find()) {
                         String scheme = matcher.group("scheme");
                         if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
@@ -239,10 +229,10 @@ public class Parser {
     @Nonnull
     private AncestorSource parseAncestorSource() throws ParseException {
         String token = this.advance();
-        if (token.matches("^" + schemePart + ":$")) {
+        if (token.matches("^" + Utils.schemePart + ":$")) {
             return new SchemeSource(token.substring(0, token.length() - 1));
         } else {
-            Matcher matcher = hostSourcePattern.matcher(token);
+            Matcher matcher = Utils.hostSourcePattern.matcher(token);
             if (matcher.find()) {
                 String scheme = matcher.group("scheme");
                 if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
@@ -268,7 +258,7 @@ public class Parser {
     @Nonnull
     private SandboxToken parseSandboxToken() throws ParseException {
         String token = this.advance();
-        Matcher matcher = sandboxTokenPattern.matcher(token);
+        Matcher matcher = Utils.sandboxTokenPattern.matcher(token);
         if (matcher.find()) {
             return new SandboxToken(token);
         }
@@ -290,7 +280,7 @@ public class Parser {
     @Nonnull
     private ReportUriDirective.URI parseUri() throws ParseException {
         String token = this.advance();
-        Matcher matcher = uriPattern.matcher(token);
+        Matcher matcher = Utils.uriPattern.matcher(token);
         if (matcher.find()) {
             return new ReportUriDirective.URI(token);
         }

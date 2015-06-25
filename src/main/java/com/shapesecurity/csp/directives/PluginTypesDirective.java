@@ -10,4 +10,8 @@ public class PluginTypesDirective extends MediaTypeListDirective {
     public PluginTypesDirective(@Nonnull List<MediaType> mediaTypes) {
         super(PluginTypesDirective.name, mediaTypes);
     }
+
+    public boolean matches(@Nonnull MediaType mediaType) {
+        return this.values().anyMatch(x -> x.equals(mediaType));
+    }
 }

@@ -12,6 +12,17 @@ public class SchemeSource implements SourceExpression, AncestorSource {
         this.value = value;
     }
 
+    @Nonnull
+    private static String getSchemeOf(@Nonnull String url) {
+        // TODO: this should be implemented properly by a URL library when we stop using String for URLs
+        return url.substring(0, url.indexOf(':'));
+    }
+
+    @Override
+    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
+        return this.value.matches(getSchemeOf(url));
+    }
+
     @Override
     public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof SchemeSource)) return false;

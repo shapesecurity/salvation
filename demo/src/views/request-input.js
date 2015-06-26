@@ -46,10 +46,14 @@ export default function() {
           </div>
         </div>
       </form>
-      <!-- TODO: make this pretty -->
-      <div id="output">
+      <div class="panel" id="output-panel">
+        <div class="panel-heading">
+          <div class="panel-title" id="output-title">
+          </div>
+        </div>
+        <div class="panel-body" id="output-body">
+        </div>
       </div>
-
       <hr>
       <p>CSP Validator was built by Sergey Shekyan, Michael Ficarra, Dawson Botsford, Ben Vinegar, and the fine folks at <a href="http://shapesecurity.com">Shape Security</a>.</p>
     </div>

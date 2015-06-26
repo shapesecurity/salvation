@@ -84,7 +84,7 @@ public class ParserTest {
         p = Parser.parse("script-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = Parser.parse("style-src *");
+        p = Parser.parse("style-src http://*.example.com:*");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         failsToParse("abc");
@@ -233,10 +233,11 @@ public class ParserTest {
     public void testReportUri() throws ParseException, TokeniserException {
         failsToParse("report-uri ");
         failsToParse("report-uri #");
+        failsToParse("report-uri a");
         Policy p;
-        p = Parser.parse("report-uri a");
+        p = Parser.parse("report-uri http://a");
         Policy q;
-        q = Parser.parse("report-uri b");
+        q = Parser.parse("report-uri http://b");
         ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
         assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
         d1.merge(q.getDirectiveByType(ReportUriDirective.class));
@@ -355,7 +356,7 @@ public class ParserTest {
         Policy p = Parser.parse("script-src a b c");
         Policy q = Parser.parse("script-src a");
         Policy r = Parser.parse("script-src m");
-        Policy s = Parser.parse("report-uri z");
+        Policy s = Parser.parse("report-uri a://z");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         DirectiveValue value = d2.values().iterator().next();
@@ -370,9 +371,14 @@ public class ParserTest {
 
     @Test
     public void testMatches() throws ParseException, TokeniserException, IllegalArgumentException {
-        Policy p = Parser.parse("img-src a b c");
+        Policy p = Parser.parse("img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*", "https://abc.com");
+        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://a.com/12")));
+        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://abc.am")));
+        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
 
-        //assertFalse("directive doesn't contain", p.allowsImageFromSource("http://a.com/12"));
+        assertFalse("resource is not allowed", p.allowsImageFromSource(URI.parse("http://a.com/12")));
+
+        //p = Parser.parse("img-src https: 'self'");
     }
 
     @Test

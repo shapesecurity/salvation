@@ -1,9 +1,10 @@
 package com.shapesecurity.csp.directives;
 
 import com.shapesecurity.csp.Base64Value;
+import com.shapesecurity.csp.URI;
 import com.shapesecurity.csp.sources.HashSource;
 import com.shapesecurity.csp.sources.MatchesHash;
-import com.shapesecurity.csp.sources.MatchesUrl;
+import com.shapesecurity.csp.sources.MatchesUri;
 import com.shapesecurity.csp.sources.SourceExpression;
 
 import javax.annotation.Nonnull;
@@ -20,9 +21,9 @@ public abstract class SourceListDirective extends Directive<SourceExpression> {
           .anyMatch(x -> ((MatchesHash) x).matchesHash(algorithm, hashValue));
     }
 
-    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
+    public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
         return this.values()
-          .filter(x -> x instanceof MatchesUrl)
-          .anyMatch(x -> ((MatchesUrl) x).matchesUrl(origin, url));
+          .filter(x -> x instanceof MatchesUri)
+          .anyMatch(x -> ((MatchesUri) x).matchesUri(origin, uri));
     }
 }

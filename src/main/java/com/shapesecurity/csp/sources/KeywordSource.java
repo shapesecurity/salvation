@@ -1,9 +1,11 @@
 package com.shapesecurity.csp.sources;
 
 
+import com.shapesecurity.csp.URI;
+
 import javax.annotation.Nonnull;
 
-public class KeywordSource implements SourceExpression, MatchesUrl {
+public class KeywordSource implements SourceExpression, MatchesUri {
     @Nonnull
     private final String value;
 
@@ -18,8 +20,8 @@ public class KeywordSource implements SourceExpression, MatchesUrl {
     }
 
     @Override
-    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
-        return this == Self && origin.equals(getOriginOf(url));
+    public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
+        return this == Self && origin.sameOrigin(uri);
     }
 
     @Nonnull
@@ -28,9 +30,13 @@ public class KeywordSource implements SourceExpression, MatchesUrl {
         return "'" + this.value + "'";
     }
 
+    @Nonnull
     public static final SourceExpression Self = new KeywordSource("self");
+    @Nonnull
     public static final SourceExpression UnsafeInline = new KeywordSource("unsafe-inline");
+    @Nonnull
     public static final SourceExpression UnsafeEval = new KeywordSource("unsafe-eval");
+    @Nonnull
     public static final SourceExpression UnsafeRedirect = new KeywordSource("unsafe-redirect");
 
 }

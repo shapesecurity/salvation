@@ -1,6 +1,8 @@
 package com.shapesecurity.csp.sources;
 
 
+import com.shapesecurity.csp.URI;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -12,15 +14,9 @@ public class SchemeSource implements SourceExpression, AncestorSource {
         this.value = value;
     }
 
-    @Nonnull
-    private static String getSchemeOf(@Nonnull String url) {
-        // TODO: this should be implemented properly by a URL library when we stop using String for URLs
-        return url.substring(0, url.indexOf(':'));
-    }
-
     @Override
-    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
-        return this.value.matches(getSchemeOf(url));
+    public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
+        return this.value.matches(uri.scheme);
     }
 
     @Override

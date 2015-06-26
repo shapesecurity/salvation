@@ -1,7 +1,6 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.sources.HashSource;
 import com.shapesecurity.csp.sources.HashSource.HashAlgorithm;
 import com.shapesecurity.csp.sources.KeywordSource;
 
@@ -17,18 +16,18 @@ public class Policy implements Show {
     private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
 
     @Nonnull
-    public String getOrigin() {
+    public URI getOrigin() {
         return origin;
     }
 
-    public void setOrigin(@Nonnull String origin) {
+    public void setOrigin(@Nonnull URI origin) {
         this.origin = origin;
     }
 
     @Nonnull
-    private String origin;
+    private URI origin;
 
-    public Policy(@Nonnull String origin) {
+    public Policy(@Nonnull URI origin) {
         this.directives = new LinkedHashMap<>();
         this.origin = origin;
     }
@@ -98,7 +97,7 @@ public class Policy implements Show {
     }
 
 
-    private boolean defaultsAllowHash(HashAlgorithm algorithm, Base64Value hashValue) {
+    private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
@@ -106,12 +105,12 @@ public class Policy implements Show {
         return defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
 
-    private boolean defaultsAllowSource(@Nonnull String s) {
+    private boolean defaultsAllowSource(@Nonnull URI s) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
-        return defaultSrcDirective.matchesUrl(this.origin, s);
+        return defaultSrcDirective.matchesUri(this.origin, s);
     }
 
     private boolean defaultsAllowUnsafeInline() {
@@ -123,12 +122,28 @@ public class Policy implements Show {
     }
 
 
-    public boolean allowsImageFromSource(@Nonnull String url) {
+    public boolean allowsImageFromSource(@Nonnull URI uri) {
         ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
         if (imgSrcDirective == null) {
-            return this.defaultsAllowSource(url);
+            return this.defaultsAllowSource(uri);
         }
-        return imgSrcDirective.matchesUrl(this.origin, url);
+        return imgSrcDirective.matchesUri(this.origin, uri);
+    }
+
+    public boolean allowsScriptFromSource(@Nonnull URI uri) {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsAllowSource(uri);
+        }
+        return scriptSrcDirective.matchesUri(this.origin, uri);
+    }
+
+    public boolean allowsStyleFromSource(@Nonnull URI uri) {
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
+            return this.defaultsAllowSource(uri);
+        }
+        return styleSrcDirective.matchesUri(this.origin, uri);
     }
 
     public boolean allowsImageWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {

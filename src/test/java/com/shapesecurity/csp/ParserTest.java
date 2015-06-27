@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
+@SuppressWarnings("ConstantConditions")
 public class ParserTest {
     private static int countIterable(Iterable<Directive<?>> a) {
         int count = 0;
@@ -43,7 +44,8 @@ public class ParserTest {
         assertEquals("", 1, countIterable(p.getDirectives()));
         Directive<?> firstDirective = p.getDirectives().iterator().next();
         ImgSrcDirective imgSrcDirective = p.getDirectiveByType(ImgSrcDirective.class);
-        assertEquals("", imgSrcDirective, firstDirective);
+        assertTrue(firstDirective instanceof ImgSrcDirective);
+        assertEquals("", imgSrcDirective, (ImgSrcDirective) firstDirective);
         assertEquals("", "img-src", ImgSrcDirective.name);
         assertEquals("", "img-src a", imgSrcDirective.show());
     }
@@ -361,7 +363,7 @@ public class ParserTest {
         Policy p = Parser.parse("script-src a b c");
         Policy q = Parser.parse("script-src a");
         Policy r = Parser.parse("script-src m");
-        Policy s = Parser.parse("report-uri a://z");
+        Policy s = Parser.parse("report-uri /z");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         DirectiveValue value = d2.values().iterator().next();
@@ -390,7 +392,7 @@ public class ParserTest {
         //assertTrue("plugin is allowed", Parser.parse("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
     }
 
-    //@Test
+    @Test
     public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {

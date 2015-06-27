@@ -3,7 +3,6 @@ package com.shapesecurity.csp;
 import com.shapesecurity.csp.directives.DirectiveValue;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.regex.Matcher;
 
@@ -20,7 +19,7 @@ public class URI implements DirectiveValue {
 
     @Nonnull
     public static String defaultPortForProtocol(@Nonnull String scheme) {
-        switch(scheme.toLowerCase()) {
+        switch (scheme.toLowerCase()) {
             case "ftp": return "21";
             case "file": return "";
             case "gopher": return "70";
@@ -30,26 +29,36 @@ public class URI implements DirectiveValue {
             case "wss": return "443";
             default: return "";
         }
-    } 
+    }
 
     @Nonnull
-    public static URI parse(@Nonnull String uri) {
+    public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
         Matcher matcher = Utils.hostSourcePattern.matcher(uri);
-        if (!matcher.find()) { throw new IllegalArgumentException("Invalid URI: " + uri); }
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Invalid URI: " + uri);
+        }
         String scheme = matcher.group("scheme");
         if (scheme == null) {
             throw new IllegalArgumentException("Invalid URI (missing scheme): " + uri);
         }
         scheme = scheme.substring(0, scheme.length() - 3);
         String port = matcher.group("port");
-        if (port == null) {
-            port = defaultPortForProtocol(scheme);
-        } else {
-            port = port.substring(1, port.length());
-        }
+        port = port == null ? defaultPortForProtocol(scheme) : port.substring(1, port.length());
         String host = matcher.group("host");
         String path = matcher.group("path");
+        if (path == null) {
+            path = "";
+        }
         return new URI(scheme, host, port, path);
+    }
+
+    @Nonnull
+    public static URI parseWithOrigin(@Nonnull URI origin, @Nonnull String uri) {
+        Matcher matcher = Utils.relativeReportUriPattern.matcher(uri);
+        if (!matcher.find()) {
+            return URI.parse(uri);
+        }
+        return new URI(origin.scheme, origin.host, origin.port, matcher.group("path"));
     }
 
     public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull String port, @Nonnull String path) {

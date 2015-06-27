@@ -21,6 +21,7 @@ public class Parser {
     public static Policy parse(@Nonnull String sourceText, @Nonnull URI origin) throws ParseException, TokeniserException {
         return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate(origin);
     }
+
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
         return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate(URI.parse(origin));

@@ -241,16 +241,21 @@ public class ParserTest {
         ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
         assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
         d1.merge(q.getDirectiveByType(ReportUriDirective.class));
-        assertEquals("report-uri merge", "report-uri a b", d1.show());
+        assertEquals("report-uri merge", "report-uri http://a http://b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
 
-        p = Parser.parse("report-uri  a");
-        q = Parser.parse("report-uri a; ");
+        // TODO relative URI is legal ?
+        //p = Parser.parse("report-uri  a");
+        //q = Parser.parse("report-uri a; ");
+        p = Parser.parse("report-uri  https://a");
+        q = Parser.parse("report-uri https://a; ");
         assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());
         assertTrue("report-uri equals", p.equals(q));
-        q = Parser.parse("report-uri a; sandbox 4");
+        q = Parser.parse("report-uri http://a; sandbox 4");
         d1 = q.getDirectiveByType(ReportUriDirective.class);
         SandboxDirective d2 = q.getDirectiveByType(SandboxDirective.class);
+        assertEquals("report-uri http://a", d1.show());
+        assertEquals("sandbox 4", d2.show());
 
     }
 
@@ -376,12 +381,16 @@ public class ParserTest {
         assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
 
+        assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
         assertFalse("resource is not allowed", p.allowsImageFromSource(URI.parse("http://a.com/12")));
 
-        //p = Parser.parse("img-src https: 'self'");
+        p = Parser.parse("script-src https: 'self' http://a 'unsafe-inline'", URI.parse("https://abc.com"));
+        assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
+
+        //assertTrue("plugin is allowed", Parser.parse("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
     }
 
-    @Test
+    //@Test
     public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {

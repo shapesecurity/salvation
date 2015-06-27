@@ -116,7 +116,7 @@ public class Policy implements Show {
     private boolean defaultsAllowUnsafeInline() {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return true;
+            return false;
         }
         return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
     }
@@ -168,5 +168,14 @@ public class Policy implements Show {
             return this.defaultsAllowUnsafeInline();
         }
         return styleSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    public boolean allowsPlugin(@Nonnull MediaTypeListDirective.MediaType mediaType) {
+        PluginTypesDirective pluginTypesDirective = this.getDirectiveByType(PluginTypesDirective.class);
+        if (pluginTypesDirective == null) {
+            return false;
+        }
+
+        return pluginTypesDirective.values().anyMatch(x -> x == mediaType);
     }
 }

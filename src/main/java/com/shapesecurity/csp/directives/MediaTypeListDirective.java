@@ -1,5 +1,8 @@
 package com.shapesecurity.csp.directives;
 
+import com.shapesecurity.csp.URI;
+import com.shapesecurity.csp.sources.MatchesUri;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;

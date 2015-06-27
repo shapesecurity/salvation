@@ -11,6 +11,7 @@ import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
+@SuppressWarnings("ConstantConditions")
 public class ParserTest {
     private static int countIterable(Iterable<Directive<?>> a) {
         int count = 0;
@@ -43,7 +44,8 @@ public class ParserTest {
         assertEquals("", 1, countIterable(p.getDirectives()));
         Directive<?> firstDirective = p.getDirectives().iterator().next();
         ImgSrcDirective imgSrcDirective = p.getDirectiveByType(ImgSrcDirective.class);
-        assertEquals("", imgSrcDirective, firstDirective);
+        assertTrue(firstDirective instanceof ImgSrcDirective);
+        assertEquals("", imgSrcDirective, (ImgSrcDirective) firstDirective);
         assertEquals("", "img-src", ImgSrcDirective.name);
         assertEquals("", "img-src a", imgSrcDirective.show());
     }
@@ -84,7 +86,7 @@ public class ParserTest {
         p = Parser.parse("script-src *");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = Parser.parse("style-src *");
+        p = Parser.parse("style-src http://*.example.com:*");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         failsToParse("abc");
@@ -233,23 +235,29 @@ public class ParserTest {
     public void testReportUri() throws ParseException, TokeniserException {
         failsToParse("report-uri ");
         failsToParse("report-uri #");
+        failsToParse("report-uri a");
         Policy p;
-        p = Parser.parse("report-uri a");
+        p = Parser.parse("report-uri http://a");
         Policy q;
-        q = Parser.parse("report-uri b");
+        q = Parser.parse("report-uri http://b");
         ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
         assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
         d1.merge(q.getDirectiveByType(ReportUriDirective.class));
-        assertEquals("report-uri merge", "report-uri a b", d1.show());
+        assertEquals("report-uri merge", "report-uri http://a http://b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
 
-        p = Parser.parse("report-uri  a");
-        q = Parser.parse("report-uri a; ");
+        // TODO relative URI is legal ?
+        //p = Parser.parse("report-uri  a");
+        //q = Parser.parse("report-uri a; ");
+        p = Parser.parse("report-uri  https://a");
+        q = Parser.parse("report-uri https://a; ");
         assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());
         assertTrue("report-uri equals", p.equals(q));
-        q = Parser.parse("report-uri a; sandbox 4");
+        q = Parser.parse("report-uri http://a; sandbox 4");
         d1 = q.getDirectiveByType(ReportUriDirective.class);
         SandboxDirective d2 = q.getDirectiveByType(SandboxDirective.class);
+        assertEquals("report-uri http://a", d1.show());
+        assertEquals("sandbox 4", d2.show());
 
     }
 
@@ -355,7 +363,7 @@ public class ParserTest {
         Policy p = Parser.parse("script-src a b c");
         Policy q = Parser.parse("script-src a");
         Policy r = Parser.parse("script-src m");
-        Policy s = Parser.parse("report-uri z");
+        Policy s = Parser.parse("report-uri /z");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         DirectiveValue value = d2.values().iterator().next();
@@ -370,9 +378,18 @@ public class ParserTest {
 
     @Test
     public void testMatches() throws ParseException, TokeniserException, IllegalArgumentException {
-        Policy p = Parser.parse("img-src a b c");
+        Policy p = Parser.parse("img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*", "https://abc.com");
+        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://a.com/12")));
+        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://abc.am")));
+        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
 
-        //assertFalse("directive doesn't contain", p.allowsImageFromSource("http://a.com/12"));
+        assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
+        assertFalse("resource is not allowed", p.allowsImageFromSource(URI.parse("http://a.com/12")));
+
+        p = Parser.parse("script-src https: 'self' http://a 'unsafe-inline'", URI.parse("https://abc.com"));
+        assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
+
+        //assertTrue("plugin is allowed", Parser.parse("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
     }
 
     @Test

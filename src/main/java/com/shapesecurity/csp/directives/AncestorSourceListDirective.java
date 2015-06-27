@@ -5,7 +5,7 @@ import com.shapesecurity.csp.sources.AncestorSource;
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public abstract class AncestorSourceListDirective extends Directive<AncestorSource> {
+abstract class AncestorSourceListDirective extends Directive<AncestorSource> {
     AncestorSourceListDirective(@Nonnull String name, @Nonnull List<AncestorSource> ancestorSources) {
         super(name, ancestorSources);
     }

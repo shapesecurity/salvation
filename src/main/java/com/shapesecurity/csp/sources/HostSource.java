@@ -1,13 +1,10 @@
 package com.shapesecurity.csp.sources;
 
 import com.shapesecurity.csp.URI;
-import com.shapesecurity.csp.Utils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class HostSource implements SourceExpression, AncestorSource {
     @Nullable
@@ -16,10 +13,10 @@ public class HostSource implements SourceExpression, AncestorSource {
     private final String host;
     @Nonnull
     private final String port;
-    @Nonnull
+    @Nullable
     private final String path;
 
-    public HostSource(@Nullable String scheme, @Nonnull String host, @Nonnull String port, @Nonnull String path) {
+    public HostSource(@Nullable String scheme, @Nonnull String host, @Nonnull String port, @Nullable String path) {
         this.scheme = scheme;
         this.host = host;
         this.port = port;
@@ -42,7 +39,7 @@ public class HostSource implements SourceExpression, AncestorSource {
         if (this.scheme != null) h ^= this.scheme.hashCode() ^ 0xA303EFA3;
         h ^= this.host.hashCode() ^ 0xFB2290B2;
         h ^= this.port.hashCode() ^ 0xB54E99F3;
-        h ^= this.path.hashCode() ^ 0x13324C0E;
+        if (this.path != null) h ^= this.path.hashCode() ^ 0x13324C0E;
         return h;
     }
 
@@ -60,7 +57,7 @@ public class HostSource implements SourceExpression, AncestorSource {
             this.port.isEmpty() && (uri.port.isEmpty() || URI.defaultPortForProtocol(uri.scheme).equals(uri.port)) ||
             this.port.equals("*") ||
             Integer.parseInt(this.port, 10) == Integer.parseInt(uri.port, 10);
-        boolean pathMatches = this.path.matches(uri.path);
+        boolean pathMatches = this.path == null || this.path.matches(uri.path);
         return  schemeMatches && hostMatches && portMatches && pathMatches;
     }
 
@@ -70,6 +67,6 @@ public class HostSource implements SourceExpression, AncestorSource {
         return (this.scheme == null ? "" : this.scheme + "://") +
             this.host +
             (this.port.isEmpty() ? "" : ":" + this.port) +
-            this.path;
+            (this.path == null ? "" : this.path);
     }
 }

@@ -13,12 +13,6 @@ public class KeywordSource implements SourceExpression, MatchesUri {
         this.value = value;
     }
 
-    @Nonnull
-    private static String getOriginOf(@Nonnull String url) {
-        // TODO: this should be implemented properly by a URL library when we stop using String for URLs
-        return url;
-    }
-
     @Override
     public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
         return this == Self && origin.sameOrigin(uri);

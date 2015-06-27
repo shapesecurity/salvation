@@ -15,9 +15,9 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull
     // @Nonempty
-    protected List<Value> values;
+    private List<Value> values;
 
-    protected Directive(@Nonnull String name, @Nonnull List<Value> values) {
+    Directive(@Nonnull String name, @Nonnull List<Value> values) {
         this.name = name;
         this.values = values;
     }
@@ -51,7 +51,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @Nonnull
-    static <T> List<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
+    private static <T> List<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
         ArrayList<T> list = new ArrayList<>();
         for (T x : a) {
             list.add(x);

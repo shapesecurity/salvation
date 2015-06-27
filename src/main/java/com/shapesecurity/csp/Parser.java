@@ -13,20 +13,29 @@ import java.util.regex.Matcher;
 public class Parser {
 
     @Nonnull
+    private final URI origin;
+
+    @Nonnull
     public static Policy parse(@Nonnull String sourceText) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate("https://www.example.com");
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse("https://www.example.com")).parsePrivate();
+    }
+
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull URI origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin).parsePrivate();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText)).parsePrivate(origin);
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin)).parsePrivate();
     }
 
     @Nonnull
     private final String[] tokens;
     private int index = 0;
 
-    private Parser(@Nonnull String[] tokens) {
+    private Parser(@Nonnull String[] tokens, @Nonnull URI origin) {
+        this.origin = origin;
         this.tokens = tokens;
     }
 
@@ -58,8 +67,8 @@ public class Parser {
     }
 
     @Nonnull
-    private Policy parsePrivate(@Nonnull String origin) throws ParseException {
-        Policy policy = new Policy(origin);
+    private Policy parsePrivate() throws ParseException {
+        Policy policy = new Policy(this.origin);
         while (this.hasNext()) {
             if (this.eat(";")) continue;
             policy.addDirective(this.parseDirective());
@@ -202,7 +211,7 @@ public class Parser {
                         String scheme = matcher.group("scheme");
                         if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
                         String port = matcher.group("port");
-                        if (port != null) port = port.substring(1, port.length());
+                        port = port == null ? "" : port.substring(1, port.length());
                         String host = matcher.group("host");
                         String path = matcher.group("path");
                         return new HostSource(scheme, host, port, path);
@@ -237,7 +246,7 @@ public class Parser {
                 String scheme = matcher.group("scheme");
                 if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
                 String port = matcher.group("port");
-                if (port != null) port = port.substring(1, port.length());
+                port = port == null ? "" : port.substring(1, port.length());
                 String host = matcher.group("host");
                 String path = matcher.group("path");
                 return new HostSource(scheme, host, port, path);
@@ -266,8 +275,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<ReportUriDirective.URI> parseUriList() throws ParseException {
-        ArrayList<ReportUriDirective.URI> uriList = new ArrayList<>();
+    private List<URI> parseUriList() throws ParseException {
+        ArrayList<URI> uriList = new ArrayList<>();
         while (this.hasNext() && !this.hasNext(";")) {
             uriList.add(this.parseUri());
         }
@@ -278,12 +287,11 @@ public class Parser {
     }
 
     @Nonnull
-    private ReportUriDirective.URI parseUri() throws ParseException {
+    private URI parseUri() throws ParseException {
         String token = this.advance();
-        Matcher matcher = Utils.uriPattern.matcher(token);
-        if (matcher.find()) {
-            return new ReportUriDirective.URI(token);
-        }
+        try {
+            return URI.parseWithOrigin(this.origin, token);
+        } catch (IllegalArgumentException ignored) {}
         throw this.createError("expecting uri-reference but found " + token);
     }
 

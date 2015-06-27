@@ -1,5 +1,7 @@
 package com.shapesecurity.csp.sources;
 
+import com.shapesecurity.csp.URI;
+
 import javax.annotation.Nonnull;
 
 public class None implements SourceExpression, AncestorSource {
@@ -7,7 +9,7 @@ public class None implements SourceExpression, AncestorSource {
     }
 
     @Override
-    public boolean matchesUrl(@Nonnull String origin, @Nonnull String url) {
+    public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
         return false;
     }
 

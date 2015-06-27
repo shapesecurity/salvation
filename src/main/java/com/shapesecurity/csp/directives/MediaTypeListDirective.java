@@ -3,7 +3,6 @@ package com.shapesecurity.csp.directives;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Objects;
 
 public abstract class MediaTypeListDirective extends Directive<MediaTypeListDirective.MediaType> {
 
@@ -11,7 +10,9 @@ public abstract class MediaTypeListDirective extends Directive<MediaTypeListDire
         super(name, values);
     }
 
-    public abstract boolean matches(@Nonnull MediaType mediaType);
+    public boolean matches(@Nonnull MediaType mediaType) {
+        return this.values().anyMatch(x -> x.equals(mediaType));
+    }
 
     public static class MediaType implements DirectiveValue {
         @Nonnull

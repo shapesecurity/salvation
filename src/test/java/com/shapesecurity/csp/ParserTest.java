@@ -113,6 +113,15 @@ public class ParserTest {
         fail();
     }
 
+    private void failsToMerge(Policy p, Policy q) {
+        try {
+            p.merge(q);
+        } catch (IllegalArgumentException ignored) {
+            return;
+        }
+        fail();
+    }
+
     @Test
     public void testSourceExpressionParsing() throws ParseException, TokeniserException {
         assertEquals("directive-name, no directive-value", "base-uri", createAndShow("base-uri"));
@@ -196,6 +205,15 @@ public class ParserTest {
         q = Parser.parse("script-src abc");
         p.merge(q);
         assertEquals("policy merge", "style-src *; script-src * abc", p.show());
+
+        p = Parser.parse("script-src a", "http://origin/a");
+        q = Parser.parse("style-src a", "http://origin/b");
+        p.merge(q);
+        assertEquals("policy merge", "script-src a; style-src a", p.show());
+
+        p = Parser.parse("script-src a", "http://origin1");
+        q = Parser.parse("style-src a", "http://origin2");
+        failsToMerge(p, q);
     }
 
     @Test()

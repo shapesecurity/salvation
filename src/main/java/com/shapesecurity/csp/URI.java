@@ -97,4 +97,11 @@ public class URI implements DirectiveValue {
             (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port) +
             this.path;
     }
+
+    @Nonnull
+    public String showOrigin() {
+        return this.scheme + "://" +
+                this.host +
+                (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port);
+    }
 }

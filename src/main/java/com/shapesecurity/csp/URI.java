@@ -6,30 +6,10 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 import java.util.regex.Matcher;
 
-public class URI implements DirectiveValue {
-    @Nonnull
-    public final String scheme;
-    @Nonnull
-    public final String host;
-    @Nonnull
-    public final String port;
+public class URI extends Origin implements DirectiveValue {
     @Nonnull
     public final String path;
 
-
-    @Nonnull
-    public static String defaultPortForProtocol(@Nonnull String scheme) {
-        switch (scheme.toLowerCase()) {
-            case "ftp": return "21";
-            case "file": return "";
-            case "gopher": return "70";
-            case "http": return "80";
-            case "https": return "443";
-            case "ws": return "80";
-            case "wss": return "443";
-            default: return "";
-        }
-    }
 
     @Nonnull
     public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
@@ -62,9 +42,7 @@ public class URI implements DirectiveValue {
     }
 
     public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull String port, @Nonnull String path) {
-        this.scheme = scheme.toLowerCase();
-        this.host = host.toLowerCase();
-        this.port = port;
+        super(scheme, host, port);
         this.path = path;
     }
 
@@ -76,15 +54,12 @@ public class URI implements DirectiveValue {
     public boolean equals(Object other) {
         if (!(other instanceof URI)) return false;
         URI otherUri = (URI) other;
-        return this.sameOrigin(otherUri) && this.path.equals(otherUri.path);
+        return super.equals(other) && this.path.equals(otherUri.path);
     }
 
     @Override
     public int hashCode() {
-        int h = 0;
-        h ^= this.scheme.hashCode() ^ 0x6468FB51;
-        h ^= this.host.hashCode() ^ 0x8936B847;
-        h ^= this.port.hashCode() ^ 0x1AA66413;
+        int h = super.hashCode();
         h ^= this.path.hashCode() ^ 0x3F8C5C1C;
         return h;
     }
@@ -92,9 +67,6 @@ public class URI implements DirectiveValue {
     @Nonnull
     @Override
     public String show() {
-        return this.scheme + "://" +
-            this.host +
-            (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port) +
-            this.path;
+        return super.show() + this.path;
     }
 }

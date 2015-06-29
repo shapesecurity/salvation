@@ -33,7 +33,7 @@ public class URI extends Origin implements DirectiveValue {
     }
 
     @Nonnull
-    public static URI parseWithOrigin(@Nonnull URI origin, @Nonnull String uri) {
+    public static URI parseWithOrigin(@Nonnull Origin origin, @Nonnull String uri) {
         Matcher matcher = Utils.relativeReportUriPattern.matcher(uri);
         if (!matcher.find()) {
             return URI.parse(uri);

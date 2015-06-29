@@ -63,10 +63,10 @@ function* fetchHeader() {
   if (headers.length < 1) {
     return { error: true, message: "no CSP headers found" };
   } else {
-    let policy = Parser.parseSync("");
+    let policy = Parser.parseSync("", this.query.url);
     for (let header of headers) {
       try {
-        policy.mergeSync(Parser.parseSync(header.value));
+        policy.mergeSync(Parser.parseSync(header.value, this.query.url));
       } catch(ex) {
         console.log(ex.cause.getMessageSync());
         return { error: true, message: 'Error: ' + ex.cause.getMessageSync() };

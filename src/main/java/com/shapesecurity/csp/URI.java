@@ -92,9 +92,20 @@ public class URI implements DirectiveValue {
     @Nonnull
     @Override
     public String show() {
+        return this.showOrigin() + this.path;
+    }
+
+    @Nonnull
+    public String showOrigin() {
         return this.scheme + "://" +
-            this.host +
-            (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port) +
-            this.path;
+                this.host +
+                (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port);
+    }
+
+    @Nonnull
+    public String showOrigin() {
+        return this.scheme + "://" +
+                this.host +
+                (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port);
     }
 }

@@ -33,6 +33,10 @@ public class Policy implements Show {
     }
 
     public void merge(@Nonnull Policy other) {
+        if (!this.getOrigin().sameOrigin(other.getOrigin())) {
+            throw new IllegalArgumentException("Policy can only be merged with another policy from the same origin: " +
+                    this.getOrigin().showOrigin() + " , but found  " + other.getOrigin().showOrigin());
+        }
         other.getDirectives().forEach(this::mergeDirective);
     }
 
@@ -95,7 +99,6 @@ public class Policy implements Show {
         }
         return sb.toString();
     }
-
 
     private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);

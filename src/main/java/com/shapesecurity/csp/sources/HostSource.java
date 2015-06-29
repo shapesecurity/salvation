@@ -1,5 +1,6 @@
 package com.shapesecurity.csp.sources;
 
+import com.shapesecurity.csp.Origin;
 import com.shapesecurity.csp.URI;
 
 import javax.annotation.Nonnull;
@@ -44,7 +45,7 @@ public class HostSource implements SourceExpression, AncestorSource {
     }
 
     @Override
-    public boolean matchesUri(@Nonnull URI origin, @Nonnull URI uri) {
+    public boolean matchesUri(@Nonnull Origin origin, @Nonnull URI uri) {
         boolean schemeMatches =
             this.scheme == null
                 ? uri.scheme.equalsIgnoreCase("http") || uri.scheme.equalsIgnoreCase("https")
@@ -54,7 +55,7 @@ public class HostSource implements SourceExpression, AncestorSource {
                 ? uri.host.endsWith(this.host.substring(2))
                 : this.host.equalsIgnoreCase(uri.host);
         boolean portMatches =
-            this.port.isEmpty() && (uri.port.isEmpty() || URI.defaultPortForProtocol(uri.scheme).equals(uri.port)) ||
+            this.port.isEmpty() && (uri.port.isEmpty() || Origin.defaultPortForProtocol(uri.scheme).equals(uri.port)) ||
             this.port.equals("*") ||
             Integer.parseInt(this.port, 10) == Integer.parseInt(uri.port, 10);
         boolean pathMatches = this.path == null || this.path.matches(uri.path);

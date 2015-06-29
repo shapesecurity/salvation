@@ -16,18 +16,18 @@ public class Policy implements Show {
     private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
 
     @Nonnull
-    public URI getOrigin() {
+    public Origin getOrigin() {
         return origin;
     }
 
-    public void setOrigin(@Nonnull URI origin) {
+    public void setOrigin(@Nonnull Origin origin) {
         this.origin = origin;
     }
 
     @Nonnull
-    private URI origin;
+    private Origin origin;
 
-    public Policy(@Nonnull URI origin) {
+    public Policy(@Nonnull Origin origin) {
         this.directives = new LinkedHashMap<>();
         this.origin = origin;
     }

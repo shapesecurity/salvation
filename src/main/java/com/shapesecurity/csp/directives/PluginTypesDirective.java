@@ -1,5 +1,7 @@
 package com.shapesecurity.csp.directives;
 
+import com.shapesecurity.csp.directiveValues.MediaType;
+
 import javax.annotation.Nonnull;
 import java.util.List;
 

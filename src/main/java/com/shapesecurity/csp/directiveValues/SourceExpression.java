@@ -1,4 +1,4 @@
-package com.shapesecurity.csp.sources;
+package com.shapesecurity.csp.directiveValues;
 
 import com.shapesecurity.csp.directives.DirectiveValue;
 

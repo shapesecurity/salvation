@@ -20,6 +20,7 @@ $(function () {
         'headerValue[]': cspString
       },
       success: function (response) {
+        console.dir(response);
 
         if (response.error){
           $('#output-title').text('Invalid policy');

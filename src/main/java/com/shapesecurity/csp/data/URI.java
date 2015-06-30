@@ -1,9 +1,9 @@
-package com.shapesecurity.csp;
+package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.Constants;
 import com.shapesecurity.csp.directives.DirectiveValue;
 
 import javax.annotation.Nonnull;
-import java.util.Objects;
 import java.util.regex.Matcher;
 
 public class URI extends Origin implements DirectiveValue {
@@ -13,7 +13,7 @@ public class URI extends Origin implements DirectiveValue {
 
     @Nonnull
     public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
-        Matcher matcher = Utils.hostSourcePattern.matcher(uri);
+        Matcher matcher = Constants.hostSourcePattern.matcher(uri);
         if (!matcher.find()) {
             throw new IllegalArgumentException("Invalid URI: " + uri);
         }
@@ -34,7 +34,7 @@ public class URI extends Origin implements DirectiveValue {
 
     @Nonnull
     public static URI parseWithOrigin(@Nonnull Origin origin, @Nonnull String uri) {
-        Matcher matcher = Utils.relativeReportUriPattern.matcher(uri);
+        Matcher matcher = Constants.relativeReportUriPattern.matcher(uri);
         if (!matcher.find()) {
             return URI.parse(uri);
         }
@@ -44,10 +44,6 @@ public class URI extends Origin implements DirectiveValue {
     public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull String port, @Nonnull String path) {
         super(scheme, host, port);
         this.path = path;
-    }
-
-    public boolean sameOrigin(@Nonnull URI other) {
-        return Objects.equals(this.scheme, other.scheme) && this.host.equals(other.host) && this.port.equals(other.port);
     }
 
     @Override

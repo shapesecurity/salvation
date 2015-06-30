@@ -1,9 +1,13 @@
 package com.shapesecurity.csp.directives;
 
-import com.shapesecurity.csp.Base64Value;
-import com.shapesecurity.csp.Origin;
-import com.shapesecurity.csp.URI;
-import com.shapesecurity.csp.sources.*;
+import com.shapesecurity.csp.data.Base64Value;
+import com.shapesecurity.csp.data.Origin;
+import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.directiveValues.HashSource;
+import com.shapesecurity.csp.directiveValues.SourceExpression;
+import com.shapesecurity.csp.interfaces.MatchesHash;
+import com.shapesecurity.csp.interfaces.MatchesNonce;
+import com.shapesecurity.csp.interfaces.MatchesUri;
 
 import javax.annotation.Nonnull;
 import java.util.List;

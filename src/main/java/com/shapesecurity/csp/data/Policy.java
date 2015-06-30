@@ -178,6 +178,6 @@ public class Policy implements Show {
             return false;
         }
 
-        return pluginTypesDirective.values().anyMatch(x -> x == mediaType);
+        return pluginTypesDirective.matchesMediaType(mediaType);
     }
 }

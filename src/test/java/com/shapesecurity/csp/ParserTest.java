@@ -5,6 +5,7 @@ import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.data.URI;
 import com.shapesecurity.csp.directives.*;
+import com.shapesecurity.csp.directiveValues.MediaType;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -378,6 +379,7 @@ public class ParserTest {
         value = d3.values().iterator().next();
         assertFalse("directive doesn't contain", d1.contains(value));
         ReportUriDirective d4 = s.getDirectiveByType(ReportUriDirective.class);
+        assertEquals("report-uri http://example.com/z", d4.show());
         value = d3.values().iterator().next();
         assertFalse("directive doesn't contain", d1.contains(value));
     }
@@ -396,6 +398,10 @@ public class ParserTest {
         assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
 
         //assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
+        assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "d")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("", "b")));
     }
 
     @Test

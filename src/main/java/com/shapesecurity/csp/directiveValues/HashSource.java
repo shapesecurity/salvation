@@ -37,7 +37,7 @@ public class HashSource implements SourceExpression, MatchesHash {
         return (this.algorithm.hashCode() ^ 0xFE608B8F) ^ (this.value.hashCode() ^ 0x01D77E94);
     }
 
-    public boolean matchesHash(@Nonnull HashAlgorithm algorithm,@Nonnull Base64Value value) {
+    public boolean matchesHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value value) {
         return this.algorithm == algorithm && this.value.equals(value);
     }
 

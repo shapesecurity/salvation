@@ -1,4 +1,6 @@
-package com.shapesecurity.csp;
+package com.shapesecurity.csp.data;
+
+import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import java.util.Objects;

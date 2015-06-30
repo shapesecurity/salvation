@@ -1,8 +1,10 @@
-package com.shapesecurity.csp;
+package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
+import com.shapesecurity.csp.directiveValues.KeywordSource;
+import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.sources.HashSource.HashAlgorithm;
-import com.shapesecurity.csp.sources.KeywordSource;
+import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -170,7 +172,7 @@ public class Policy implements Show {
         return styleSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
     }
 
-    public boolean allowsPlugin(@Nonnull MediaTypeListDirective.MediaType mediaType) {
+    public boolean allowsPlugin(@Nonnull MediaType mediaType) {
         PluginTypesDirective pluginTypesDirective = this.getDirectiveByType(PluginTypesDirective.class);
         if (pluginTypesDirective == null) {
             return false;

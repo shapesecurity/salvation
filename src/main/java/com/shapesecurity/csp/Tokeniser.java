@@ -1,20 +1,26 @@
 package com.shapesecurity.csp;
 
+import com.shapesecurity.csp.tokens.DirectiveNameToken;
+import com.shapesecurity.csp.tokens.DirectiveSeparatorToken;
+import com.shapesecurity.csp.tokens.DirectiveValueToken;
+import com.shapesecurity.csp.tokens.Token;
+
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Tokeniser {
     @Nonnull
-    private final ArrayList<String> tokens;
+    private final ArrayList<Token> tokens;
     @Nonnull
     private final String sourceText;
     private int index = 0;
     private final int length;
 
     @Nonnull
-    public static String[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+    public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
         return new Tokeniser(sourceText).tokenise();
     }
 
@@ -38,15 +44,27 @@ public class Tokeniser {
         return new TokeniserException(message);
     }
 
-    private boolean eat(@Nonnull Pattern pattern) {
+    private boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
         if (this.index >= this.length) return false;
         Matcher matcher = pattern.matcher(this.sourceText);
         if (!matcher.find(this.index) || matcher.start() != this.index) return false;
         int start = this.index;
         this.index = matcher.end();
-        this.tokens.add(this.sourceText.substring(start, this.index));
+        this.tokens.add(ctor.apply(this.sourceText.substring(start, this.index)));
         this.eatWhitespace();
         return true;
+    }
+
+    private boolean eatDirectiveSeparator() {
+        return this.eat(DirectiveSeparatorToken::new, Tokeniser.semi);
+    }
+
+    private boolean eatDirectiveName() {
+        return this.eat(DirectiveNameToken::new, Tokeniser.directiveNamePattern);
+    }
+
+    private boolean eatDirectiveValue() {
+        return this.eat(DirectiveValueToken::new, Tokeniser.directiveValuePattern);
     }
 
     private void eatWhitespace() {
@@ -71,21 +89,21 @@ public class Tokeniser {
     }
 
     @Nonnull
-    private String[] tokenise() throws TokeniserException {
+    private Token[] tokenise() throws TokeniserException {
         while (this.hasNext()) {
-            if (this.eat(Tokeniser.semi)) continue;
-            if (!this.eat(Tokeniser.directiveNamePattern)) {
+            if (this.eatDirectiveSeparator()) continue;
+            if (!this.eatDirectiveName()) {
                 throw this.createError("expecting directive-name but found " + this.next());
             }
-            if (this.eat(Tokeniser.semi)) continue;
+            if (this.eatDirectiveSeparator()) continue;
             while (this.hasNext()) {
-                if (!this.eat(Tokeniser.directiveValuePattern)) {
+                if (!this.eatDirectiveValue()) {
                     throw this.createError("expecting directive-value but found " + this.next());
                 }
-                if (this.eat(Tokeniser.semi)) break;
+                if (this.eatDirectiveSeparator()) break;
             }
         }
-        String[] tokensArray = new String[this.tokens.size()];
+        Token[] tokensArray = new Token[this.tokens.size()];
         return this.tokens.toArray(tokensArray);
     }
 

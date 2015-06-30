@@ -1,7 +1,7 @@
-package com.shapesecurity.csp.sources;
+package com.shapesecurity.csp.directiveValues;
 
-import com.shapesecurity.csp.Origin;
-import com.shapesecurity.csp.URI;
+import com.shapesecurity.csp.data.Origin;
+import com.shapesecurity.csp.data.URI;
 
 import javax.annotation.Nonnull;
 

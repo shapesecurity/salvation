@@ -13,16 +13,17 @@ import requestInputView from "./views/request-input"
 import directHeaderView from "./views/direct-header"
 
 // initialise
-java.classpath.pushDir(__dirname + '/../../target/');
+java.classpath.pushDir(__dirname + "/../../target/");
 
-var Parser = java.import('com.shapesecurity.csp.Parser');
+var Parser = java.import("com.shapesecurity.csp.Parser");
+var Tokeniser = java.import("com.shapesecurity.csp.Tokeniser");
 let app = koa();
 app.use(rateLimit({
   duration: 10 * 60 * 1000, // 10 mins
   max: 100,
 }));
 
-app.use(require('koa-static')(__dirname + '/../src/static'));
+app.use(require("koa-static")(__dirname + "/../src/static"));
 
 // routes
 
@@ -44,7 +45,7 @@ function* fetchHeader() {
   let client = url.startsWith("https:") ? https : http;
   let headers = yield next => client.get(this.query.url, res => {
     if (res.statusCode >= 300 && res.statusCode < 400) {
-      if (!{}.hasOwnProperty.call(res.headers, 'location'))
+      if (!{}.hasOwnProperty.call(res.headers, "location"))
         return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
       this.redirect(`/fetchHeader?url=${encodeURIComponent(res.headers.location)}`);
       return next(null, []);
@@ -63,16 +64,19 @@ function* fetchHeader() {
   if (headers.length < 1) {
     return { error: true, message: "no CSP headers found" };
   } else {
-    let policy = Parser.parseSync("");
+    let policy = Parser.parseSync("", this.query.url);
     for (let header of headers) {
       try {
-        policy.mergeSync(Parser.parseSync(header.value));
+        policy.mergeSync(Parser.parseSync(header.value, this.query.url));
       } catch(ex) {
         console.log(ex.cause.getMessageSync());
-        return { error: true, message: 'Error: ' + ex.cause.getMessageSync() };
+        return { error: true, message: "Error: " + ex.cause.getMessageSync() };
       }
     }
-    return { message: 'policy is valid: ' + policy.showSync() };
+    return {
+      message: "policy is valid: " + policy.showSync(),
+      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+    };
   }
 }
 
@@ -81,15 +85,19 @@ function* requestInput() {
 
 function* directHeader(){
   let info = { error: true, message: "unknown error" };
-  if (!{}.hasOwnProperty.call(this.query, 'headerValue[]')) {
+  if (!{}.hasOwnProperty.call(this.query, "headerValue[]")) {
     return { error: true, message: "no headerValue[] request parameter given" }
   };
   try {
-    let policy = Parser.parseSync(this.query['headerValue[]']);
-    info = { message: 'Policy is valid: ' + policy.showSync() };
+    let policyText = this.query["headerValue[]"];
+    let policy = Parser.parseSync(policyText, "http://example.com");
+    info = {
+      message: "Policy is valid: " + policy.showSync(),
+      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+    };
   } catch(ex) {
     console.log(ex.cause.getMessageSync());
-    info = { error: true, message: 'Error: ' + ex.cause.getMessageSync() };
+    info = { error: true, message: "Error: " + ex.cause.getMessageSync() };
   }
   return info;
 };

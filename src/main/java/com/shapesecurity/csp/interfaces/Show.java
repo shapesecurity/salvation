@@ -1,4 +1,4 @@
-package com.shapesecurity.csp;
+package com.shapesecurity.csp.interfaces;
 
 import javax.annotation.Nonnull;
 

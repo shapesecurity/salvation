@@ -1,6 +1,6 @@
 package com.shapesecurity.csp.directives;
 
-import com.shapesecurity.csp.Show;
+import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

@@ -1,9 +1,15 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
+import com.shapesecurity.csp.data.Base64Value;
+import com.shapesecurity.csp.data.Origin;
+import com.shapesecurity.csp.data.Policy;
+import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.directives.SandboxDirective.SandboxToken;
-import com.shapesecurity.csp.sources.*;
+import com.shapesecurity.csp.tokens.DirectiveNameToken;
+import com.shapesecurity.csp.tokens.DirectiveValueToken;
+import com.shapesecurity.csp.tokens.Token;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
@@ -26,17 +32,17 @@ public class Parser {
     }
 
     @Nonnull
-    private final String[] tokens;
+    private final Token[] tokens;
     private int index = 0;
 
-    private Parser(@Nonnull String[] tokens, @Nonnull Origin origin) {
+    private Parser(@Nonnull Token[] tokens, @Nonnull Origin origin) {
         this.origin = origin;
         this.tokens = tokens;
     }
 
 
     @Nonnull
-    private String advance() {
+    private Token advance() {
         return this.tokens[this.index++];
     }
 
@@ -44,8 +50,8 @@ public class Parser {
         return this.index < this.tokens.length;
     }
 
-    private boolean hasNext(@Nonnull String token) {
-        return this.hasNext() && token.equals(this.tokens[this.index]);
+    private boolean hasNext(@Nonnull String value) {
+        return this.hasNext() && value.equals(this.tokens[this.index].value);
     }
 
     private boolean eat(@Nonnull String token) {
@@ -69,7 +75,7 @@ public class Parser {
             policy.addDirective(this.parseDirective());
             if (!this.eat(";")) {
                 if (this.hasNext()) {
-                    throw this.createError("expecting semicolon or end of policy but found " + this.advance());
+                    throw this.createError("expecting semicolon or end of policy but found " + this.advance().value);
                 } else {
                     break;
                 }
@@ -80,48 +86,33 @@ public class Parser {
 
     @Nonnull
     private Directive<?> parseDirective() throws ParseException {
-        String token = this.advance();
-        switch (token.toLowerCase()) {
-            case "base-uri":
-                return new BaseUriDirective(this.parseSourceList());
-            case "child-src":
-                return new ChildSrcDirective(this.parseSourceList());
-            case "connect-src":
-                return new ConnectSrcDirective(this.parseSourceList());
-            case "default-src":
-                return new DefaultSrcDirective(this.parseSourceList());
-            case "font-src":
-                return new FontSrcDirective(this.parseSourceList());
-            case "form-action":
-                return new FormActionDirective(this.parseSourceList());
-            case "frame-ancestors":
-                return new FrameAncestorsDirective(this.parseAncestorSourceList());
-            case "frame-src":
-                return new FrameSrcDirective(this.parseSourceList());
-            case "img-src":
-                return new ImgSrcDirective(this.parseSourceList());
-            case "media-src":
-                return new MediaSrcDirective(this.parseSourceList());
-            case "object-src":
-                return new ObjectSrcDirective(this.parseSourceList());
-            case "plugin-types":
-                return new PluginTypesDirective(this.parseMediaTypeList());
-            case "report-uri":
-                return new ReportUriDirective(this.parseUriList());
-            case "sandbox":
-                return new SandboxDirective(this.parseSandboxTokenList());
-            case "script-src":
-                return new ScriptSrcDirective(this.parseSourceList());
-            case "style-src":
-                return new StyleSrcDirective(this.parseSourceList());
-            default:
-                throw this.createError("expecting directive-name but found " + token);
+        Token token = this.advance();
+        if (token instanceof DirectiveNameToken) {
+            switch (((DirectiveNameToken) token).subtype) {
+                case BaseUri: return new BaseUriDirective(this.parseSourceList());
+                case ChildSrc: return new ChildSrcDirective(this.parseSourceList());
+                case ConnectSrc: return new ConnectSrcDirective(this.parseSourceList());
+                case DefaultSrc: return new DefaultSrcDirective(this.parseSourceList());
+                case FontSrc: return new FontSrcDirective(this.parseSourceList());
+                case FormAction: return new FormActionDirective(this.parseSourceList());
+                case FrameAncestors: return new FrameAncestorsDirective(this.parseAncestorSourceList());
+                case FrameSrc: return new FrameSrcDirective(this.parseSourceList());
+                case ImgSrc: return new ImgSrcDirective(this.parseSourceList());
+                case MediaSrc: return new MediaSrcDirective(this.parseSourceList());
+                case ObjectSrc: return new ObjectSrcDirective(this.parseSourceList());
+                case PluginTypes: return new PluginTypesDirective(this.parseMediaTypeList());
+                case ReportUri: return new ReportUriDirective(this.parseUriList());
+                case Sandbox: return new SandboxDirective(this.parseSandboxTokenList());
+                case ScriptSrc: return new ScriptSrcDirective(this.parseSourceList());
+                case StyleSrc: return new StyleSrcDirective(this.parseSourceList());
+            }
         }
+        throw this.createError("expecting directive-name but found " + token.value);
     }
 
     @Nonnull
-    private List<MediaTypeListDirective.MediaType> parseMediaTypeList() throws ParseException {
-        ArrayList<MediaTypeListDirective.MediaType> mediaTypes = new ArrayList<>();
+    private List<MediaType> parseMediaTypeList() throws ParseException {
+        ArrayList<MediaType> mediaTypes = new ArrayList<>();
         if (!this.hasNext() || this.hasNext(";")) {
             throw this.createError("media-type-list must contain at least one media-type");
         }
@@ -133,13 +124,13 @@ public class Parser {
     }
 
     @Nonnull
-    private MediaTypeListDirective.MediaType parseMediaType() throws ParseException {
-        String token = this.advance();
-        Matcher matcher = Utils.mediaTypePattern.matcher(token);
+    private MediaType parseMediaType() throws ParseException {
+        Token token = this.advance();
+        Matcher matcher = Constants.mediaTypePattern.matcher(token.value);
         if (matcher.find()) {
-            return new MediaTypeListDirective.MediaType(matcher.group("type"), matcher.group("subtype"));
+            return new MediaType(matcher.group("type"), matcher.group("subtype"));
         }
-        throw this.createError("expecting media-type but found " + token);
+        throw this.createError("expecting media-type but found " + token.value);
     }
 
     @Nonnull
@@ -157,63 +148,65 @@ public class Parser {
 
     @Nonnull
     private SourceExpression parseSourceExpression() throws ParseException {
-        String token = this.advance();
-        switch (token) {
-            case "'self'":
-                return KeywordSource.Self;
-            case "'unsafe-inline'":
-                return KeywordSource.UnsafeInline;
-            case "'unsafe-eval'":
-                return KeywordSource.UnsafeEval;
-            case "'unsafe-redirect'":
-                return KeywordSource.UnsafeRedirect;
-            default:
-                if (token.startsWith("'nonce-")) {
-                    Base64Value b;
-                    try {
-                        b = new Base64Value(token.substring(7, token.length() - 1));
-                    } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
-                        throw this.createError(e.getMessage());
+        Token token = this.advance();
+        if (token instanceof DirectiveValueToken) {
+            switch (token.value) {
+                case "'self'":
+                    return KeywordSource.Self;
+                case "'unsafe-inline'":
+                    return KeywordSource.UnsafeInline;
+                case "'unsafe-eval'":
+                    return KeywordSource.UnsafeEval;
+                case "'unsafe-redirect'":
+                    return KeywordSource.UnsafeRedirect;
+                default:
+                    if (token.value.startsWith("'nonce-")) {
+                        Base64Value b;
+                        try {
+                            b = new Base64Value(token.value.substring(7, token.value.length() - 1));
+                        } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                            throw this.createError(e.getMessage());
+                        }
+                        return new NonceSource(b);
+                    } else if (token.value.startsWith("'sha")) {
+                        HashSource.HashAlgorithm algo;
+                        switch (token.value.substring(4, 7)) {
+                            case "256":
+                                algo = HashSource.HashAlgorithm.SHA256;
+                                break;
+                            case "384":
+                                algo = HashSource.HashAlgorithm.SHA384;
+                                break;
+                            case "512":
+                                algo = HashSource.HashAlgorithm.SHA512;
+                                break;
+                            default:
+                                throw this.createError("unrecognised hash algorithm " + token.value.substring(1, 7));
+                        }
+                        Base64Value b;
+                        try {
+                            b = new Base64Value(token.value.substring(8, token.value.length() - 1));
+                        } catch (Base64Value.IllegalArgumentException e) {
+                            throw this.createError(e.getMessage());
+                        }
+                        return new HashSource(algo, b);
+                    } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
+                        return new SchemeSource(token.value.substring(0, token.value.length() - 1));
+                    } else {
+                        Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
+                        if (matcher.find()) {
+                            String scheme = matcher.group("scheme");
+                            if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
+                            String port = matcher.group("port");
+                            port = port == null ? "" : port.substring(1, port.length());
+                            String host = matcher.group("host");
+                            String path = matcher.group("path");
+                            return new HostSource(scheme, host, port, path);
+                        }
                     }
-                    return new NonceSource(b);
-                } else if (token.startsWith("'sha")) {
-                    HashSource.HashAlgorithm algo;
-                    switch (token.substring(4, 7)) {
-                        case "256":
-                            algo = HashSource.HashAlgorithm.SHA256;
-                            break;
-                        case "384":
-                            algo = HashSource.HashAlgorithm.SHA384;
-                            break;
-                        case "512":
-                            algo = HashSource.HashAlgorithm.SHA512;
-                            break;
-                        default:
-                            throw this.createError("unrecognised hash algorithm " + token.substring(1, 7));
-                    }
-                    Base64Value b;
-                    try {
-                        b = new Base64Value(token.substring(8, token.length() - 1));
-                    } catch (Base64Value.IllegalArgumentException e) {
-                        throw this.createError(e.getMessage());
-                    }
-                    return new HashSource(algo, b);
-                } else if (token.matches("^" + Utils.schemePart + ":$")) {
-                    return new SchemeSource(token.substring(0, token.length() - 1));
-                } else {
-                    Matcher matcher = Utils.hostSourcePattern.matcher(token);
-                    if (matcher.find()) {
-                        String scheme = matcher.group("scheme");
-                        if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
-                        String port = matcher.group("port");
-                        port = port == null ? "" : port.substring(1, port.length());
-                        String host = matcher.group("host");
-                        String path = matcher.group("path");
-                        return new HostSource(scheme, host, port, path);
-                    }
-                }
+            }
         }
-        throw this.createError("expecting source-expression but found " + token);
+        throw this.createError("expecting source-expression but found " + token.value);
     }
 
     @Nonnull
@@ -232,11 +225,11 @@ public class Parser {
 
     @Nonnull
     private AncestorSource parseAncestorSource() throws ParseException {
-        String token = this.advance();
-        if (token.matches("^" + Utils.schemePart + ":$")) {
-            return new SchemeSource(token.substring(0, token.length() - 1));
+        Token token = this.advance();
+        if (token.value.matches("^" + Constants.schemePart + ":$")) {
+            return new SchemeSource(token.value.substring(0, token.value.length() - 1));
         } else {
-            Matcher matcher = Utils.hostSourcePattern.matcher(token);
+            Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
             if (matcher.find()) {
                 String scheme = matcher.group("scheme");
                 if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
@@ -247,12 +240,12 @@ public class Parser {
                 return new HostSource(scheme, host, port, path);
             }
         }
-        throw this.createError("expecting ancestor-source but found " + token);
+        throw this.createError("expecting ancestor-source but found " + token.value);
     }
 
     @Nonnull
-    private List<SandboxToken> parseSandboxTokenList() throws ParseException {
-        ArrayList<SandboxToken> sandboxTokens = new ArrayList<>();
+    private List<SandboxValue> parseSandboxTokenList() throws ParseException {
+        ArrayList<SandboxValue> sandboxTokens = new ArrayList<>();
         while (this.hasNext() && !this.hasNext(";")) {
             sandboxTokens.add(this.parseSandboxToken());
         }
@@ -260,13 +253,13 @@ public class Parser {
     }
 
     @Nonnull
-    private SandboxToken parseSandboxToken() throws ParseException {
-        String token = this.advance();
-        Matcher matcher = Utils.sandboxTokenPattern.matcher(token);
+    private SandboxValue parseSandboxToken() throws ParseException {
+        Token token = this.advance();
+        Matcher matcher = Constants.sandboxTokenPattern.matcher(token.value);
         if (matcher.find()) {
-            return new SandboxToken(token);
+            return new SandboxValue(token.value);
         }
-        throw this.createError("expecting sandbox-token but found " + token);
+        throw this.createError("expecting sandbox-token but found " + token.value);
     }
 
     @Nonnull
@@ -283,11 +276,11 @@ public class Parser {
 
     @Nonnull
     private URI parseUri() throws ParseException {
-        String token = this.advance();
+        Token token = this.advance();
         try {
-            return URI.parseWithOrigin(this.origin, token);
+            return URI.parseWithOrigin(this.origin, token.value);
         } catch (IllegalArgumentException ignored) {}
-        throw this.createError("expecting uri-reference but found " + token);
+        throw this.createError("expecting uri-reference but found " + token.value);
     }
 
     public static class ParseException extends Exception {

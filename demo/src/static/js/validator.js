@@ -3,6 +3,23 @@
 $(function () {
   'use strict';
 
+  function colorize(tokenized) {
+    var colorString = '';
+    tokenized.forEach(function (token){
+      var nameColor = '#ff0099';
+      var valueColor = '#e67e22';
+      if (token.type === "DirectiveName"){
+        colorString += "<span style='color:" + nameColor + "'>" + token.value + " </span>";
+      }
+      else if (token.type === "DirectiveValue") { //oftentimes, the URL
+        colorString += "<span style='color:" + valueColor + "'>" + token.value + "</span>";
+      }
+      else {
+        colorString += "<span style='color:" + valueColor + "'>" + token.value + "</span><br>";
+      }
+    });
+    return colorString;
+  }
   // TODO: add handler for fetchHeader form
 
   $('form[action="/directHeader"]').on('submit', function (evt) {
@@ -26,14 +43,15 @@ $(function () {
           $('#output-title').text('Invalid policy');
           $('#output-panel').removeClass('panel-success');
           $('#output-panel').addClass('panel-danger');
+          $('#output-body').text(response.message);
         }
         else { //Valid CSP policy
           $('#output-title').text('Valid policy');
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
+          $('#output-body').html(colorize(response.tokens));
         }
 
-        $('#output-body').text(response.message);
       }
     });
   });

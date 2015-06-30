@@ -13,15 +13,10 @@ import java.util.regex.Matcher;
 public class Parser {
 
     @Nonnull
-    private final URI origin;
+    private final Origin origin;
 
     @Nonnull
-    public static Policy parse(@Nonnull String sourceText) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse("https://www.example.com")).parsePrivate();
-    }
-
-    @Nonnull
-    public static Policy parse(@Nonnull String sourceText, @Nonnull URI origin) throws ParseException, TokeniserException {
+    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
         return new Parser(Tokeniser.tokenise(sourceText), origin).parsePrivate();
     }
 
@@ -34,7 +29,7 @@ public class Parser {
     private final String[] tokens;
     private int index = 0;
 
-    private Parser(@Nonnull String[] tokens, @Nonnull URI origin) {
+    private Parser(@Nonnull String[] tokens, @Nonnull Origin origin) {
         this.origin = origin;
         this.tokens = tokens;
     }

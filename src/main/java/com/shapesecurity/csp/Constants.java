@@ -3,7 +3,7 @@ package com.shapesecurity.csp;
 import java.util.regex.Pattern;
 
 @SuppressWarnings("MalformedRegex")
-class Utils {
+public class Constants {
     public static final String schemePart = "[a-zA-Z][a-zA-Z0-9+\\-.]*";
     private static final String hostPart = "\\*|(?:\\*\\.)?[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*";
     private static final String portPart = ":(?:[0-9]+|\\*)";

@@ -1,6 +1,6 @@
 package com.shapesecurity.csp.directives;
 
-import com.shapesecurity.csp.sources.SourceExpression;
+import com.shapesecurity.csp.directiveValues.SourceExpression;
 
 import javax.annotation.Nonnull;
 import java.util.List;

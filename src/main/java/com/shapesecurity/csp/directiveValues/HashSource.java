@@ -1,7 +1,8 @@
-package com.shapesecurity.csp.sources;
+package com.shapesecurity.csp.directiveValues;
 
-import com.shapesecurity.csp.Base64Value;
-import com.shapesecurity.csp.Show;
+import com.shapesecurity.csp.data.Base64Value;
+import com.shapesecurity.csp.interfaces.MatchesHash;
+import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

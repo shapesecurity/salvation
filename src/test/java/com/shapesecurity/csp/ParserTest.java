@@ -2,6 +2,8 @@ package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
+import com.shapesecurity.csp.data.Policy;
+import com.shapesecurity.csp.data.URI;
 import com.shapesecurity.csp.directives.*;
 import org.junit.Test;
 

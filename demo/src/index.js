@@ -73,7 +73,11 @@ function* fetchHeader() {
         return { error: true, message: "Error: " + ex.cause.getMessageSync() };
       }
     }
-    return { message: "policy is valid: " + policy.showSync() };
+    let policyText = policy.showSync();
+    return {
+      message: "Policy is valid: " + policyText,
+      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+    };
   }
 }
 

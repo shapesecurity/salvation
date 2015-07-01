@@ -79,7 +79,7 @@ $(function () {
           $('#output-title').text('CSP headers found at URL');
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
-          $('#output-body').text(response.message);
+          $('#output-body').html(colorize(response.tokens));
         }
 
       }

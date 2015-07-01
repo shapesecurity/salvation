@@ -46,18 +46,20 @@ public class HostSource implements SourceExpression, AncestorSource {
 
     @Override
     public boolean matchesUri(@Nonnull Origin origin, @Nonnull URI uri) {
+        if (this.scheme == null && this.port.isEmpty() && this.host.equals("*")) return true;
         boolean schemeMatches =
             this.scheme == null
                 ? uri.scheme.equalsIgnoreCase("http") || uri.scheme.equalsIgnoreCase("https")
                 : this.scheme.equalsIgnoreCase(uri.scheme);
         boolean hostMatches =
-            this.host.startsWith("*.")
+            this.host.equals("*") || (this.host.startsWith("*.")
                 ? uri.host.endsWith(this.host.substring(2))
-                : this.host.equalsIgnoreCase(uri.host);
+                : this.host.equalsIgnoreCase(uri.host));
         boolean portMatches =
             this.port.isEmpty() && (uri.port.isEmpty() || Origin.defaultPortForProtocol(uri.scheme).equals(uri.port)) ||
             this.port.equals("*") ||
-            Integer.parseInt(this.port, 10) == Integer.parseInt(uri.port, 10);
+                    (!this.port.isEmpty() && !uri.port.isEmpty()) &&
+                            (Integer.parseInt(this.port, 10) ==  Integer.parseInt(uri.port, 10));
         boolean pathMatches = this.path == null || this.path.matches(uri.path);
         return  schemeMatches && hostMatches && portMatches && pathMatches;
     }

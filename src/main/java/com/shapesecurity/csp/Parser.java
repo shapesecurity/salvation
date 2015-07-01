@@ -164,7 +164,7 @@ public class Parser {
                         Base64Value b;
                         try {
                             b = new Base64Value(token.value.substring(7, token.value.length() - 1));
-                        } catch (Base64Value.IllegalArgumentException | StringIndexOutOfBoundsException e) {
+                        } catch (IllegalArgumentException | StringIndexOutOfBoundsException e) {
                             throw this.createError(e.getMessage());
                         }
                         return new NonceSource(b);
@@ -186,7 +186,7 @@ public class Parser {
                         Base64Value b;
                         try {
                             b = new Base64Value(token.value.substring(8, token.value.length() - 1));
-                        } catch (Base64Value.IllegalArgumentException e) {
+                        } catch (IllegalArgumentException e) {
                             throw this.createError(e.getMessage());
                         }
                         return new HashSource(algo, b);

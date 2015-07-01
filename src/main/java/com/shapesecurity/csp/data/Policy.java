@@ -104,7 +104,7 @@ public class Policy implements Show {
         if (defaultSrcDirective == null) {
             return true;
         }
-        return defaultSrcDirective.matchesHash(algorithm, hashValue);
+        return this.defaultsAllowUnsafeInline() || defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
 
     private boolean defaultsAllowSource(@Nonnull URI s) {
@@ -124,7 +124,7 @@ public class Policy implements Show {
     }
 
 
-    public boolean allowsImageFromSource(@Nonnull URI uri) {
+    public boolean allowsImgFromSource(@Nonnull URI uri) {
         ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
         if (imgSrcDirective == null) {
             return this.defaultsAllowSource(uri);
@@ -148,12 +148,22 @@ public class Policy implements Show {
         return styleSrcDirective.matchesUri(this.origin, uri);
     }
 
-    public boolean allowsImageWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
-        if (imgSrcDirective == null) {
+    public boolean allowsStyleWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+        if (this.allowsUnsafeInlineStyle()) return true;
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
             return this.defaultsAllowHash(algorithm, hashValue);
         }
-        return imgSrcDirective.matchesHash(algorithm, hashValue);
+        return styleSrcDirective.matchesHash(algorithm, hashValue);
+    }
+
+    public boolean allowsScriptWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+        if (this.allowsUnsafeInlineScript()) return true;
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsAllowHash(algorithm, hashValue);
+        }
+        return scriptSrcDirective.matchesHash(algorithm, hashValue);
     }
 
     public boolean allowsUnsafeInlineScript() {

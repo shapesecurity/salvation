@@ -23,7 +23,7 @@ app.use(rateLimit({
   max: 100,
 }));
 
-app.use(require("koa-static")(__dirname + "/../src/static"));
+app.use(require("koa-static")(__dirname + "/../static"));
 
 // routes
 
@@ -73,10 +73,7 @@ function* fetchHeader() {
         return { error: true, message: "Error: " + ex.cause.getMessageSync() };
       }
     }
-    return {
-      message: "policy is valid: " + policy.showSync(),
-      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
-    };
+    return { message: "policy is valid: " + policy.showSync() };
   }
 }
 

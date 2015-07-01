@@ -1,0 +1,27 @@
+.token:hover {
+  background-color: #546576;
+}
+.token {
+  background-color: #445667;
+  border-radius: 7px;
+  border: 1px solid #2B3E50;
+  color: white;
+  cursor: default;
+  display: inline;
+  font-size: larger;
+  line-height: 2em;
+  margin: 1px;
+  padding: 3px 6px;
+}
+.token.directiveName {
+  color: #A4C4ED;
+  cursor: help;
+}
+.token.directiveValue {
+}
+.token.directiveValue.keyword {
+  color: #90D072;
+}
+.token.directiveSeparator {
+  color: #EABF50;
+}

@@ -3,22 +3,19 @@
 $(function () {
   'use strict';
 
-  function colorize(tokenized) {
-    var colorString = '';
-    tokenized.forEach(function (token){
-      var nameColor = '#ff0099';
-      var valueColor = '#e67e22';
-      if (token.type === "DirectiveName"){
-        colorString += "<span style='color:" + nameColor + "'>" + token.value + " </span>";
+  function colorize(tokens) {
+    return tokens.map(function (token){
+      switch (token.type) {
+        case 'DirectiveName':
+          return '<span class="token directiveName">' + token.value + '</span>';
+        case 'DirectiveValue':
+          return '<span class="token directiveValue' + (token.value[0] === '\'' ? ' keyword' : '') + '">' + token.value + '</span>';
+        case 'DirectiveSeparator':
+          return '<span class="token directiveSeparator">' + token.value + '</span><br>';
+        default:
+          return token.value;
       }
-      else if (token.type === "DirectiveValue") { //oftentimes, the URL
-        colorString += "<span style='color:" + valueColor + "'>" + token.value + "</span>";
-      }
-      else {
-        colorString += "<span style='color:" + valueColor + "'>" + token.value + "</span><br>";
-      }
-    });
-    return colorString;
+    }).join(' ');
   }
   // TODO: add handler for fetchHeader form
 

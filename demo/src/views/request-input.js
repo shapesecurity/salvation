@@ -8,7 +8,8 @@ export default function() {
     <meta charset="utf-8">
     <title>CSP Header Inspector and Validator</title>
     <link href="/css/bootstrap.css" type="text/css" rel="stylesheet"/>
-    <script src="/js/jquery.js"></script>
+    <link href="/css/css.css" type="text/css" rel="stylesheet"/>
+    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
     <script src="/js/validator.js"></script>
   </head>
   <body>
@@ -19,10 +20,10 @@ export default function() {
       <p>Validate CSP headers as served from the given URL.</p>
       <form action="/fetchHeader" class="well">
         <div class="row">
-          <div class="col-md-10">
+          <div class="col-md-11">
             <input type="url" name="url" placeholder="https://..." class="form-control"/>
           </div>
-          <div class="col-md-2">
+          <div class="col-md-1">
             <button class="btn">Go</button>
           </div>
         </div>
@@ -38,10 +39,10 @@ export default function() {
               <option>Content-Security-Policy-Report-Only:</option>
             </select>
           </div>
-          <div class="col-md-7">
+          <div class="col-md-8">
             <input type="text" name="headerValue[]" width="120" class="form-control"/>
           </div>
-          <div class="col-md-2">
+          <div class="col-md-1">
             <button class="btn">Go</button>
           </div>
         </div>

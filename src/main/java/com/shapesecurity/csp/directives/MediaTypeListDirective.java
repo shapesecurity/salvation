@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 public abstract class MediaTypeListDirective extends Directive<MediaType> {
-
     MediaTypeListDirective(@Nonnull String name, @Nonnull List<MediaType> values) {
         super(name, values);
     }
@@ -14,5 +13,4 @@ public abstract class MediaTypeListDirective extends Directive<MediaType> {
     public boolean matches(@Nonnull MediaType mediaType) {
         return this.values().anyMatch(x -> x.equals(mediaType));
     }
-
 }

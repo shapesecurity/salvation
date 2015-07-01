@@ -1,11 +1,12 @@
 package com.shapesecurity.csp.directiveValues;
 
 import com.shapesecurity.csp.directives.DirectiveValue;
+import com.shapesecurity.csp.interfaces.MatchesMediaType;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class MediaType implements DirectiveValue {
+public class MediaType implements DirectiveValue, MatchesMediaType {
     @Nonnull
     public final String type;
     @Nonnull
@@ -19,8 +20,11 @@ public class MediaType implements DirectiveValue {
     @Override
     public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof MediaType)) return false;
-        return ((MediaType) other).type.equalsIgnoreCase(this.type) &&
-                ((MediaType) other).subtype.equalsIgnoreCase(this.subtype);
+        return this.matchesMediaType((MediaType) other);
+    }
+
+    public boolean matchesMediaType(@Nonnull MediaType mediaType) {
+        return this.type.equalsIgnoreCase(mediaType.type) && this.subtype.equalsIgnoreCase(mediaType.subtype);
     }
 
     @Override

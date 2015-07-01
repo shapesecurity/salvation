@@ -25,3 +25,17 @@
 .token.directiveSeparator {
   color: #EABF50;
 }
+
+.btn {
+  background-color: #5C92B8;
+}
+select.form-control {
+  padding: 1px;
+}
+
+a {
+  color: #5C92B8;
+}
+a:hover {
+  color: #6CA0C5;
+}

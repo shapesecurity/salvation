@@ -59,10 +59,4 @@ public class Base64Value implements Show {
     public String show() {
         return this.value.replace('-', '+').replace('_', '/');
     }
-
-    public class IllegalArgumentException extends Exception {
-        IllegalArgumentException(String message) {
-            super(message);
-        }
-    }
 }

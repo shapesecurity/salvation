@@ -2,8 +2,11 @@ package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
+import com.shapesecurity.csp.data.Base64Value;
 import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.directiveValues.HashSource;
+import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import org.junit.Test;
@@ -203,6 +206,9 @@ public class ParserTest {
         q = createPolicyWithDefaultOrigin("script-src abc");
         p.merge(q);
         assertEquals("policy merge", "style-src *; script-src * abc", p.show());
+        p.setOrigin(URI.parse("http://qwe.zz:80"));
+        assertEquals("policy origin", "http://qwe.zz", p.getOrigin().show());
+
     }
 
     @Test()
@@ -302,17 +308,17 @@ public class ParserTest {
 
     @Test
     public void testHashSource() throws ParseException, TokeniserException {
-        failsToParse("script-src 'self' https://example.com 'sha255-RUM5'");
-        failsToParse("script-src 'self' https://example.com 'sha256-333'");
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-RUM5'", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha256-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha384-RUM5'", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha384-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha512-RUM5'", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha512-RUM5'").getDirectiveByType(ScriptSrcDirective.class).show());
-        Policy p = createPolicyWithDefaultOrigin("script-src 'sha512-RUM5'");
-        Policy q = createPolicyWithDefaultOrigin("script-src 'sha512-RUM5'");
+        failsToParse("script-src 'self' https://example.com 'sha255-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
+        failsToParse("script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'").getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").getDirectiveByType(ScriptSrcDirective.class).show());
+        Policy p = createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        Policy q = createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
         assertEquals("hash-source hashcode equality", p.hashCode(), q.hashCode());
         ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
         assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-        q = createPolicyWithDefaultOrigin("script-src 'sha512-eHV5'");
+        q = createPolicyWithDefaultOrigin("script-src 'sha512-HD6Xh+Y6oIZnXv4XqbKxrb6t3RkoPYv+NkqOBE8MwkssuATRE2aFBp8Nm9kp/Xn5a4l2Ki8QkX5qIUlbXQgO4Q=='");
         assertFalse("hash-source inequality", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
     }
 
@@ -386,22 +392,64 @@ public class ParserTest {
 
     @Test
     public void testMatches() throws ParseException, TokeniserException, IllegalArgumentException {
-        Policy p = Parser.parse("img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*", "https://abc.com");
-        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://a.com/12")));
-        assertTrue("resource is allowed", p.allowsImageFromSource(URI.parse("https://abc.am")));
+        Policy p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", "https://abc.com");
+        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
+        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://abc.am")));
+        assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("http://a.com/12")));
+        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.com/12")));
 
         assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
-        assertFalse("resource is not allowed", p.allowsImageFromSource(URI.parse("http://a.com/12")));
+
 
         p = Parser.parse("script-src https: 'self' http://a 'unsafe-inline'", URI.parse("https://abc.com"));
         assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
 
         //assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
         assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("default-src 'none'").allowsPlugin(new MediaType("z", "b")));
         assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));
         assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "d")));
         assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("", "b")));
+
+        assertTrue("script hash is allowed", createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("script hash is not allowed", createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        assertTrue("style hash is allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("style hash is not allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        p = Parser.parse("default-src 'none'", "https://abc.com");
+        assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
+        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
+        assertFalse("inline style is not allowed", p.allowsUnsafeInlineStyle());
+        assertFalse("script hash is not allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("style hash is not allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        p = Parser.parse("default-src *:* 'unsafe-inline'", "https://abc.com");
+        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
+        //assertTrue("resource is allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+
+        // CSP spec 4.2.2 9
+        assertTrue("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
+        assertTrue("inline style is allowed", p.allowsUnsafeInlineStyle());
+        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue("style hash is allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+    }
+
+    @Test
+    public void testURIandOrigins() throws IllegalArgumentException {
+        URI u1 = URI.parse("http://a/123");
+        URI u2 = URI.parse("http://a:80/");
+        u1 = URI.parseWithOrigin(URI.parse("https://www"), "/34");
+        assertEquals("abs uri", "https://www/34", u1.show());
+        u1 = URI.parse("http://a:80");
+        u2 = URI.parse("http://a");
+        assertTrue("URIs are equal", u1.equals(u2));
     }
 
     @Test

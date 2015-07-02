@@ -40,27 +40,31 @@ app.use(route.get("/directHeader", composeAppLogicAndView(directHeader, directHe
 
 // application logic
 
-function* fetchHeader() {
-  let url = this.query.url;
+function getHeaders(url) {
   let client = url.startsWith("https:") ? https : http;
-  let headers = yield next => client.get(this.query.url, res => {
-    if (res.statusCode >= 300 && res.statusCode < 400) {
-      if (!{}.hasOwnProperty.call(res.headers, "location"))
-        return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
-      this.redirect(`/fetchHeader?url=${encodeURIComponent(res.headers.location)}`);
-      return next(null, []);
-    }
-    if (res.statusCode < 200 || res.statusCode >= 400)
-      return next(new Error(res.statusMessage));
-    let headers = [];
-    for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
-      let headerName = res.rawHeaders[i].toLowerCase();
-      if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
-        headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
+  return function(next) {
+    client.get(url, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400) {
+        if (!{}.hasOwnProperty.call(res.headers, "location"))
+          return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
+        return getHeaders(res.headers.location)(next);
       }
-    }
-    next(null, headers);
-  })
+      if (res.statusCode < 200 || res.statusCode >= 400)
+        return next(new Error(res.statusMessage));
+      let headers = [];
+      for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
+        let headerName = res.rawHeaders[i].toLowerCase();
+        if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
+          headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
+        }
+      }
+      next(null, {url, headers});
+    });
+  };
+}
+
+function* fetchHeader() {
+  let {url, headers} = yield getHeaders(this.query.url);
   if (headers.length < 1) {
     return { error: true, message: "no CSP headers found" };
   } else {
@@ -77,6 +81,7 @@ function* fetchHeader() {
     return {
       message: "Policy is valid: " + policyText,
       tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+      url
     };
   }
 }

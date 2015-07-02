@@ -70,8 +70,8 @@ $(function () {
           $('input[name="url"]').val(dest);
         }
 
-        if (response.message === "no CSP headers found"){
-          $('#output-title').text('No CSP headers found at ' + dest);
+        if (response.error){
+          $('#output-title').text(response.message);
           $('#output-panel').removeClass('panel-success');
           $('#output-panel').addClass('panel-danger');
           $('#output-body').text('');

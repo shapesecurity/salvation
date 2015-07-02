@@ -46,11 +46,11 @@ function getHeaders(url) {
     client.get(url, res => {
       if (res.statusCode >= 300 && res.statusCode < 400) {
         if (!{}.hasOwnProperty.call(res.headers, "location"))
-          return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
+          return next(new Error(`Received from ${url}: ${res.statusCode} HTTP response with no Location header`));
         return getHeaders(res.headers.location)(next);
       }
       if (res.statusCode < 200 || res.statusCode >= 400)
-        return next(new Error(res.statusMessage));
+        return next(new Error(`Received from ${url}: ${res.statusCode} ${res.statusMessage}`));
       let headers = [];
       for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
         let headerName = res.rawHeaders[i].toLowerCase();
@@ -60,31 +60,43 @@ function getHeaders(url) {
       }
       next(null, {url, headers});
     }).on('error', function(e) {
-      return next(new Error(e.message));
+      let err = new Error(`Unknown error`);
+      switch(e.code) {
+        case "ENOTFOUND":
+          err = new Error(`Error resolving hostname: ${e.hostname}`);
+          break;
+        default:
+          break;
+      }
+      return next(err);
     });
   };
 }
 
 function* fetchHeader() {
-  let {url, headers} = yield getHeaders(this.query.url);
-  if (headers.length < 1) {
-    return { error: true, message: "no CSP headers found", url };
-  } else {
-    let policy = Parser.parseSync("", this.query.url);
-    for (let header of headers) {
-      try {
-        policy.mergeSync(Parser.parseSync(header.value, this.query.url));
-      } catch(ex) {
-        console.log(ex.cause.getMessageSync());
-        return { error: true, message: "Error: " + ex.cause.getMessageSync() };
+  try {
+    let {url, headers} = yield getHeaders(this.query.url);
+    if (headers.length < 1) {
+      return { error: true, message: "no CSP headers found at " + url };
+    } else {
+      let policy = Parser.parseSync("", this.query.url);
+      for (let header of headers) {
+        try {
+          policy.mergeSync(Parser.parseSync(header.value, this.query.url));
+        } catch(ex) {
+          console.log(ex.cause.getMessageSync());
+          return { error: true, message: "Error: " + ex.cause.getMessageSync() };
+        }
       }
+      let policyText = policy.showSync();
+      return {
+        message: "Policy is valid: " + policyText,
+        tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+        url
+      };
     }
-    let policyText = policy.showSync();
-    return {
-      message: "Policy is valid: " + policyText,
-      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
-      url
-    };
+  } catch(ex) {
+    return { error: true, message: ex.message};
   }
 }
 
@@ -92,7 +104,7 @@ function* requestInput() {
 }
 
 function* directHeader(){
-  let info = { error: true, message: "unknown error" };
+  let info = { error: true, message: "Unknown error" };
   if (!{}.hasOwnProperty.call(this.query, "headerValue[]")) {
     return { error: true, message: "no headerValue[] request parameter given" }
   };

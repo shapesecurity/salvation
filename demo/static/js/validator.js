@@ -71,13 +71,13 @@ $(function () {
         }
 
         if (response.message === "no CSP headers found"){
-          $('#output-title').text('No CSP headers found at specified URL');
+          $('#output-title').text('No CSP headers found at ' + dest);
           $('#output-panel').removeClass('panel-success');
           $('#output-panel').addClass('panel-danger');
           $('#output-body').text('');
         }
         else { //Valid CSP policy
-          $('#output-title').text('CSP headers found at URL');
+          $('#output-title').text('CSP headers found at ' + dest);
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
           $('#output-body').html(colorize(response.tokens));

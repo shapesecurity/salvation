@@ -59,6 +59,8 @@ function getHeaders(url) {
         }
       }
       next(null, {url, headers});
+    }).on('error', function(e) {
+      return next(new Error(e.message));
     });
   };
 }
@@ -66,7 +68,7 @@ function getHeaders(url) {
 function* fetchHeader() {
   let {url, headers} = yield getHeaders(this.query.url);
   if (headers.length < 1) {
-    return { error: true, message: "no CSP headers found" };
+    return { error: true, message: "no CSP headers found", url };
   } else {
     let policy = Parser.parseSync("", this.query.url);
     for (let header of headers) {

@@ -34,8 +34,6 @@ $(function () {
         'headerValue[]': cspString
       },
       success: function (response) {
-        console.dir(response);
-
         if (response.error){
           $('#output-title').text('Invalid policy');
           $('#output-panel').removeClass('panel-success');
@@ -67,7 +65,10 @@ $(function () {
         'url': url,
       },
       success: function (response) {
-        console.log(response);
+        var dest = response.url;
+        if(dest) {
+          $('input[name="url"]').val(dest);
+        }
 
         if (response.message === "no CSP headers found"){
           $('#output-title').text('No CSP headers found at specified URL');

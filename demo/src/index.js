@@ -7,10 +7,12 @@ import * as koa from "koa";
 import * as rateLimit from "koa-better-ratelimit";
 import * as route from "koa-route";
 import * as java from "java";
+import * as helmet from "koa-helmet";
 
 import fetchHeaderView from "./views/fetch-header";
 import requestInputView from "./views/request-input"
 import directHeaderView from "./views/direct-header"
+import cspReportView from "./views/csp-report"
 
 // initialise
 java.classpath.pushDir(__dirname + "/../../target/");
@@ -22,6 +24,25 @@ app.use(rateLimit({
   duration: 10 * 60 * 1000, // 10 mins
   max: 100,
 }));
+app.use(helmet.csp({
+  'default-src': ["'none'"],
+  'script-src': ["'self'", 'http://code.jquery.com', 'https://code.jquery.com'],
+  'style-src': ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
+  'font-src': ["'self'", 'https://fonts.gstatic.com'],
+  'img-src': ["'self'"],
+  'connect-src': ["'self'"],
+  'frame-ancestors': ["'none'"],
+  'report-uri': ['/csp-report'],
+  reportOnly: false, 
+  setAllHeaders: false,
+  safari5: true
+}));
+app.use(helmet.xframe('deny'));
+app.use(helmet.iexss());
+app.use(helmet.ienoopen());
+app.use(helmet.contentTypeOptions());
+app.use(helmet.cacheControl());
+
 
 app.use(require("koa-static")(__dirname + "/../static"));
 
@@ -37,55 +58,80 @@ function composeAppLogicAndView(appLogic, view) {
 app.use(route.get("/", composeAppLogicAndView(requestInput, requestInputView)));
 app.use(route.get("/fetchHeader", composeAppLogicAndView(fetchHeader, fetchHeaderView)));
 app.use(route.get("/directHeader", composeAppLogicAndView(directHeader, directHeaderView)));
+app.use(route.post("/csp-report", composeAppLogicAndView(cspReport, cspReportView)));
 
 // application logic
 
-function* fetchHeader() {
-  let url = this.query.url;
+function getHeaders(url) {
   let client = url.startsWith("https:") ? https : http;
-  let headers = yield next => client.get(this.query.url, res => {
-    if (res.statusCode >= 300 && res.statusCode < 400) {
-      if (!{}.hasOwnProperty.call(res.headers, "location"))
-        return next(new Error(`received ${res.statusCode} HTTP response with no Location header`));
-      this.redirect(`/fetchHeader?url=${encodeURIComponent(res.headers.location)}`);
-      return next(null, []);
-    }
-    if (res.statusCode < 200 || res.statusCode >= 400)
-      return next(new Error(res.statusMessage));
-    let headers = [];
-    for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
-      let headerName = res.rawHeaders[i].toLowerCase();
-      if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
-        headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
+  return function(next) {
+    client.get(url, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400) {
+        if (!{}.hasOwnProperty.call(res.headers, "location"))
+          return next(new Error(`Received from ${url}: ${res.statusCode} HTTP response with no Location header`));
+        return getHeaders(res.headers.location)(next);
       }
-    }
-    next(null, headers);
-  })
-  if (headers.length < 1) {
-    return { error: true, message: "no CSP headers found" };
-  } else {
-    let policy = Parser.parseSync("", this.query.url);
-    for (let header of headers) {
-      try {
-        policy.mergeSync(Parser.parseSync(header.value, this.query.url));
-      } catch(ex) {
-        console.log(ex.cause.getMessageSync());
-        return { error: true, message: "Error: " + ex.cause.getMessageSync() };
+      if (res.statusCode < 200 || res.statusCode >= 400)
+        return next(new Error(`Received from ${url}: ${res.statusCode} ${res.statusMessage}`));
+      let headers = [];
+      for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
+        let headerName = res.rawHeaders[i].toLowerCase();
+        if (headerName === "content-security-policy" || headerName === "content-security-policy-report-only") {
+          headers.push({ kind: headerName, value: res.rawHeaders[i + 1] });
+        }
       }
+      next(null, {url, headers});
+    }).on('error', function(e) {
+      let err = new Error(`Unknown error`);
+      switch(e.code) {
+        case "ENOTFOUND":
+          err = new Error(`Error resolving hostname: ${e.hostname}`);
+          break;
+        default:
+          break;
+      }
+      return next(err);
+    });
+  };
+}
+
+function* fetchHeader() {
+  try {
+    let {url, headers} = yield getHeaders(this.query.url);
+    if (headers.length < 1) {
+      return { error: true, message: "no CSP headers found at " + url };
+    } else {
+      let policy = Parser.parseSync("", this.query.url);
+      for (let header of headers) {
+        try {
+          policy.mergeSync(Parser.parseSync(header.value, this.query.url));
+        } catch(ex) {
+          console.log(ex.cause.getMessageSync());
+          return { error: true, message: "Error: " + ex.cause.getMessageSync() };
+        }
+      }
+      let policyText = policy.showSync();
+      return {
+        message: "Policy is valid: " + policyText,
+        tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+        url
+      };
     }
-    let policyText = policy.showSync();
-    return {
-      message: "Policy is valid: " + policyText,
-      tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
-    };
+  } catch(ex) {
+    return { error: true, message: ex.message};
   }
 }
 
 function* requestInput() {
+  
+}
+
+function* cspReport() {
+
 }
 
 function* directHeader(){
-  let info = { error: true, message: "unknown error" };
+  let info = { error: true, message: "Unknown error" };
   if (!{}.hasOwnProperty.call(this.query, "headerValue[]")) {
     return { error: true, message: "no headerValue[] request parameter given" }
   };

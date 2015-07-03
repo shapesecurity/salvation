@@ -21,7 +21,7 @@ export default function() {
       <form action="/fetchHeader" class="well">
         <div class="row">
           <div class="col-md-11">
-            <input type="url" name="url" placeholder="https://..." class="form-control"/>
+            <input type="url" name="url" placeholder="https://..." class="form-control" value="${this.request.href}"/>
           </div>
           <div class="col-md-1">
             <button class="btn">Go</button>

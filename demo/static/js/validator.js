@@ -82,10 +82,8 @@ $(function () {
           $('#output-panel').addClass('panel-success');
           $('#output-body').html(colorize(response.tokens));
         }
-
       }
     });
   });
-
-
+  $('form[action="/fetchHeader"]').submit();
 });

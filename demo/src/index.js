@@ -7,10 +7,12 @@ import * as koa from "koa";
 import * as rateLimit from "koa-better-ratelimit";
 import * as route from "koa-route";
 import * as java from "java";
+import * as helmet from "koa-helmet";
 
 import fetchHeaderView from "./views/fetch-header";
 import requestInputView from "./views/request-input"
 import directHeaderView from "./views/direct-header"
+import cspReportView from "./views/csp-report"
 
 // initialise
 java.classpath.pushDir(__dirname + "/../../target/");
@@ -22,6 +24,25 @@ app.use(rateLimit({
   duration: 10 * 60 * 1000, // 10 mins
   max: 100,
 }));
+app.use(helmet.csp({
+  'default-src': ["'none'"],
+  'script-src': ["'self'", 'http://code.jquery.com', 'https://code.jquery.com'],
+  'style-src': ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
+  'font-src': ["'self'", 'https://fonts.gstatic.com'],
+  'img-src': ["'self'"],
+  'connect-src': ["'self'"],
+  'frame-ancestors': ["'none'"],
+  'report-uri': ['/csp-report'],
+  reportOnly: false, 
+  setAllHeaders: false,
+  safari5: true
+}));
+app.use(helmet.xframe('deny'));
+app.use(helmet.iexss());
+app.use(helmet.ienoopen());
+app.use(helmet.contentTypeOptions());
+app.use(helmet.cacheControl());
+
 
 app.use(require("koa-static")(__dirname + "/../static"));
 
@@ -37,6 +58,7 @@ function composeAppLogicAndView(appLogic, view) {
 app.use(route.get("/", composeAppLogicAndView(requestInput, requestInputView)));
 app.use(route.get("/fetchHeader", composeAppLogicAndView(fetchHeader, fetchHeaderView)));
 app.use(route.get("/directHeader", composeAppLogicAndView(directHeader, directHeaderView)));
+app.use(route.post("/csp-report", composeAppLogicAndView(cspReport, cspReportView)));
 
 // application logic
 
@@ -101,6 +123,11 @@ function* fetchHeader() {
 }
 
 function* requestInput() {
+  
+}
+
+function* cspReport() {
+
 }
 
 function* directHeader(){

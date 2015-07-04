@@ -6,3 +6,5 @@ target
 node_modules
 demo/dist
 npm-debug.log
+key.pem
+cert.pem

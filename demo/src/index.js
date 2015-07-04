@@ -7,7 +7,7 @@ import * as koa from "koa";
 import * as rateLimit from "koa-better-ratelimit";
 import * as route from "koa-route";
 import * as java from "java";
-import * as helmet from "koa-helmet";
+import * as fs from "fs";
 
 import fetchHeaderView from "./views/fetch-header";
 import requestInputView from "./views/request-input"
@@ -24,27 +24,16 @@ app.use(rateLimit({
   duration: 10 * 60 * 1000, // 10 mins
   max: 100,
 }));
-app.use(helmet.csp({
-  'default-src': ["'none'"],
-  'script-src': ["'self'", 'http://code.jquery.com', 'https://code.jquery.com'],
-  'style-src': ["'self'", 'https://fonts.googleapis.com', "'unsafe-inline'"],
-  'font-src': ["'self'", 'https://fonts.gstatic.com'],
-  'img-src': ["'self'"],
-  'connect-src': ["'self'"],
-  'frame-ancestors': ["'none'"],
-  'report-uri': ['/csp-report'],
-  reportOnly: false, 
-  setAllHeaders: false,
-  safari5: true
-}));
-app.use(helmet.xframe('deny'));
-app.use(helmet.iexss());
-app.use(helmet.ienoopen());
-app.use(helmet.contentTypeOptions());
-app.use(helmet.cacheControl());
-
-
 app.use(require("koa-static")(__dirname + "/../static"));
+
+app.use(function *(next){
+  yield next;
+  this.set("X-XSS-Protection", "1; mode=block");
+  this.set("Cache-Control", "no-store, no-cache");
+  this.set("X-Frame-Options", "DENY");
+  this.set("X-Content-Options", "nosniff");
+  this.set("strict-transport-security", "max-age=631138519");
+});
 
 // routes
 
@@ -64,6 +53,9 @@ app.use(route.post("/csp-report", composeAppLogicAndView(cspReport, cspReportVie
 
 function getHeaders(url) {
   let client = url.startsWith("https:") ? https : http;
+  if(client === https) { // TODO remove this. ignoring cert
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
   return function(next) {
     client.get(url, res => {
       if (res.statusCode >= 300 && res.statusCode < 400) {
@@ -123,7 +115,7 @@ function* fetchHeader() {
 }
 
 function* requestInput() {
-  
+  this.response.set("content-security-policy", "default-src 'none';script-src 'self' http://code.jquery.com https://code.jquery.com;img-src 'self';font-src 'self' https://fonts.gstatic.com;connect-src 'self';style-src 'self' https://fonts.googleapis.com 'unsafe-inline';frame-ancestors 'none';report-uri /csp-report");
 }
 
 function* cspReport() {
@@ -150,6 +142,16 @@ function* directHeader(){
 };
 
 // go!
-var port = 3000;
-app.listen(port);
+var options = {
+  key: fs.readFileSync('./key.pem'),
+  cert: fs.readFileSync('./cert.pem'),
+  ciphers: "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4",
+  honorCipherOrder: true
+};
+var port = process.env.PORT || 80;
+var tls_port = process.env.TLS_PORT || 443;
+http.createServer(app.callback()).listen(port);
 console.log("server started at port " + port);
+https.createServer(options, app.callback()).listen(tls_port);
+console.log("TLS server started at port " + tls_port);
+

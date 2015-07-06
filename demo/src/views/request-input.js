@@ -7,10 +7,7 @@ export default function() {
   <head>
     <meta charset="utf-8">
     <title>CSP Header Inspector and Validator</title>
-    <link href="/css/bootstrap.css" type="text/css" rel="stylesheet"/>
-    <link href="/css/css.css" type="text/css" rel="stylesheet"/>
-    <script src="//code.jquery.com/jquery-2.1.4.min.js"></script>
-    <script src="/js/validator.js"></script>
+    <script src="/js/srloader.js"></script>
   </head>
   <body>
     <div class="container">

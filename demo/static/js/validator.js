@@ -92,13 +92,12 @@ $(function () {
     evt.preventDefault();
 
     var url = $('input[name="url"]').val();
-    console.log(url);
     $.ajax('/fetchHeader', {
       headers: {
         'Accept': 'application/json'
       },
       data: {
-        'url': url,
+        'url': url
       },
       success: function (response) {
         var dest = response.url;

@@ -8,6 +8,7 @@ import * as rateLimit from "koa-better-ratelimit";
 import * as route from "koa-route";
 import * as java from "java";
 import * as fs from "fs";
+import * as URL from "url";
 
 import fetchHeaderView from "./views/fetch-header";
 import requestInputView from "./views/request-input"
@@ -89,7 +90,12 @@ function getHeaders(url) {
 
 function* fetchHeader() {
   try {
-    let {url, headers} = yield getHeaders(this.query.url);
+    // remove querystring, chck for NR IP
+    let dest = URL.parse(this.query.url);
+    if(dest.hostname && isNonRoutableIp(dest.hostname)) {
+      return { error: true, message: "Error, non-routable IP address: " + dest.href };
+    }
+    let {url, headers} = yield getHeaders(dest.href);
     if (headers.length < 1) {
       return { error: true, message: "no CSP headers found at " + url };
     } else {
@@ -140,6 +146,11 @@ function* directHeader(){
   }
   return info;
 };
+
+function isNonRoutableIp(url) {
+  var re = /(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)|(^127\.0\.0\.1)/;
+  return re.test(url);
+}
 
 // go!
 var options = {

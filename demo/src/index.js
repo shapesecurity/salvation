@@ -121,7 +121,7 @@ function* fetchHeader() {
 }
 
 function* requestInput() {
-  this.response.set("content-security-policy", "default-src 'none';script-src 'self' http://code.jquery.com https://code.jquery.com;img-src 'self';font-src 'self' https://fonts.gstatic.com http://bootswatch.com/fonts/ https://bootswatch.com/fonts/;connect-src 'self';style-src 'self' http://bootswatch.com/superhero/ https://bootswatch.com/superhero/ https://fonts.googleapis.com 'unsafe-inline';frame-ancestors 'none';report-uri /csp-report");
+  this.response.set("content-security-policy", "default-src 'none';script-src 'self' code.jquery.com;img-src 'self';font-src 'self' https://fonts.gstatic.com bootswatch.com/fonts/;connect-src 'self';style-src 'self' bootswatch.com/superhero/ https://fonts.googleapis.com 'unsafe-inline';frame-ancestors 'none';report-uri /csp-report");
 }
 
 function* cspReport() {

@@ -75,10 +75,10 @@ function getHeaders(url) {
       }
       next(null, {url, headers});
     }).on('error', function(e) {
-      let err = new Error(`Unknown error`);
+      let err = new Error(`unknown error: ${e}`);
       switch(e.code) {
         case "ENOTFOUND":
-          err = new Error(`Error resolving hostname: ${e.hostname}`);
+          err = new Error(`error resolving hostname: ${e.hostname}`);
           break;
         default:
           break;
@@ -92,25 +92,28 @@ function* fetchHeader() {
   try {
     // remove querystring, chck for NR IP
     let dest = URL.parse(this.query.url);
-    if(dest.hostname && isNonRoutableIp(dest.hostname)) {
-      return { error: true, message: "Error, non-routable IP address: " + dest.href };
+    if (!dest.hostname) {
+      return { error: true, message: `invalid URL: ${this.query.url}` };
+    }
+    if (isNonRoutableIp(dest.hostname)) {
+      return { error: true, message: `non-routable IP address: ${dest.hostname}` };
     }
     let {url, headers} = yield getHeaders(dest.href);
     if (headers.length < 1) {
-      return { error: true, message: "no CSP headers found at " + url };
+      return { error: true, message: `no CSP headers found at ${url}` };
     } else {
       let policy = Parser.parseSync("", this.query.url);
       for (let header of headers) {
         try {
           policy.mergeSync(Parser.parseSync(header.value, this.query.url));
         } catch(ex) {
-          console.log(ex.cause.getMessageSync());
-          return { error: true, message: "Error: " + ex.cause.getMessageSync() };
+          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
         }
       }
       let policyText = policy.showSync();
       return {
-        message: "Policy is valid: " + policyText,
+        message: "policy is valid",
+        policyText,
         tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
         url
       };
@@ -129,7 +132,7 @@ function* cspReport() {
 }
 
 function* directHeader(){
-  let info = { error: true, message: "Unknown error" };
+  let info = { error: true, message: "unknown error" };
   if (!{}.hasOwnProperty.call(this.query, "headerValue[]")) {
     return { error: true, message: "no headerValue[] request parameter given" }
   };
@@ -147,9 +150,10 @@ function* directHeader(){
   return info;
 };
 
-function isNonRoutableIp(url) {
-  var re = /(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)|(^127\.0\.0\.1)/;
-  return re.test(url);
+function isNonRoutableIp(hostname) {
+  var v4 = /(^0\.)|(^10\.)|(^172\.1[6-9]\.)|(^172\.2[0-9]\.)|(^172\.3[0-1]\.)|(^192\.168\.)|(^127\.)/;
+  var v6 = /^[0:]+:1$/
+  return v4.test(hostname) || v6.test(hostname);
 }
 
 // go!

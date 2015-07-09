@@ -53,19 +53,31 @@ app.use(route.post("/csp-report", composeAppLogicAndView(cspReport, cspReportVie
 // application logic
 
 function getHeaders(url) {
-  let client = url.startsWith("https:") ? https : http;
+  let client = url.protocol.startsWith("https:") ? https : http;
   if(client === https) { // TODO remove this. ignoring cert
     process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
   }
   return function(next) {
-    client.get(url, res => {
+    var options = {
+      hostname: url.hostname,
+      port: url.port,
+      path: url.path,
+      agent: false
+    };
+    let req = client.request(options, res => {
       if (res.statusCode >= 300 && res.statusCode < 400) {
         if (!{}.hasOwnProperty.call(res.headers, "location"))
-          return next(new Error(`Received from ${url}: ${res.statusCode} HTTP response with no Location header`));
-        return getHeaders(res.headers.location)(next);
+          return next(new Error(`Received from ${url.href}: ${res.statusCode} HTTP response with no Location header`));
+        let locationUrl;
+        try {
+          locationUrl = URL.parse(URL.resolve(url.href, res.headers.location));
+        } catch(e) {
+          return next(new Error(`${url.href} redirects to invalid URL`));
+        }
+        return getHeaders(locationUrl)(next);
       }
       if (res.statusCode < 200 || res.statusCode >= 400)
-        return next(new Error(`Received from ${url}: ${res.statusCode} ${res.statusMessage}`));
+        return next(new Error(`Received from ${url.href}: ${res.statusCode} ${res.statusMessage}`));
       let headers = [];
       for (let i = 0, l = res.rawHeaders.length; i < l; i += 2) {
         let headerName = res.rawHeaders[i].toLowerCase();
@@ -74,17 +86,24 @@ function getHeaders(url) {
         }
       }
       next(null, {url, headers});
-    }).on('error', function(e) {
-      let err = new Error(`unknown error: ${e}`);
+    });
+    req.setTimeout(3000);
+    req.on('error', function(e) {
+      let err = new Error(`unknown error: ${e.code}`);
       switch(e.code) {
         case "ENOTFOUND":
           err = new Error(`error resolving hostname: ${e.hostname}`);
           break;
-        default:
+        case "ECONNRESET":
+          err = new Error(`error connecting to ${url.href}`);
+          break;
+        case "ECONNREFUSED":
+          err = new Error(`connection refused by ${url.href}`);
           break;
       }
       return next(err);
     });
+    req.end();
   };
 }
 
@@ -92,20 +111,21 @@ function* fetchHeader() {
   try {
     // remove querystring, chck for NR IP
     let dest = URL.parse(this.query.url);
-    if (!dest.hostname) {
+    if (!dest.protocol || !dest.hostname) {
       return { error: true, message: `invalid URL: ${this.query.url}` };
     }
     if (isNonRoutableIp(dest.hostname)) {
       return { error: true, message: `non-routable IP address: ${dest.hostname}` };
     }
-    let {url, headers} = yield getHeaders(dest.href);
+    let {url, headers} = yield getHeaders(dest);
+
     if (headers.length < 1) {
-      return { error: true, message: `no CSP headers found at ${url}` };
+      return { error: true, message: `no CSP headers found at ${url.href}` };
     } else {
-      let policy = Parser.parseSync("", this.query.url);
+      let policy = Parser.parseSync("", dest.href);
       for (let header of headers) {
         try {
-          policy.mergeSync(Parser.parseSync(header.value, this.query.url));
+          policy.mergeSync(Parser.parseSync(header.value, dest.href));
         } catch(ex) {
           return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
         }
@@ -115,7 +135,7 @@ function* fetchHeader() {
         message: "policy is valid",
         policyText,
         tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
-        url
+        url: url.href
       };
     }
   } catch(ex) {

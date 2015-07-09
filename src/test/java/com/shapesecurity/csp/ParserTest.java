@@ -36,9 +36,14 @@ public class ParserTest {
     }
 
     @Test
-    public void testEmptyParser() throws ParseException, TokeniserException {
-        Policy emptyPolicy = createPolicyWithDefaultOrigin("");
-        assertNotNull("empty policy should not be null", emptyPolicy);
+    public void testEmptyPolicy() throws ParseException, TokeniserException {
+        Policy p = createPolicyWithDefaultOrigin("");
+        assertNotNull("empty policy should not be null", p);
+        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am")));
+        assertTrue("resource is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue("resource is allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+
+
     }
 
     @Test
@@ -420,6 +425,11 @@ public class ParserTest {
         assertTrue("style hash is allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
+        assertTrue("script nonce is allowed", createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='").allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("script nonce is not allowed", createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='").allowsScriptWithNonce(new Base64Value("cGl6ZGE=")));
+        assertTrue("style nonce is allowed", createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='").allowsStyleWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed", createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='").allowsStyleWithNonce(new Base64Value("cGl6ZGE=")));
+
         p = Parser.parse("default-src 'none'", "https://abc.com");
         assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
@@ -428,6 +438,9 @@ public class ParserTest {
         assertFalse("inline style is not allowed", p.allowsUnsafeInlineStyle());
         assertFalse("script hash is not allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
+
 
         p = Parser.parse("default-src *:* 'unsafe-inline'", "https://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));

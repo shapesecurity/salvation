@@ -144,7 +144,7 @@ function* fetchHeader() {
 }
 
 function* requestInput() {
-  this.response.set("content-security-policy", "default-src 'none';script-src 'self' code.jquery.com;img-src 'self';font-src 'self' https://fonts.gstatic.com bootswatch.com/fonts/;connect-src 'self';style-src 'self' bootswatch.com/superhero/ https://fonts.googleapis.com 'unsafe-inline';frame-ancestors 'none';report-uri /csp-report");
+  this.response.set("content-security-policy", "default-src 'none';script-src 'self' code.jquery.com;img-src 'self';font-src 'self' https://fonts.gstatic.com bootswatch.com/fonts/;connect-src 'self';style-src 'self' bootswatch.com/superhero/ https://fonts.googleapis.com;frame-ancestors 'none';report-uri /csp-report");
 }
 
 function* cspReport() {

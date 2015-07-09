@@ -26,7 +26,7 @@ public class NonceSource implements SourceExpression, MatchesNonce {
     }
 
     public boolean matchesNonce(@Nonnull Base64Value nonce) {
-        return this.value.equals(value);
+        return this.value.equals(nonce);
     }
 
     @Nonnull

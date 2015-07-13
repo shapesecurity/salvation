@@ -1,12 +1,11 @@
 package com.shapesecurity.csp.directives;
 
 import com.shapesecurity.csp.directiveValues.MediaType;
-import com.shapesecurity.csp.interfaces.MatchesMediaType;
 
 import javax.annotation.Nonnull;
 import java.util.List;
 
-public class PluginTypesDirective extends MediaTypeListDirective implements MatchesMediaType {
+public class PluginTypesDirective extends MediaTypeListDirective {
     @Nonnull
     private static final String name = "plugin-types";
 
@@ -14,8 +13,4 @@ public class PluginTypesDirective extends MediaTypeListDirective implements Matc
         super(PluginTypesDirective.name, mediaTypes);
     }
 
-    public boolean matchesMediaType(@Nonnull MediaType mediaType) {
-        return this.values()
-                .anyMatch(x -> x.matchesMediaType(mediaType));
-    }
 }

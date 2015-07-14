@@ -7,7 +7,7 @@ $(function () {
     return tokens.map(function (token){
       switch (token.type) {
         case 'DirectiveName':
-          return '<span class="token directiveName" data-trigger="hover" data-placement="down" title="' + token.value + '" data-toggle="popover" data-content="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
+          return '<span class="token directiveName" data-trigger="hover" data-placement="bottom" title="' + token.value + '" data-toggle="popover" data-content="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
         case 'DirectiveValue':
           return '<span class="token directiveValue' + (token.value[0] === '\'' ? ' keyword' : '') + '">' + token.value + '</span>';
         case 'DirectiveSeparator':

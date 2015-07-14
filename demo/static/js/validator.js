@@ -1,4 +1,4 @@
-/*global $*/
+/*global $ document*/
 /*eslint quotes: [1, "single"]*/
 $(function () {
   'use strict';
@@ -7,7 +7,7 @@ $(function () {
     return tokens.map(function (token){
       switch (token.type) {
         case 'DirectiveName':
-          return '<span class="token directiveName" title="' + tooltipize(token.value) + '">' + token.value + '</span>';
+          return '<span class="token directiveName" data-trigger="hover" data-placement="down" title="' + token.value + '" data-toggle="popover" data-content="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
         case 'DirectiveValue':
           return '<span class="token directiveValue' + (token.value[0] === '\'' ? ' keyword' : '') + '">' + token.value + '</span>';
         case 'DirectiveSeparator':
@@ -50,7 +50,7 @@ $(function () {
       case 'frame-ancestors':
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
-        console.error('uknown tooltip for ' + directive);
+        console.error('unknown tooltip for ' + directive);
         return '';
     }
   }
@@ -81,6 +81,7 @@ $(function () {
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
           $('#output-body').html(colorize(response.tokens));
+          $('[data-toggle="popover"]').popover();
         }
 
       }
@@ -116,9 +117,11 @@ $(function () {
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
           $('#output-body').html(colorize(response.tokens));
+          $('[data-toggle="popover"]').popover();
         }
       }
     });
   });
+
   $('form[action="/fetchHeader"]').submit();
 });

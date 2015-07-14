@@ -62,7 +62,7 @@
 		nonCanonicalSrc: '//bootswatch.com/superhero/bootstrap.min.css',
 		hashAlgorithm: 'sha256',
 		hash: 'o0IkLyCCWGBI+ryg6bL44/f8s4cb7+5bncR4LvU57a8=',
-		fallbackSrc: '/css/bootstrap.css',
+		fallbackSrc: '/css/bootstrap.min.css',
 		successCallback: function () {
 			unsafeLoadStyle('/css/css.css');
 		}
@@ -74,7 +74,15 @@
 		hash: '8WqyJLuWKRBVhxXIL1jBDD7SDxU936oZkCnxQbWwJVw=',
 		fallbackSrc: '/js/jquery.js',
 		successCallback: function() {
-			unsafeLoadScript('/js/validator.js');
+			loadSriScript({
+				nonCanonicalSrc: '//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js',
+				hashAlgorithm: 'sha256',
+				hash: 'Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc=',
+				fallbackSrc: '/js/bootstrap.min.js',
+				successCallback: function() {
+					unsafeLoadScript('/js/validator.js');
+				}
+			});
 		}
 	});
 }());

@@ -15,35 +15,38 @@ export default function() {
 
       <h2>Validate URL</h2>
       <p>Validate CSP headers as served from the given URL.</p>
-      <form action="/fetchHeader" class="well">
+      <div class="well">
         <div class="row">
-          <div class="col-md-11">
-            <input type="url" name="url" placeholder="https://..." class="form-control" value="${this.request.href}"/>
-          </div>
-          <div class="col-md-1">
-            <button class="btn">Go</button>
+          <div class="col-md-12">
+            <div class="input-group">
+              <label class="sr-only" for="url">Enter URL:</label>
+              <input type="url" id="url" name="url" placeholder="https://..." class="form-control" autocomplete="off" value="${this.request.href}"/>
+              <span class="input-group-btn">
+                <button id="fetchHeader" class="btn btn-default" type="button">Go!</button>
+              </span>
+            </div>
           </div>
         </div>
-      </form>
+      </div>
 
       <h2>Validate CSP String</h2>
       <p>Validate a raw CSP header/value string.</p>
-      <form action="/directHeader" class="well">
+      <div class="well">
         <div class="row">
-          <div class="col-md-3">
-            <select name="headerName[]" class="form-control">
-              <option>Content-Security-Policy:</option>
-              <option>Content-Security-Policy-Report-Only:</option>
-            </select>
-          </div>
-          <div class="col-md-8">
-            <input type="text" name="headerValue[]" width="120" class="form-control"/>
-          </div>
-          <div class="col-md-1">
-            <button class="btn">Go</button>
+          <div class="col-md-12">
+            <div id="direct-header-group" class="input-group">
+              <span class="input-group-btn">
+                <button id="merge" class="btn btn-default" type="button">Merge</button>
+              </span>
+              <label class="sr-only" for="headerValue">Enter Content Security Policy:</label>
+              <input type="text" id="headerValue" name="headerValue" class="form-control" autocomplete="off"/>
+              <span class="input-group-btn">
+                <button id="directHeader" class="btn btn-default" type="button">Go!</button>
+              </span>
+            </div>
           </div>
         </div>
-      </form>
+      </div>
       <div class="panel" id="output-panel">
         <div class="panel-heading">
           <div class="panel-title" id="output-title">

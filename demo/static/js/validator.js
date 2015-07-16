@@ -1,4 +1,4 @@
-/*global $ document*/
+/*global $ document console*/
 /*eslint quotes: [1, "single"]*/
 $(function () {
   'use strict';
@@ -51,23 +51,55 @@ $(function () {
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
         console.error('unknown tooltip for ' + directive);
-        return '';
+        return 'Directive is either deprecated or not invented yet';
     }
   }
 
-  $('form[action="/directHeader"]').on('submit', function (evt) {
-    evt.preventDefault();
+  $('#fetchHeader').on('click', function(evt) {
 
-    var cspType = $('select[name="headerName[]"]').val(),
-     cspString = $('input[name="headerValue[]"]').val();
+    evt.preventDefault();
+    var url = $('input[name="url').val();
+    $.ajax('/fetchHeader', {
+      headers: {
+        'Accept': 'application/json'
+      },
+      data: {
+        'url': url
+      },
+      success: function (response) {
+        var dest = response.url;
+        if(dest) {
+          $('input[name="url"]').val(dest);
+        }
+
+        if (response.error){
+          $('#output-title').text('Invalid policy at ' + dest);
+          $('#output-panel').removeClass('panel-success');
+          $('#output-panel').addClass('panel-danger');
+          $('#output-body').text(response.message);
+        }
+        else { //Valid CSP policy
+          $('#output-title').text('Valid CSP headers found at ' + dest);
+          $('#output-panel').removeClass('panel-danger');
+          $('#output-panel').addClass('panel-success');
+          $('#output-body').html(colorize(response.tokens));
+          $('[data-toggle="popover"]').popover();
+        }
+      }
+    });
+  });
+  
+  $('#directHeader').on('click', function (evt) {
+
+    evt.preventDefault();
+    var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue"]'));
 
     $.ajax('/directHeader', {
       headers: {
         'Accept': 'application/json'
       },
       data: {
-        'headerName[]': cspType,
-        'headerValue[]': cspString
+        'headerValue': JSON.stringify(cspElements.map(function(el) { return el.value; }))
       },
       success: function (response) {
         if (response.error){
@@ -83,45 +115,44 @@ $(function () {
           $('#output-body').html(colorize(response.tokens));
           $('[data-toggle="popover"]').popover();
         }
-
       }
     });
   });
 
-  $('form[action="/fetchHeader"]').on('submit', function(evt) {
+  $('#url').keyup(function(evt) {
+    if(evt.which == 13 ) {
+      evt.preventDefault();
+      $('#fetchHeader').click();
+    }
+  });
+
+  $('#headerValue').keyup(function(evt) {
+    if(evt.which == 13 ) {
+      evt.preventDefault();
+      $('#directHeader').click();
+    }
+  });
+
+  $('#merge').on('click', function(evt)
+    {
+        evt.preventDefault();
+
+        var controlGroup = $('#direct-header-group'),
+            currentEntry = $(this).parents('.entry:first'),
+            newEntry = $(currentEntry.clone()).appendTo(controlGroup);
+
+        newEntry.find('input').val('');
+        controlGroup.find('.entry:not(:last) #merge')
+            .removeClass('btn-add').addClass('btn-remove')
+            .removeClass('btn-success').addClass('btn-danger')
+            .html('<span class="glyphicon glyphicon-minus"></span>');
+    }).on('click', '.btn-remove', function(evt)
+    {
+    $(this).parents('.entry:first').remove();
 
     evt.preventDefault();
-
-    var url = $('input[name="url"]').val();
-    $.ajax('/fetchHeader', {
-      headers: {
-        'Accept': 'application/json'
-      },
-      data: {
-        'url': url
-      },
-      success: function (response) {
-        var dest = response.url;
-        if(dest) {
-          $('input[name="url"]').val(dest);
-        }
-
-        if (response.error){
-          $('#output-title').text(response.message);
-          $('#output-panel').removeClass('panel-success');
-          $('#output-panel').addClass('panel-danger');
-          $('#output-body').text('');
-        }
-        else { //Valid CSP policy
-          $('#output-title').text('CSP headers found at ' + dest);
-          $('#output-panel').removeClass('panel-danger');
-          $('#output-panel').addClass('panel-success');
-          $('#output-body').html(colorize(response.tokens));
-          $('[data-toggle="popover"]').popover();
-        }
-      }
-    });
+    return false;
   });
-
-  $('form[action="/fetchHeader"]').submit();
+  
+  $('#fetchHeader').click();
 });

@@ -18,13 +18,15 @@ export default function() {
       <div class="well">
         <div class="row">
           <div class="col-md-12">
-            <div class="input-group">
-              <label class="sr-only" for="url">Enter URL:</label>
-              <input type="url" id="url" name="url" placeholder="https://..." class="form-control" autocomplete="off" value="${this.request.href}"/>
-              <span class="input-group-btn">
-                <button id="fetchHeader" class="btn btn-default" type="button">Go!</button>
-              </span>
-            </div>
+            <form role="form" id="fetchHeader" action="/fetchHeader">
+              <div class="input-group">
+                <label class="sr-only" for="url">Enter URL:</label>
+                <input type="url" id="url" name="url" placeholder="https://..." class="form-control" autocomplete="off" value="${this.request.href}"/>
+                <span class="input-group-btn">
+                  <button class="btn btn-info" type="submit">Go!</button>
+                </span>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -32,20 +34,24 @@ export default function() {
       <h2>Validate CSP String</h2>
       <p>Validate a raw CSP header/value string.</p>
       <div class="well">
-        <div class="row">
-          <div class="col-md-12">
-            <div id="direct-header-group" class="input-group">
-              <span class="input-group-btn">
-                <button id="merge" class="btn btn-default" type="button">Merge</button>
-              </span>
-              <label class="sr-only" for="headerValue">Enter Content Security Policy:</label>
-              <input type="text" id="headerValue" name="headerValue" class="form-control" autocomplete="off"/>
-              <span class="input-group-btn">
-                <button id="directHeader" class="btn btn-default" type="button">Go!</button>
-              </span>
+        <form role="form" id="directHeader" action="/directHeader">
+          <div id="directHeaderInputTemplate" class="row">
+            <div class="col-md-12">
+                <div class="input-group">
+                  <span class="input-group-btn">
+                    <button class="btn btn-add btn-success" type="button">
+                      <span class="glyphicon glyphicon-plus"></span>
+                    </button>
+                  </span>
+                  <label class="sr-only" for="headerValue">Enter Content Security Policy:</label>
+                  <input type="text" id="headerValue" name="headerValue[]" class="form-control" autocomplete="off"/>
+                  <span class="input-group-btn">
+                    <button class="btn btn-info btn-go" type="submit">Go!</button>
+                  </span>
+                </div>
             </div>
           </div>
-        </div>
+        </form>
       </div>
       <div class="panel" id="output-panel">
         <div class="panel-heading">
@@ -56,7 +62,7 @@ export default function() {
         </div>
       </div>
       <hr>
-      <p>CSP Validator was built by Sergey Shekyan, Michael Ficarra, Dawson Botsford, Ben Vinegar, and the fine folks at <a href="http://shapesecurity.com">Shape Security</a>.</p>
+      <p>CSP Validator was built by Sergey Shekyan, Michael Ficarra, Dawson Botsford, Ben Vinegar, and the fine folks at <a href="//shapesecurity.com">Shape Security</a>.</p>
     </div>
   </body>
 </html>`;

@@ -55,8 +55,7 @@ $(function () {
     }
   }
 
-  $('#fetchHeader').on('click', function(evt) {
-
+  $('#fetchHeader').on('submit', function(evt) {
     evt.preventDefault();
     var url = $('input[name="url').val();
     $.ajax('/fetchHeader', {
@@ -88,18 +87,17 @@ $(function () {
       }
     });
   });
-  
-  $('#directHeader').on('click', function (evt) {
 
+  $('#directHeader').on('submit', function (evt) {
     evt.preventDefault();
-    var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue"]'));
+    var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue[]"]'));
 
     $.ajax('/directHeader', {
       headers: {
         'Accept': 'application/json'
       },
       data: {
-        'headerValue': JSON.stringify(cspElements.map(function(el) { return el.value; }))
+        'headerValue[]': JSON.stringify(cspElements.map(function(el) { return el.value; }))
       },
       success: function (response) {
         if (response.error){
@@ -119,40 +117,25 @@ $(function () {
     });
   });
 
-  $('#url').keyup(function(evt) {
-    if(evt.which == 13 ) {
-      evt.preventDefault();
-      $('#fetchHeader').click();
-    }
-  });
-
-  $('#headerValue').keyup(function(evt) {
-    if(evt.which == 13 ) {
-      evt.preventDefault();
-      $('#directHeader').click();
-    }
-  });
-
-  $('#merge').on('click', function(evt)
-    {
+  $('#directHeader').delegate('.btn-add', 'click', function(evt) {
         evt.preventDefault();
 
-        var controlGroup = $('#direct-header-group'),
-            currentEntry = $(this).parents('.entry:first'),
-            newEntry = $(currentEntry.clone()).appendTo(controlGroup);
+        var row = $('#directHeaderInputTemplate').clone();
+        row.find('.btn-go').parent().remove();
+        row.find('.btn-add').removeClass('btn-add').addClass('btn-remove').removeClass('btn-success').addClass('btn-danger');
+        row.find('.glyphicon-plus').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        row.find('input').val('');
+        row.find('input').attr('placeholder', 'Enter CSP to merge');
+        row.find('input').removeAttr('id');
+        row.appendTo($('#directHeader'));
+        return false;
+  });
 
-        newEntry.find('input').val('');
-        controlGroup.find('.entry:not(:last) #merge')
-            .removeClass('btn-add').addClass('btn-remove')
-            .removeClass('btn-success').addClass('btn-danger')
-            .html('<span class="glyphicon glyphicon-minus"></span>');
-    }).on('click', '.btn-remove', function(evt)
-    {
-    $(this).parents('.entry:first').remove();
-
+  $('#directHeader').delegate('.btn-remove', 'click', function(evt) {
+    $(this).parents('.row').remove();
     evt.preventDefault();
     return false;
   });
-  
-  $('#fetchHeader').click();
+
+  $('#fetchHeader').submit();
 });

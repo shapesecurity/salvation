@@ -127,7 +127,7 @@ function* fetchHeader() {
         try {
           policy.mergeSync(Parser.parseSync(header.value, dest.href));
         } catch(ex) {
-          return { error: true, message: `${ex.cause.getMessageSync()}`, url: url.href};
+          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, url: url.href};
         }
       }
       let policyText = policy.showSync();
@@ -154,11 +154,22 @@ function* cspReport() {
 
 function* directHeader(){
   let info = { error: true, message: "unknown error" };
-  if (!{}.hasOwnProperty.call(this.query, "headerValue")) {
-    return { error: true, message: "no headerValue request parameter given" }
+  if (!{}.hasOwnProperty.call(this.query, "headerValue[]")) {
+    return { error: true, message: "no headerValue[] request parameter given" }
   };
   try {
-    let policyArray = JSON.parse(this.query["headerValue"]);
+    let policyArray;
+    switch (this.accepts("html", "json", "text")) {
+      case "html":
+        policyArray = this.query["headerValue[]"];
+        break;
+      case "json":
+      policyArray = JSON.parse(this.query["headerValue[]"]);
+      break;
+      default:
+        return { error: true, message: `Unexpected error` };
+    }
+
     let policy = Parser.parseSync("", "http://example.com");
     for(let policyText of policyArray) {
        try {
@@ -179,7 +190,7 @@ function* directHeader(){
       info = { error: true, message: `${ex.cause.getMessageSync()}` };
     } else { // other error
       console.log("unexpected error: " + ex.stack);
-      info = { error: true, message: "Unexpected error" };
+      info = { error: true, message: "unexpected error" };
     }
   }
   return info;

@@ -26,9 +26,6 @@
   color: #EABF50;
 }
 
-.btn {
-  background-color: #5C92B8;
-}
 select.form-control {
   padding: 1px;
 }
@@ -38,5 +35,9 @@ a {
 }
 a:hover {
   color: #6CA0C5;
+}
+
+#directHeader .row:not(:first-child) {
+  margin-top: 10px;
 }
 

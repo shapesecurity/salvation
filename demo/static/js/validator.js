@@ -1,4 +1,4 @@
-/*global $ document*/
+/*global $ document console*/
 /*eslint quotes: [1, "single"]*/
 $(function () {
   'use strict';
@@ -51,48 +51,13 @@ $(function () {
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
         console.error('unknown tooltip for ' + directive);
-        return '';
+        return 'Directive is either deprecated or not invented yet';
     }
   }
 
-  $('form[action="/directHeader"]').on('submit', function (evt) {
+  $('#fetchHeader').on('submit', function(evt) {
     evt.preventDefault();
-
-    var cspType = $('select[name="headerName[]"]').val(),
-     cspString = $('input[name="headerValue[]"]').val();
-
-    $.ajax('/directHeader', {
-      headers: {
-        'Accept': 'application/json'
-      },
-      data: {
-        'headerName[]': cspType,
-        'headerValue[]': cspString
-      },
-      success: function (response) {
-        if (response.error){
-          $('#output-title').text('Invalid policy');
-          $('#output-panel').removeClass('panel-success');
-          $('#output-panel').addClass('panel-danger');
-          $('#output-body').text(response.message);
-        }
-        else { //Valid CSP policy
-          $('#output-title').text('Valid policy');
-          $('#output-panel').removeClass('panel-danger');
-          $('#output-panel').addClass('panel-success');
-          $('#output-body').html(colorize(response.tokens));
-          $('[data-toggle="popover"]').popover();
-        }
-
-      }
-    });
-  });
-
-  $('form[action="/fetchHeader"]').on('submit', function(evt) {
-
-    evt.preventDefault();
-
-    var url = $('input[name="url"]').val();
+    var url = $('input[name="url').val();
     $.ajax('/fetchHeader', {
       headers: {
         'Accept': 'application/json'
@@ -107,13 +72,13 @@ $(function () {
         }
 
         if (response.error){
-          $('#output-title').text(response.message);
+          $('#output-title').text('Invalid policy at ' + dest);
           $('#output-panel').removeClass('panel-success');
           $('#output-panel').addClass('panel-danger');
-          $('#output-body').text('');
+          $('#output-body').text(response.message);
         }
         else { //Valid CSP policy
-          $('#output-title').text('CSP headers found at ' + dest);
+          $('#output-title').text('Valid CSP headers found at ' + dest);
           $('#output-panel').removeClass('panel-danger');
           $('#output-panel').addClass('panel-success');
           $('#output-body').html(colorize(response.tokens));
@@ -123,5 +88,54 @@ $(function () {
     });
   });
 
-  $('form[action="/fetchHeader"]').submit();
+  $('#directHeader').on('submit', function (evt) {
+    evt.preventDefault();
+    var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue[]"]'));
+    var cspArray = $.param({'headerValue[]': cspElements.map(function(el) { return el.value; })});
+
+    $.ajax('/directHeader', {
+      headers: {
+        'Accept': 'application/json'
+      },
+      processData: false,
+      data: cspArray,
+      success: function (response) {
+        if (response.error){
+          $('#output-title').text('Invalid policy');
+          $('#output-panel').removeClass('panel-success');
+          $('#output-panel').addClass('panel-danger');
+          $('#output-body').text(response.message);
+        }
+        else { //Valid CSP policy
+          $('#output-title').text('Valid policy');
+          $('#output-panel').removeClass('panel-danger');
+          $('#output-panel').addClass('panel-success');
+          $('#output-body').html(colorize(response.tokens));
+          $('[data-toggle="popover"]').popover();
+        }
+      }
+    });
+  });
+
+  $('#directHeader').delegate('.btn-add', 'click', function(evt) {
+        evt.preventDefault();
+
+        var row = $('#directHeaderInputTemplate').clone();
+        row.find('.btn-go').parent().remove();
+        row.find('.btn-add').removeClass('btn-add').addClass('btn-remove').removeClass('btn-success').addClass('btn-danger');
+        row.find('.glyphicon-plus').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        row.find('input').val('');
+        row.find('input').attr('placeholder', 'Enter CSP to merge');
+        row.find('input').removeAttr('id');
+        row.appendTo($('#directHeader'));
+        return false;
+  });
+
+  $('#directHeader').delegate('.btn-remove', 'click', function(evt) {
+    $(this).parents('.row').remove();
+    evt.preventDefault();
+    return false;
+  });
+
+  $('#fetchHeader').submit();
 });

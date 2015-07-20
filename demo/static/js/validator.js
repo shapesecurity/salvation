@@ -91,14 +91,14 @@ $(function () {
   $('#directHeader').on('submit', function (evt) {
     evt.preventDefault();
     var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue[]"]'));
+    var cspArray = $.param({'headerValue[]': cspElements.map(function(el) { return el.value; })});
 
     $.ajax('/directHeader', {
       headers: {
         'Accept': 'application/json'
       },
-      data: {
-        'headerValue[]': JSON.stringify(cspElements.map(function(el) { return el.value; }))
-      },
+      processData: false,
+      data: cspArray,
       success: function (response) {
         if (response.error){
           $('#output-title').text('Invalid policy');

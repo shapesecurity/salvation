@@ -158,29 +158,18 @@ function* directHeader(){
     return { error: true, message: "no headerValue[] request parameter given" }
   };
   try {
-    let policyArray;
-    switch (this.accepts("html", "json", "text")) {
-      case "html":
-        policyArray = this.query["headerValue[]"];
-        break;
-      case "json":
-      policyArray = JSON.parse(this.query["headerValue[]"]);
-      break;
-      default:
-        return { error: true, message: `Unexpected error` };
-    }
-
+    let policyArray = [].concat(this.query["headerValue[]"]);
     let policy = Parser.parseSync("", "http://example.com");
     for(let policyText of policyArray) {
-       try {
-          policy.mergeSync(Parser.parseSync(policyText, "http://example.com"));
-        } catch(ex) {
-          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
-        }
+      try {
+        policy.mergeSync(Parser.parseSync(policyText, "http://example.com"));
+      } catch(ex) {
+        return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
+      }
     }
     let finalPolicyText = policy.showSync();
     info = {
-      message: `Policy is valid:  ${finalPolicyText}`,
+      message: `Policy is valid: ${finalPolicyText}`,
       tokens: Tokeniser.tokeniseSync(finalPolicyText).map(x => JSON.parse(x.toJSONSync())),
     };
   } catch(ex) {

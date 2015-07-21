@@ -117,6 +117,8 @@ public class Policy implements Show {
         return defaultSrcDirective.matchesNonce(nonce);
     }
 
+
+    // 7.4.1
     private boolean defaultsAllowSource(@Nonnull URI s) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -217,5 +219,14 @@ public class Policy implements Show {
             return this.defaultsAllowNonce(nonce);
         }
         return styleSrcDirective.matchesNonce(nonce);
+    }
+
+    public boolean allowsConnectTo(@Nonnull URI uri) {
+        ConnectSrcDirective connectSrcDirective = this.getDirectiveByType(ConnectSrcDirective.class);
+        if (connectSrcDirective == null) {
+            return this.defaultsAllowSource(uri);
+        }
+        return connectSrcDirective.matchesUri(this.origin, uri);
+
     }
 }

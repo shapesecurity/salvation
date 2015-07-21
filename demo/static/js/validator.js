@@ -57,7 +57,7 @@ $(function () {
 
   $('#fetchHeader').on('submit', function(evt) {
     evt.preventDefault();
-    var url = $('input[name="url').val();
+    var url = $('input[name="url"]').val();
     $.ajax('/fetchHeader', {
       headers: {
         'Accept': 'application/json'

@@ -442,7 +442,7 @@ public class ParserTest {
         assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
 
 
-        p = Parser.parse("default-src *:* 'unsafe-inline'", "https://abc.com");
+        p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         //assertTrue("resource is allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
 
@@ -452,6 +452,13 @@ public class ParserTest {
         assertTrue("inline style is allowed", p.allowsUnsafeInlineStyle());
         assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertTrue("style hash is allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("https://abc.com")));
+        assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("http://good.com/")));
+
+        // CSP spec 7.4.1 There is no inheritance from default-src
+        assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("https://good.com/")));
+        assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://aaa.good.com/")));
     }
 
     @Test
@@ -463,6 +470,21 @@ public class ParserTest {
         u1 = URI.parse("http://a:80");
         u2 = URI.parse("http://a");
         assertTrue("URIs are equal", u1.equals(u2));
+    }
+
+
+    @Test
+    public void testPolicyMerge() throws IllegalArgumentException, ParseException, TokeniserException {
+        Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
+        Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
+        p1.merge(p2);
+        assertEquals("default-src aaa 'self'", p1.show());
+        // TODO should be:
+        //assertEquals("default-src aaa origin2.com'", p1.show());
+        p1 = Parser.parse("default-src aaa", "https://origin1.com");
+        p2 = Parser.parse("report-uri /vvv/", "https://origin2.com");
+        p1.merge(p2);
+        assertEquals("default-src aaa; report-uri https://origin2.com/vvv/", p1.show());
     }
 
     @Test

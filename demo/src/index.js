@@ -109,7 +109,6 @@ function getHeaders(url) {
 
 function* fetchHeader() {
   try {
-    // remove querystring, chck for NR IP
     let dest = URL.parse(this.query.url);
     if (!dest.protocol || !dest.hostname) {
       return { error: true, message: `invalid URL: ${this.query.url}`, url: url.href };
@@ -120,7 +119,7 @@ function* fetchHeader() {
     let {url, headers} = yield getHeaders(dest);
 
     if (headers.length < 1) {
-      return { error: true, message: `no CSP headers found`, url: url.href };
+      return { error: true, message: `no CSP headers found at ${url.href}`, url: url.href };
     } else {
       let policy = Parser.parseSync("", dest.href);
       for (let header of headers) {
@@ -139,7 +138,7 @@ function* fetchHeader() {
       };
     }
   } catch(ex) {
-    return { error: true, message: ex.message};
+    return { error: true, message: ex.message, url: this.query.url };
   }
 }
 

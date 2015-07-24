@@ -72,7 +72,7 @@ $(function () {
         }
 
         if (response.error){
-          $('#output-title').text('Invalid policy at ' + dest);
+          $('#output-title').text('Error fetching CSP from ' + dest);
           $('#output-panel').removeClass('panel-success');
           $('#output-panel').addClass('panel-danger');
           $('#output-body').text(response.message);

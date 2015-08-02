@@ -40,7 +40,6 @@ public class Parser {
         this.tokens = tokens;
     }
 
-
     @Nonnull
     private Token advance() {
         return this.tokens[this.index++];

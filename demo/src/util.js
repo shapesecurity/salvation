@@ -26,6 +26,21 @@ function hex4(c) {
   return `${"0000".slice(hex.length)}${hex}`;
 }
 
+export function reportViolation(report) {
+  return "" +
+`violation of: ${report["violated-directive"]}
+effective directive: ${report["effective-directive"]}
+on: ${report["document-uri"]}
+blocked URI: ${report["blocked-uri"]}
+original policy: ${["original-policy"]}
+user-agent: ${report["user-agent"]}
+referrer: ${report["referrer"]}
+status code: ${report["status-code"]}
+source file: ${report["source-file"]}
+line number: ${report["line-number"]}
+column number: ${report["column-number"]}`;
+}
+
 // TODO: also run appropriate minifiers
 export const html = escapeUsing(s => s.replace(/[<>&"'`]/g, c => `&#x${hex4(c)};`))
 export const js = escapeUsing(s => s.replace(/<\/script>/g, c => `\\u${hex4(c[0])}${c.slice(1)}`));

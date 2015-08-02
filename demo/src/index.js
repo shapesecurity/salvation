@@ -9,11 +9,14 @@ import * as route from "koa-route";
 import * as java from "java";
 import * as fs from "fs";
 import * as URL from "url";
+import * as bodyParser from "koa-bodyparser";
+import * as logger from "koa-logger2";
 
 import fetchHeaderView from "./views/fetch-header";
 import requestInputView from "./views/request-input"
 import directHeaderView from "./views/direct-header"
 import cspReportView from "./views/csp-report"
+import {reportViolation} from "./util";
 
 // initialise
 java.classpath.pushDir(__dirname + "/../../target/");
@@ -21,11 +24,17 @@ java.classpath.pushDir(__dirname + "/../../target/");
 var Parser = java.import("com.shapesecurity.csp.Parser");
 var Tokeniser = java.import("com.shapesecurity.csp.Tokeniser");
 let app = koa();
+app.use(logger().gen);
+
+// application logic
 app.use(rateLimit({
   duration: 10 * 60 * 1000, // 10 mins
   max: 100,
 }));
 app.use(require("koa-static")(__dirname + "/../static"));
+app.use(bodyParser());
+
+
 
 app.use(function *(next){
   yield next;
@@ -49,8 +58,6 @@ app.use(route.get("/", composeAppLogicAndView(requestInput, requestInputView)));
 app.use(route.get("/fetchHeader", composeAppLogicAndView(fetchHeader, fetchHeaderView)));
 app.use(route.get("/directHeader", composeAppLogicAndView(directHeader, directHeaderView)));
 app.use(route.post("/csp-report", composeAppLogicAndView(cspReport, cspReportView)));
-
-// application logic
 
 function getHeaders(url) {
   let client = url.protocol.startsWith("https:") ? https : http;
@@ -148,7 +155,14 @@ function* requestInput() {
 }
 
 function* cspReport() {
-
+  // remove application/json once FF changes report ct to application/csp-report
+  if(this.request.type === "application/csp-report" || this.request.type === "application/json") {
+    let report = this.request.body["csp-report"];
+    report["user-agent"] = this.request.headers["user-agent"];
+    console.log(reportViolation(report));
+  } else {
+    this.throw(415, "wrong data");
+  }
 }
 
 function* directHeader(){

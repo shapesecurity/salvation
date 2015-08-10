@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 
 public class URI extends Origin implements DirectiveValue {
     @Nonnull
-    public final String path;
+    private final String path;
 
 
     @Nonnull

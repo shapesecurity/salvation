@@ -11,9 +11,9 @@ export default function() {
   </head>
   <body>
     <div class="container">
-      <h1 class="page-header">Content Security Policy (CSP) Validator</h1>
+      <h2 class="page-header">Content Security Policy (CSP) Validator</h2>
 
-      <h2>Validate URL</h2>
+      <h3>Validate Header</h3>
       <p>Validate CSP headers as served from the given URL.</p>
       <div class="well">
         <div class="row">
@@ -31,7 +31,7 @@ export default function() {
         </div>
       </div>
 
-      <h2>Validate CSP String</h2>
+      <h3>Validate CSP String</h3>
       <p>Validate a raw CSP header/value string.</p>
       <div class="well">
         <form role="form" id="directHeader" action="/directHeader">

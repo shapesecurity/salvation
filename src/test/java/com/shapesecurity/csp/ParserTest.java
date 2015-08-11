@@ -5,6 +5,7 @@ import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.Base64Value;
 import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.data.Warning;
 import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
@@ -13,6 +14,7 @@ import org.junit.Test;
 
 import javax.annotation.Nonnull;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import static org.junit.Assert.*;
@@ -504,5 +506,15 @@ public class ParserTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void testWarnings() throws IllegalArgumentException, ParseException, TokeniserException {
+        ArrayList<Warning> warnings = new ArrayList<>();
+        Policy p1 = Parser.parse("frame-src aaa", "https://origin", warnings);
+
+        assertEquals("frame-src aaa", p1.show());
+        assertEquals(1, warnings.size());
+        assertEquals("The frame-src directive is deprecated. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.iterator().next().message);
     }
 }

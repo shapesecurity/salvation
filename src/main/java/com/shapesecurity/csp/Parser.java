@@ -1,10 +1,7 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
-import com.shapesecurity.csp.data.Base64Value;
-import com.shapesecurity.csp.data.Origin;
-import com.shapesecurity.csp.data.Policy;
-import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.data.*;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.tokens.DirectiveNameToken;
@@ -12,7 +9,9 @@ import com.shapesecurity.csp.tokens.DirectiveValueToken;
 import com.shapesecurity.csp.tokens.Token;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 
@@ -23,21 +22,41 @@ public class Parser {
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), origin).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePrivate();
+    }
+
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePrivate();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin)).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePrivate();
+    }
+
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePrivate();
     }
 
     @Nonnull
     private final Token[] tokens;
     private int index = 0;
 
-    private Parser(@Nonnull Token[] tokens, @Nonnull Origin origin) {
+    @Nullable
+    private Collection<Warning> warningsOut;
+
+    private Parser(@Nonnull Token[] tokens, @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
         this.origin = origin;
         this.tokens = tokens;
+        this.warningsOut = warningsOut;
+    }
+
+    private void warn(@Nonnull String message) {
+        if (this.warningsOut != null) {
+            this.warningsOut.add(new Warning(message));
+        }
     }
 
     @Nonnull
@@ -95,7 +114,9 @@ public class Parser {
                 case FontSrc: return new FontSrcDirective(this.parseSourceList());
                 case FormAction: return new FormActionDirective(this.parseSourceList());
                 case FrameAncestors: return new FrameAncestorsDirective(this.parseAncestorSourceList());
-                case FrameSrc: return new FrameSrcDirective(this.parseSourceList());
+                case FrameSrc:
+                    this.warn("The frame-src directive is deprecated. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                    return new FrameSrcDirective(this.parseSourceList());
                 case ImgSrc: return new ImgSrcDirective(this.parseSourceList());
                 case MediaSrc: return new MediaSrcDirective(this.parseSourceList());
                 case ObjectSrc: return new ObjectSrcDirective(this.parseSourceList());

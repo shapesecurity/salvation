@@ -1,8 +1,13 @@
 package com.shapesecurity.csp.data;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class Warning {
+
+    @Nullable
+    public
+    Location location;
 
     @Nonnull
     public final String message;

@@ -41,21 +41,26 @@ public class Parser {
     }
 
     @Nonnull
-    private final Token[] tokens;
-    private int index = 0;
+    protected final Token[] tokens;
+    protected int index = 0;
 
     @Nullable
-    private Collection<Warning> warningsOut;
+    protected Collection<Warning> warningsOut;
 
-    private Parser(@Nonnull Token[] tokens, @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
+    protected Parser(@Nonnull Token[] tokens, @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
         this.origin = origin;
         this.tokens = tokens;
         this.warningsOut = warningsOut;
     }
 
+    @Nonnull
+    protected Warning createWarning(@Nonnull String message) {
+        return new Warning(message);
+    }
+
     private void warn(@Nonnull String message) {
         if (this.warningsOut != null) {
-            this.warningsOut.add(new Warning(message));
+            this.warningsOut.add(this.createWarning(message));
         }
     }
 
@@ -64,7 +69,7 @@ public class Parser {
         return this.tokens[this.index++];
     }
 
-    private boolean hasNext() {
+    protected boolean hasNext() {
         return this.index < this.tokens.length;
     }
 
@@ -81,12 +86,12 @@ public class Parser {
     }
 
     @Nonnull
-    private ParseException createError(@Nonnull String message) {
+    protected ParseException createError(@Nonnull String message) {
         return new ParseException(message);
     }
 
     @Nonnull
-    private Policy parsePrivate() throws ParseException {
+    protected Policy parsePrivate() throws ParseException {
         Policy policy = new Policy(this.origin);
         while (this.hasNext()) {
             if (this.eat(";")) continue;
@@ -304,6 +309,9 @@ public class Parser {
     }
 
     public static class ParseException extends Exception {
+        @Nullable
+        Location location;
+
         private ParseException(@Nonnull String message) {
             super(message);
         }

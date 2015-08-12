@@ -1,11 +1,13 @@
 package com.shapesecurity.csp;
 
+import com.shapesecurity.csp.data.Location;
 import com.shapesecurity.csp.tokens.DirectiveNameToken;
 import com.shapesecurity.csp.tokens.DirectiveSeparatorToken;
 import com.shapesecurity.csp.tokens.DirectiveValueToken;
 import com.shapesecurity.csp.tokens.Token;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -13,11 +15,11 @@ import java.util.regex.Pattern;
 
 public class Tokeniser {
     @Nonnull
-    private final ArrayList<Token> tokens;
+    protected final ArrayList<Token> tokens;
     @Nonnull
-    private final String sourceText;
-    private int index = 0;
-    private final int length;
+    protected final String sourceText;
+    protected int index = 0;
+    protected final int length;
 
     @Nonnull
     public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
@@ -32,7 +34,7 @@ public class Tokeniser {
         return ch == ' ' || ch == '\t';
     }
 
-    private Tokeniser(@Nonnull String sourceText) {
+    protected Tokeniser(@Nonnull String sourceText) {
         this.tokens = new ArrayList<>();
         this.sourceText = sourceText;
         this.length = sourceText.length();
@@ -40,11 +42,11 @@ public class Tokeniser {
     }
 
     @Nonnull
-    private TokeniserException createError(@Nonnull String message) {
+    protected TokeniserException createError(@Nonnull String message) {
         return new TokeniserException(message);
     }
 
-    private boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
+    protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
         if (this.index >= this.length) return false;
         Matcher matcher = pattern.matcher(this.sourceText);
         if (!matcher.find(this.index) || matcher.start() != this.index) return false;
@@ -108,6 +110,9 @@ public class Tokeniser {
     }
 
     public static class TokeniserException extends Exception {
+        @Nullable
+        public Location location;
+
         public TokeniserException(@Nonnull String message) {
             super(message);
         }

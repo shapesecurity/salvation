@@ -6,8 +6,9 @@ import javax.annotation.Nullable;
 public class Warning {
 
     @Nullable
-    public
-    Location location;
+    public Location startLocation;
+    @Nullable
+    public Location endLocation;
 
     @Nonnull
     public final String message;

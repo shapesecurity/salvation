@@ -32,23 +32,49 @@ public class ParserWithLocation extends Parser {
     // invariant: tokens will have non-null locations
     private ParserWithLocation(@Nonnull String sourceText, @Nonnull Token[] tokens, @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
         super(tokens, origin, warningsOut);
-        EOF = new Location(1, sourceText.length(), sourceText.length());
+        EOF = new Location(1, sourceText.length() + 1, sourceText.length());
     }
 
     private final Location EOF;
 
+    @Nullable
+    private Token getCurrentToken() {
+        return this.index <= this.tokens.length && this.index > 0 ? this.tokens[this.index - 1] : null;
+    }
+
     @Nonnull
-    private Location getLocation() {
-        Location location = this.hasNext() ? this.tokens[this.index].startLocation : EOF;
-        assert location != null;
-        return new Location(1, location.column, location.offset);
+    private Location getStartLocation() {
+        Token currentToken = this.getCurrentToken();
+        if (currentToken == null || currentToken.startLocation == null) {
+            return new Location(1, 1, 0);
+        }
+        return currentToken.startLocation;
+    }
+
+    @Nonnull
+    private Location getEndLocation() {
+        Token currentToken = this.getCurrentToken();
+        if (currentToken == null || currentToken.endLocation == null) {
+            return EOF;
+        }
+        return currentToken.endLocation;
+    }
+
+    @Override
+    @Nonnull
+    protected ParseException createUnexpectedEOF(@Nonnull String message) {
+        ParseException e = super.createError(message);
+        e.startLocation = EOF;
+        e.endLocation = EOF;
+        return e;
     }
 
     @Override
     @Nonnull
     protected ParseException createError(@Nonnull String message) {
         ParseException e = super.createError(message);
-        e.location = this.getLocation();
+        e.startLocation = this.getStartLocation();
+        e.endLocation = this.getEndLocation();
         return e;
     }
 
@@ -56,7 +82,8 @@ public class ParserWithLocation extends Parser {
     @Nonnull
     protected Warning createWarning(@Nonnull String message) {
         Warning warning = super.createWarning(message);
-        warning.location = this.getLocation();
+        warning.startLocation = this.getStartLocation();
+        warning.endLocation = this.getEndLocation();
         return warning;
     }
 }

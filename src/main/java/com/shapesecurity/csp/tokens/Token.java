@@ -9,9 +9,9 @@ import javax.annotation.Nullable;
 public abstract class Token {
 
     @Nullable
-    public Location endLocation;
-    @Nullable
     public Location startLocation;
+    @Nullable
+    public Location endLocation;
 
     @Nonnull
     public final String value;

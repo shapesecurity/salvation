@@ -14,9 +14,13 @@ public class TokeniserWithLocation extends Tokeniser {
 
     @Nonnull
     private Location getLocation() {
-        return new Location(1, this.index, this.index);
+        return new Location(1, this.index + 1, this.index);
     }
 
+    @Nonnull
+    public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+        return new TokeniserWithLocation(sourceText).tokenise();
+    }
 
     @Override
     @Nonnull

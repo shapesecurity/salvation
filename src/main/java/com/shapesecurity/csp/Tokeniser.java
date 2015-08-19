@@ -91,7 +91,7 @@ public class Tokeniser {
     }
 
     @Nonnull
-    private Token[] tokenise() throws TokeniserException {
+    protected Token[] tokenise() throws TokeniserException {
         while (this.hasNext()) {
             if (this.eatDirectiveSeparator()) continue;
             if (!this.eatDirectiveName()) {

@@ -175,7 +175,10 @@ function* directHeader(){
     let policy = Parser.parseSync("", "http://example.com");
     for(let policyText of policyArray) {
       try {
-        policy.mergeSync(Parser.parseSync(policyText, "http://example.com"));
+        let ArrayList = java.import('java.util.ArrayList');
+        let list = new ArrayList();
+        policy.mergeSync(Parser.parseSync(policyText, "http://example.com", list));
+        console.log(list.sizeSync());
       } catch(ex) {
         return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
       }

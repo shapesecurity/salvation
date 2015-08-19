@@ -4,6 +4,7 @@ import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.*;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
+import com.shapesecurity.csp.interfaces.Show;
 import com.shapesecurity.csp.tokens.DirectiveNameToken;
 import com.shapesecurity.csp.tokens.DirectiveValueToken;
 import com.shapesecurity.csp.tokens.Token;
@@ -86,6 +87,11 @@ public class Parser {
     }
 
     @Nonnull
+    protected ParseException createUnexpectedEOF(@Nonnull String message) {
+        return this.createError(message);
+    }
+
+    @Nonnull
     protected ParseException createError(@Nonnull String message) {
         return new ParseException(message);
     }
@@ -138,8 +144,11 @@ public class Parser {
     @Nonnull
     private List<MediaType> parseMediaTypeList() throws ParseException {
         ArrayList<MediaType> mediaTypes = new ArrayList<>();
-        if (!this.hasNext() || this.hasNext(";")) {
+        if (this.hasNext(";")) {
             throw this.createError("media-type-list must contain at least one media-type");
+        }
+        if (!this.hasNext()) {
+            throw this.createUnexpectedEOF("media-type-list must contain at least one media-type");
         }
         mediaTypes.add(this.parseMediaType());
         while (this.hasNext() && !this.hasNext(";")) {
@@ -183,6 +192,7 @@ public class Parser {
                 case "'unsafe-eval'":
                     return KeywordSource.UnsafeEval;
                 case "'unsafe-redirect'":
+                    this.warn("'unsafe-redirect' has been removed from CSP as of version 2.0");
                     return KeywordSource.UnsafeRedirect;
                 default:
                     if (token.value.startsWith("'nonce-")) {
@@ -294,6 +304,9 @@ public class Parser {
             uriList.add(this.parseUri());
         }
         if (uriList.isEmpty()) {
+            if (!this.hasNext()) {
+                throw this.createUnexpectedEOF("report-uri must contain at least one uri-reference");
+            }
             throw this.createError("report-uri must contain at least one uri-reference");
         }
         return uriList;
@@ -308,12 +321,23 @@ public class Parser {
         throw this.createError("expecting uri-reference but found " + token.value);
     }
 
-    public static class ParseException extends Exception {
+    public static class ParseException extends Exception implements Show {
         @Nullable
-        Location location;
+        Location startLocation;
+        @Nullable
+        Location endLocation;
 
         private ParseException(@Nonnull String message) {
             super(message);
+        }
+
+        @Nonnull
+        @Override
+        public String show() {
+            if (startLocation == null) {
+                return super.toString();
+            }
+            return startLocation.show() + ": " + super.toString();
         }
     }
 }

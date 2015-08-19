@@ -9,7 +9,7 @@ import com.shapesecurity.csp.data.Warning;
 import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.directiveValues.MediaType;
+import com.shapesecurity.csp.tokens.Token;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -33,6 +33,7 @@ public class ParserTest {
     private static Policy createPolicyWithDefaultOrigin(@Nonnull String policy) throws ParseException, TokeniserException {
         return Parser.parse(policy, "http://example.com");
     }
+
     private String createAndShow(@Nonnull String value) throws ParseException, TokeniserException {
         return createPolicyWithDefaultOrigin(value).getDirectiveByType(BaseUriDirective.class).show();
     }
@@ -398,7 +399,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testMatches() throws ParseException, TokeniserException, IllegalArgumentException {
+    public void testMatches() throws ParseException, TokeniserException {
         Policy p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", "https://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
@@ -464,7 +465,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testURIandOrigins() throws IllegalArgumentException {
+    public void testURIandOrigins() {
         URI u1 = URI.parse("http://a/123");
         URI u2 = URI.parse("http://a:80/");
         u1 = URI.parseWithOrigin(URI.parse("https://www"), "/34");
@@ -476,7 +477,7 @@ public class ParserTest {
 
 
     @Test
-    public void testPolicyMerge() throws IllegalArgumentException, ParseException, TokeniserException {
+    public void testPolicyMerge() throws ParseException, TokeniserException {
         Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
         Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
         p1.merge(p2);
@@ -509,12 +510,162 @@ public class ParserTest {
     }
 
     @Test
-    public void testWarnings() throws IllegalArgumentException, ParseException, TokeniserException {
+    public void testWarnings() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
         Policy p1 = Parser.parse("frame-src aaa", "https://origin", warnings);
 
         assertEquals("frame-src aaa", p1.show());
         assertEquals(1, warnings.size());
         assertEquals("The frame-src directive is deprecated. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.iterator().next().message);
+    }
+
+    @Test
+    public void testParseExceptionLocation() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("script-src aaa 'none' bbb", "https://origin");
+        } catch (ParseException e) {
+            assertNotNull(e.startLocation);
+            assertEquals(1, e.startLocation.line);
+            assertEquals(16, e.startLocation.column);
+            assertEquals(15, e.startLocation.offset);
+            assertNotNull(e.endLocation);
+            assertEquals(1, e.endLocation.line, 1);
+            assertEquals(22, e.endLocation.column);
+            assertEquals(21, e.endLocation.offset);
+            return;
+        }
+
+        fail();
+    }
+
+    @Test
+    public void testParseExceptionLocationReportUriEOF() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("report-uri", "https://origin");
+        } catch (ParseException e) {
+            assertNotNull(e.startLocation);
+            assertEquals(1, e.startLocation.line);
+            assertEquals(11, e.startLocation.column);
+            assertEquals(10, e.startLocation.offset);
+            assertNotNull(e.endLocation);
+            assertEquals(1, e.endLocation.line);
+            assertEquals(11, e.endLocation.column);
+            assertEquals(10, e.endLocation.offset);
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testParseExceptionLocationEmptyMediaTypeListEOF() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("plugin-types", "https://origin");
+        } catch (ParseException e) {
+            assertNotNull(e.startLocation);
+            assertEquals(1, e.startLocation.line);
+            assertEquals(13, e.startLocation.column);
+            assertEquals(12, e.startLocation.offset);
+            assertNotNull(e.endLocation);
+            assertEquals(1, e.endLocation.line);
+            assertEquals(13, e.endLocation.column);
+            assertEquals(12, e.endLocation.offset);
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testParseExceptionLocationEmptyMediaTypeList() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("    plugin-types     ; script-src aaa", "https://origin");
+        } catch (ParseException e) {
+            assertNotNull(e.startLocation);
+            assertEquals(1, e.startLocation.line);
+            assertEquals(5, e.startLocation.column);
+            assertEquals(4, e.startLocation.offset);
+            assertNotNull(e.endLocation);
+            assertEquals(1, e.endLocation.line);
+            assertEquals(17, e.endLocation.column);
+            assertEquals(16, e.endLocation.offset);
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testTokeniserExceptionLocation() {
+        try {
+            TokeniserWithLocation.tokenise("   @@@   ");
+        } catch (TokeniserException e) {
+            assertNotNull(e.location);
+            assertEquals(1, e.location.line);
+            assertEquals(4, e.location.column);
+            assertEquals(3, e.location.offset);
+        }
+    }
+
+    @Test
+    public void testTokenLocation() throws TokeniserException {
+        Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
+        assertEquals(3, tokens.length);
+        assertNotNull(tokens[0].startLocation);
+        assertEquals(1, tokens[0].startLocation.line);
+        assertEquals(1, tokens[0].startLocation.column);
+        assertEquals(0, tokens[0].startLocation.offset);
+        assertNotNull(tokens[0].endLocation);
+        assertEquals(1, tokens[0].endLocation.line);
+        assertEquals(11, tokens[0].endLocation.column);
+        assertEquals(10, tokens[0].endLocation.offset);
+        assertNotNull(tokens[1].startLocation);
+        assertEquals(1, tokens[1].startLocation.line);
+        assertEquals(12, tokens[1].startLocation.column);
+        assertEquals(11, tokens[1].startLocation.offset);
+        assertNotNull(tokens[1].endLocation);
+        assertEquals(1, tokens[1].endLocation.line);
+        assertEquals(15, tokens[1].endLocation.column);
+        assertEquals(14, tokens[1].endLocation.offset);
+        assertNotNull(tokens[2].startLocation);
+        assertEquals(1, tokens[2].startLocation.line);
+        assertEquals(16, tokens[2].startLocation.column);
+        assertEquals(15, tokens[2].startLocation.offset);
+        assertNotNull(tokens[2].endLocation);
+        assertEquals(1, tokens[2].endLocation.line);
+        assertEquals(19, tokens[2].endLocation.column);
+        assertEquals(18, tokens[2].endLocation.offset);
+    }
+
+    @Test
+    public void testWarningLocationFrameSrc() throws ParseException, TokeniserException {
+        ArrayList<Warning> warnings = new ArrayList<>();
+        ParserWithLocation.parse("frame-src aaa", "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        Warning warning = warnings.get(0);
+        assertNotNull(warning);
+        assertNotNull(warning.startLocation);
+        assertEquals(1, warning.startLocation.line);
+        assertEquals(1, warning.startLocation.column);
+        assertEquals(0, warning.startLocation.offset);
+        assertNotNull(warning.endLocation);
+        assertEquals(1, warning.endLocation.line);
+        assertEquals(10, warning.endLocation.column);
+        assertEquals(9, warning.endLocation.offset);
+    }
+
+    @Test
+    public void testWarningLocationUnsafeRedirect() throws ParseException, TokeniserException {
+        ArrayList<Warning> warnings = new ArrayList<>();
+        ParserWithLocation.parse("script-src 'unsafe-redirect'", "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        Warning warning = warnings.get(0);
+        assertNotNull(warning);
+        assertNotNull(warning.startLocation);
+        assertEquals(1, warning.startLocation.line);
+        assertEquals(12, warning.startLocation.column);
+        assertEquals(11, warning.startLocation.offset);
+        assertNotNull(warning.endLocation);
+        assertEquals(1, warning.endLocation.line);
+        assertEquals(29, warning.endLocation.column);
+        assertEquals(28, warning.endLocation.offset);
+
     }
 }

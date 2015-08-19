@@ -1,8 +1,10 @@
 package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.interfaces.Show;
+
 import javax.annotation.Nonnull;
 
-public class Location {
+public class Location implements Show {
 
     @Nonnull
     public final int line;
@@ -19,8 +21,9 @@ public class Location {
         this.offset = offset;
     }
 
+    @Nonnull
     @Override
-    public String toString() {
-        return line + ":" + column;
+    public String show() {
+        return (line + "") + ":" + (column + "");
     }
 }

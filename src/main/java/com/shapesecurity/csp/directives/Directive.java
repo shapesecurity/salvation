@@ -1,5 +1,6 @@
 package com.shapesecurity.csp.directives;
 
+import com.shapesecurity.csp.directiveValues.None;
 import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
@@ -53,6 +54,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull
     private static <T> List<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
         ArrayList<T> list = new ArrayList<>();
+
+        if(a.iterator().hasNext() && b.iterator().hasNext() &&
+                (a.iterator().next() instanceof None != b.iterator().next() instanceof None)) {
+            throw new IllegalArgumentException("'none' can only be merged with another 'none'");
+        }
+
         for (T x : a) {
             list.add(x);
         }

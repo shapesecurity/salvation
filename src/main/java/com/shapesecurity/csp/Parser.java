@@ -126,7 +126,7 @@ public class Parser {
                 case FormAction: return new FormActionDirective(this.parseSourceList());
                 case FrameAncestors: return new FrameAncestorsDirective(this.parseAncestorSourceList());
                 case FrameSrc:
-                    this.warn("The frame-src directive is deprecated. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                    this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
                     return new FrameSrcDirective(this.parseSourceList());
                 case ImgSrc: return new ImgSrcDirective(this.parseSourceList());
                 case MediaSrc: return new MediaSrcDirective(this.parseSourceList());

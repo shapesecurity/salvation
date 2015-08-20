@@ -1,9 +1,11 @@
 package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.interfaces.Show;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class Warning {
+public class Warning implements Show {
 
     @Nullable
     public Location startLocation;
@@ -20,6 +22,15 @@ public class Warning {
     @Override
     public String toString() {
         return "Warning: " + message;
+    }
+
+    @Nonnull
+    @Override
+    public String show() {
+        if (startLocation == null) {
+            return message;
+        }
+        return startLocation.show() + ": " + message;
     }
 }
 

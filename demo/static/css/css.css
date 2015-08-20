@@ -12,6 +12,7 @@
   line-height: 2em;
   margin: 1px;
   padding: 3px 6px;
+  white-space: nowrap;
 }
 .token.directiveName {
   color: #A4C4ED;
@@ -40,4 +41,5 @@ a:hover {
 #directHeader .row:not(:first-child) {
   margin-top: 10px;
 }
+
 

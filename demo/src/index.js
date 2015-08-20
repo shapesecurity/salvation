@@ -21,8 +21,10 @@ import {reportViolation} from "./util";
 // initialise
 java.classpath.pushDir(__dirname + "/../../target/");
 
-var Parser = java.import("com.shapesecurity.csp.Parser");
-var Tokeniser = java.import("com.shapesecurity.csp.Tokeniser");
+let ParserWithLocation = java.import("com.shapesecurity.csp.ParserWithLocation");
+let TokeniserWithLocation = java.import("com.shapesecurity.csp.TokeniserWithLocation");
+let Warning = java.import("com.shapesecurity.csp.data.Warning");
+let ArrayList = java.import('java.util.ArrayList');
 let app = koa();
 app.use(logger().gen);
 
@@ -128,19 +130,21 @@ function* fetchHeader() {
     if (headers.length < 1) {
       return { error: true, message: `no CSP headers found at ${url.href}`, url: url.href };
     } else {
-      let policy = Parser.parseSync("", dest.href);
+      let warnings = new ArrayList();
+      let policy = ParserWithLocation.parseSync("", dest.href);
       for (let header of headers) {
         try {
-          policy.mergeSync(Parser.parseSync(header.value, dest.href));
+          policy.mergeSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
         } catch(ex) {
-          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, url: url.href};
+          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: header.value, url: url.href};
         }
       }
       let policyText = policy.showSync();
       return {
         message: "policy is valid",
         policyText,
-        tokens: Tokeniser.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+        tokens: TokeniserWithLocation.tokeniseSync(policyText).map(x => JSON.parse(x.toJSONSync())),
+        warnings: warnings.toArraySync().map(x => x.showSync()),
         url: url.href
       };
     }
@@ -172,21 +176,20 @@ function* directHeader(){
   };
   try {
     let policyArray = [].concat(this.query["headerValue[]"]);
-    let policy = Parser.parseSync("", "http://example.com");
+    let policy = ParserWithLocation.parseSync("", "http://example.com");
+    let warnings = new ArrayList();
     for(let policyText of policyArray) {
       try {
-        let ArrayList = java.import('java.util.ArrayList');
-        let list = new ArrayList();
-        policy.mergeSync(Parser.parseSync(policyText, "http://example.com", list));
-        console.log(list.sizeSync());
+        policy.mergeSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
       } catch(ex) {
-        return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}` };
+        return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: policyText };
       }
     }
     let finalPolicyText = policy.showSync();
     info = {
       message: `Policy is valid: ${finalPolicyText}`,
-      tokens: Tokeniser.tokeniseSync(finalPolicyText).map(x => JSON.parse(x.toJSONSync())),
+      tokens: TokeniserWithLocation.tokeniseSync(finalPolicyText).map(x => JSON.parse(x.toJSONSync())),
+      warnings: warnings.toArraySync().map(x => x.showSync())
     };
   } catch(ex) {
     // node-java error

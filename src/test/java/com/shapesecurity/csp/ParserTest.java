@@ -516,7 +516,7 @@ public class ParserTest {
 
         assertEquals("frame-src aaa", p1.show());
         assertEquals(1, warnings.size());
-        assertEquals("The frame-src directive is deprecated. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.iterator().next().message);
+        assertEquals("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.iterator().next().message);
     }
 
     @Test
@@ -667,5 +667,40 @@ public class ParserTest {
         assertEquals(29, warning.endLocation.column);
         assertEquals(28, warning.endLocation.offset);
 
+    }
+
+    @Test
+    public void testMergeNone() throws ParseException, TokeniserException {
+        try {
+            Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+            Policy p2 = ParserWithLocation.parse("script-src a", "https://origin");
+            p1.merge(p2);
+        } catch (IllegalArgumentException e1) {
+            assertEquals("'none' can only be merged with another 'none'", e1.getMessage());
+            try {
+                Policy p1 = ParserWithLocation.parse("script-src a", "https://origin");
+                Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+                p1.merge(p2);
+            } catch (IllegalArgumentException e2) {
+                assertEquals("'none' can only be merged with another 'none'", e2.getMessage());
+
+                {
+                    Policy p1 = ParserWithLocation.parse("script-src", "https://origin");
+                    Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+                    p1.merge(p2);
+                    assertEquals("script-src 'none'", p1.show());
+                }
+
+                {
+                    Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+                    Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+                    p1.merge(p2);
+                    assertEquals("script-src 'none'", p1.show());
+                }
+                return;
+            }
+            return;
+        }
+        fail();
     }
 }

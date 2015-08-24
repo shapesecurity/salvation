@@ -57,6 +57,8 @@ public class Base64Value implements Show {
     @Nonnull
     @Override
     public String show() {
-        return this.value.replace('-', '+').replace('_', '/');
+        // TODO: figure out if we should do this
+        // return this.value.replace('-', '+').replace('_', '/');
+        return this.value;
     }
 }

@@ -321,7 +321,7 @@ public class Parser {
         throw this.createError("expecting uri-reference but found " + token.value);
     }
 
-    public static class ParseException extends Exception implements Show {
+    public static class ParseException extends Exception {
         @Nullable
         Location startLocation;
         @Nullable
@@ -333,11 +333,11 @@ public class Parser {
 
         @Nonnull
         @Override
-        public String show() {
+        public String getMessage() {
             if (startLocation == null) {
-                return super.toString();
+                return super.getMessage();
             }
-            return startLocation.show() + ": " + super.toString();
+            return startLocation.show() + ": " + super.getMessage();
         }
     }
 }

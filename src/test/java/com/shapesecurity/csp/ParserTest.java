@@ -666,7 +666,26 @@ public class ParserTest {
         assertEquals(1, warning.endLocation.line);
         assertEquals(29, warning.endLocation.column);
         assertEquals(28, warning.endLocation.offset);
+    }
 
+    @Test
+    public void testErrorTextWithLocation() throws ParseException, TokeniserException {
+        try {
+            ParserWithLocation.parse("plugin-types", "https://origin");
+        } catch (ParseException e) {
+            assertEquals("1:13: media-type-list must contain at least one media-type", e.getMessage());
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testWarningTextWithLocation() throws ParseException, TokeniserException {
+        ArrayList<Warning> warnings = new ArrayList<>();
+        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        Warning warning = warnings.get(0);
+        assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0", warning.show());
     }
 
     @Test

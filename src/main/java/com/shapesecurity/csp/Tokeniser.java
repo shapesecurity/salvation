@@ -1,6 +1,7 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.data.Location;
+import com.shapesecurity.csp.interfaces.Show;
 import com.shapesecurity.csp.tokens.DirectiveNameToken;
 import com.shapesecurity.csp.tokens.DirectiveSeparatorToken;
 import com.shapesecurity.csp.tokens.DirectiveValueToken;
@@ -115,6 +116,15 @@ public class Tokeniser {
 
         public TokeniserException(@Nonnull String message) {
             super(message);
+        }
+
+        @Nonnull
+        @Override
+        public String getMessage() {
+            if (location == null) {
+                return super.getMessage();
+            }
+            return location.show() + ": " + super.getMessage();
         }
     }
 }

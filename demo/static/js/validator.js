@@ -7,7 +7,7 @@ $(function () {
     return tokens.map(function (token){
       switch (token.type) {
         case 'DirectiveName':
-          return '<span class="token directiveName" data-trigger="hover" data-placement="bottom" title="' + token.value + '" data-toggle="popover" data-content="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
+          return '<span class="token directiveName" title="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
         case 'DirectiveValue':
           return '<span class="token directiveValue' + (token.value[0] === '\'' ? ' keyword' : '') + '">' + token.value + '</span>';
         case 'DirectiveSeparator':
@@ -50,85 +50,115 @@ $(function () {
       case 'frame-ancestors':
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
-        console.error('unknown tooltip for ' + directive);
+        console.info('unknown tooltip for ' + directive);
         return 'Directive is either deprecated or not invented yet';
     }
   }
 
+  function displayResults(response) {
+    var dest = response.url;
+    if(dest) {
+      $('input[name="url"]').val(dest);
+    }
+
+    var outputBody = $('#output-body');
+    outputBody.empty();
+
+    if (response.error){
+      $('#output-panel').removeClass('panel-success');
+      $('#output-panel').addClass('panel-danger');
+      if(response.originalPolicy) {
+        $('#output-title').text('Invalid policy' + (dest ? ' at ' + dest : ''));
+        outputBody
+          .append($('<p>').text(response.message))
+          .append($('<pre>').html(response.originalPolicy));
+      } else {
+        $('#output-title').text(dest ? 'Error fetching CSP headers from ' + dest : 'Error');
+        outputBody.text(response.message);
+      }
+    } else {
+      $('#output-title').text('Valid policy' + (dest ? ' at ' + dest : ''));
+      $('#output-panel').removeClass('panel-danger');
+      $('#output-panel').addClass('panel-success');
+      if(response.warnings && response.warnings.length > 0) {
+        outputBody.append(response.warnings.map(function(warningText) {
+          return $('<div class="alert alert-warning">')
+            .append($('<h4>').text('Warning!'))
+            .append($('<p>').text(warningText));
+        }));
+      }
+      outputBody.append($('<p>').html(colorize(response.tokens)));
+    }
+  }
+
+  function handleError(jqXhr, errorType, error) {
+    $('#output-panel').removeClass('panel-success');
+    $('#output-panel').addClass('panel-danger');
+    switch (errorType) {
+      case 'timeout':
+        $('#output-title').text('Request timed out');
+        break;
+      case 'abort':
+        $('#output-title').text('Request aborted');
+        break;
+      default:
+        $('#output-title').text('Error');
+    }
+    $('#output-body').empty().text(error.message);
+  }
+
   $('#fetchHeader').on('submit', function(evt) {
     evt.preventDefault();
+    $('.btn.btn-info').prop('disabled', true);
     var url = $('input[name="url"]').val();
     $.ajax('/fetchHeader', {
+      timeout: 15e3,
       headers: {
         'Accept': 'application/json'
       },
       data: {
         'url': url
-      },
-      success: function (response) {
-        var dest = response.url;
-        if(dest) {
-          $('input[name="url"]').val(dest);
-        }
-
-        if (response.error){
-          $('#output-title').text('Error fetching CSP from ' + dest);
-          $('#output-panel').removeClass('panel-success');
-          $('#output-panel').addClass('panel-danger');
-          $('#output-body').text(response.message);
-        }
-        else { //Valid CSP policy
-          $('#output-title').text('Valid CSP headers found at ' + dest);
-          $('#output-panel').removeClass('panel-danger');
-          $('#output-panel').addClass('panel-success');
-          $('#output-body').html(colorize(response.tokens));
-          $('[data-toggle="popover"]').popover();
-        }
       }
+    })
+    .done(displayResults)
+    .error(handleError)
+    .always(function() {
+      $('.btn.btn-info').prop('disabled', false);
     });
   });
 
   $('#directHeader').on('submit', function (evt) {
     evt.preventDefault();
+    $('.btn.btn-info').prop('disabled', true);
     var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue[]"]'));
     var cspArray = $.param({'headerValue[]': cspElements.map(function(el) { return el.value; })});
 
     $.ajax('/directHeader', {
+      timeout: 5e3,
       headers: {
         'Accept': 'application/json'
       },
       processData: false,
-      data: cspArray,
-      success: function (response) {
-        if (response.error){
-          $('#output-title').text('Invalid policy');
-          $('#output-panel').removeClass('panel-success');
-          $('#output-panel').addClass('panel-danger');
-          $('#output-body').text(response.message);
-        }
-        else { //Valid CSP policy
-          $('#output-title').text('Valid policy');
-          $('#output-panel').removeClass('panel-danger');
-          $('#output-panel').addClass('panel-success');
-          $('#output-body').html(colorize(response.tokens));
-          $('[data-toggle="popover"]').popover();
-        }
-      }
+      data: cspArray
+    })
+    .done(displayResults)
+    .error(handleError)
+    .always(function() {
+      $('.btn.btn-info').prop('disabled', false);
     });
   });
 
   $('#directHeader').delegate('.btn-add', 'click', function(evt) {
-        evt.preventDefault();
-
-        var row = $('#directHeaderInputTemplate').clone();
-        row.find('.btn-go').parent().remove();
-        row.find('.btn-add').removeClass('btn-add').addClass('btn-remove').removeClass('btn-success').addClass('btn-danger');
-        row.find('.glyphicon-plus').removeClass('glyphicon-plus').addClass('glyphicon-minus');
-        row.find('input').val('');
-        row.find('input').attr('placeholder', 'Enter CSP to merge');
-        row.find('input').removeAttr('id');
-        row.appendTo($('#directHeader'));
-        return false;
+    evt.preventDefault();
+    var row = $('#directHeaderInputTemplate').clone();
+    row.find('.btn-go').parent().remove();
+    row.find('.btn-add').removeClass('btn-add').addClass('btn-remove').removeClass('btn-success').addClass('btn-danger');
+    row.find('.glyphicon-plus').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+    row.find('input').val('');
+    row.find('input').attr('placeholder', 'Enter CSP to merge');
+    row.find('input').removeAttr('id');
+    row.appendTo($('#directHeader'));
+    return false;
   });
 
   $('#directHeader').delegate('.btn-remove', 'click', function(evt) {

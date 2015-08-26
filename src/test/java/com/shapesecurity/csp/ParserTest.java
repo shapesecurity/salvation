@@ -689,6 +689,44 @@ public class ParserTest {
     }
 
     @Test
+    public void testAllowDirective() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("allow 'none'", "https://origin");
+        } catch (ParseException e1) {
+            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testOptionsDirective() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("options inline-script", "https://origin");
+        } catch (ParseException e1) {
+            assertEquals("1:1: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.", e1.getMessage());
+            return;
+        }
+        fail();
+    }
+
+    @Test
+    public void testFutureDirectives() throws TokeniserException {
+        try {
+            ParserWithLocation.parse("referrer no-referrer", "https://origin");
+        } catch (ParseException e1) {
+            assertEquals("1:1: The referrer directive is not in the CSP specification yet.", e1.getMessage());
+            try {
+                ParserWithLocation.parse("upgrade-insecure-requests", "https://origin");
+            } catch (ParseException e2) {
+                assertEquals("1:1: The upgrade-insecure-requests directive is not in the CSP specification yet.", e2.getMessage());
+            }
+            return;
+        }
+        fail();
+    }
+
+    @Test
     public void testMergeNone() throws ParseException, TokeniserException {
         try {
             Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");

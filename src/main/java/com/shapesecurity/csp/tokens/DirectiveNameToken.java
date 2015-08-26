@@ -39,7 +39,14 @@ public class DirectiveNameToken extends Token {
         ReportUri,
         Sandbox,
         ScriptSrc,
-        StyleSrc;
+        StyleSrc,
+
+        Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
+        UpgradeInsecureRequests, // in draft at http://www.w3.org/TR/2015/WD-upgrade-insecure-requests-20150424/#delivery as of 2015-08-27
+
+        Allow, // never included in an official CSP specification
+        Options; // never included in an official CSP specification
+
 
         @Nullable
         static DirectiveNameSubtype fromString(@Nonnull String directiveName) {
@@ -60,6 +67,12 @@ public class DirectiveNameToken extends Token {
                 case "sandbox": return Sandbox;
                 case "script-src": return ScriptSrc;
                 case "style-src": return StyleSrc;
+
+                // deprecated or proposed directives
+                case "allow": return Allow;
+                case "options": return Options;
+                case "referrer": return Referrer;
+                case "upgrade-insecure-requests": return UpgradeInsecureRequests;
             }
             return null;
         }

@@ -136,6 +136,13 @@ public class Parser {
                 case Sandbox: return new SandboxDirective(this.parseSandboxTokenList());
                 case ScriptSrc: return new ScriptSrcDirective(this.parseSourceList());
                 case StyleSrc: return new StyleSrcDirective(this.parseSourceList());
+                case Referrer:
+                case UpgradeInsecureRequests:
+                    throw this.createError("The " + ((DirectiveNameToken) token).value + " directive is not in the CSP specification yet.");
+                case Allow:
+                    throw this.createError("The allow directive has been replaced with default-src and is not in the CSP specification.");
+                case Options:
+                    throw this.createError("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
             }
         }
         throw this.createError("expecting directive-name but found " + token.value);

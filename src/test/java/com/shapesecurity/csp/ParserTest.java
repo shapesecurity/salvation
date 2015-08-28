@@ -10,6 +10,7 @@ import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.tokens.Token;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -501,7 +502,7 @@ public class ParserTest {
                 try {
                     p = createPolicyWithDefaultOrigin(line[1]);
                     assertNotNull(String.format("policy should not be null: %s", line[0]), p);
-                } catch (ParseException | TokeniserException e) {
+                } catch (ParseException | TokeniserException | IllegalArgumentException e) {
                     System.out.println(line[0]);
                     System.out.println(e);
                 }
@@ -759,5 +760,48 @@ public class ParserTest {
             return;
         }
         fail();
+    }
+
+    @Test
+    public void testMergeDefaultSrc() throws ParseException, TokeniserException {
+        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src *", "https://origin");
+        p2 = ParserWithLocation.parse("script-src b", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src *; script-src * b", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src b", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src a; script-src a b", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
+        p2 = ParserWithLocation.parse("script-src c", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src a; script-src b c", p1.show());
+
+        p1 = ParserWithLocation.parse("img-src a; script-src b", "https://origin");
+        p2 = ParserWithLocation.parse("default-src c", "https://origin");
+        p1.merge(p2);
+        assertEquals("img-src a c; script-src b c; default-src c", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("style-src b", "https://origin");
+        p1.merge(p2);
+        assertEquals("script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
+        p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src a c; script-src b c; img-src a d", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("default-src a", "https://origin");
+        p1.merge(p2);
+        assertEquals("default-src b a; script-src a", p1.show());
     }
 }

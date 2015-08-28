@@ -3,14 +3,15 @@ package com.shapesecurity.csp.data;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
 import com.shapesecurity.csp.directiveValues.KeywordSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
+import com.shapesecurity.csp.directiveValues.NonceSource;
+import com.shapesecurity.csp.directiveValues.SourceExpression;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Policy implements Show {
 
@@ -35,7 +36,113 @@ public class Policy implements Show {
     }
 
     public void merge(@Nonnull Policy other) {
+        DefaultSrcDirective defaults = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaults != null) {
+            this.expandDefaultSrc(defaults, this);
+        }
+        DefaultSrcDirective otherDefaults = other.getDirectiveByType(DefaultSrcDirective.class);
+        if (otherDefaults != null) {
+            other.expandDefaultSrc(otherDefaults, other);
+        }
         other.getDirectives().forEach(this::mergeDirective);
+        this.optimise();
+    }
+
+    private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective, @Nonnull Policy basePolicy) {
+        Set<SourceExpression> defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+        if (!basePolicy.directives.containsKey(ScriptSrcDirective.class)) {
+            this.mergeDirective(new ScriptSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(StyleSrcDirective.class)) {
+            this.mergeDirective(new StyleSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(ImgSrcDirective.class)) {
+            this.mergeDirective(new ImgSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(ChildSrcDirective.class)) {
+            this.mergeDirective(new ChildSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(ConnectSrcDirective.class)) {
+            this.mergeDirective(new ConnectSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(FontSrcDirective.class)) {
+            this.mergeDirective(new FontSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(MediaSrcDirective.class)) {
+            this.mergeDirective(new MediaSrcDirective(defaultSources));
+        }
+        if (!basePolicy.directives.containsKey(ObjectSrcDirective.class)) {
+            this.mergeDirective(new ObjectSrcDirective(defaultSources));
+        }
+    }
+
+    private void optimise() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) return;
+        Set<SourceExpression> defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+
+        // * remove source directives that are equivalent to default-src
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective != null && defaultSources.equals(scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(ScriptSrcDirective.class);
+        }
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective != null && defaultSources.equals(styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(StyleSrcDirective.class);
+        }
+        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
+        if (imgSrcDirective != null && defaultSources.equals(imgSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(ImgSrcDirective.class);
+        }
+        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+        if (childSrcDirective != null && defaultSources.equals(childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(ChildSrcDirective.class);
+        }
+        ConnectSrcDirective connectSrcDirective = this.getDirectiveByType(ConnectSrcDirective.class);
+        if (connectSrcDirective != null && defaultSources.equals(connectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(ConnectSrcDirective.class);
+        }
+        FontSrcDirective fontSrcDirective = this.getDirectiveByType(FontSrcDirective.class);
+        if (fontSrcDirective != null && defaultSources.equals(fontSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(FontSrcDirective.class);
+        }
+        MediaSrcDirective mediaSrcDirective = this.getDirectiveByType(MediaSrcDirective.class);
+        if (mediaSrcDirective != null && defaultSources.equals(mediaSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(MediaSrcDirective.class);
+        }
+        ObjectSrcDirective objectSrcDirective = this.getDirectiveByType(ObjectSrcDirective.class);
+        if (objectSrcDirective != null && defaultSources.equals (objectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+            this.directives.remove(ObjectSrcDirective.class);
+        }
+
+        // * remove default-src nonces if the policy contains both script-src and style-src directives
+        if (
+            this.directives.containsKey(ScriptSrcDirective.class) &&
+            this.directives.containsKey(StyleSrcDirective.class)
+        ) {
+            defaultSources = defaultSrcDirective.values().filter(x -> !(x instanceof NonceSource)).collect(Collectors.toCollection(LinkedHashSet::new));
+            defaultSrcDirective = new DefaultSrcDirective(defaultSources);
+            this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
+        }
+
+        // * remove unnecessary default-src directives if all source directives exist
+        if (
+            this.directives.containsKey(ScriptSrcDirective.class) &&
+            this.directives.containsKey(StyleSrcDirective.class) &&
+            this.directives.containsKey(ImgSrcDirective.class) &&
+            this.directives.containsKey(ChildSrcDirective.class) &&
+            this.directives.containsKey(ConnectSrcDirective.class) &&
+            this.directives.containsKey(FontSrcDirective.class) &&
+            this.directives.containsKey(MediaSrcDirective.class) &&
+            this.directives.containsKey(ObjectSrcDirective.class)
+        ) {
+            this.directives.remove(DefaultSrcDirective.class);
+        }
+
+        // * remove default-src directives with no source expressions
+        if (defaultSources.isEmpty()) {
+            this.directives.remove(DefaultSrcDirective.class);
+        }
     }
 
     // merge a directive if it does not exist; used for policy manipulation and composition
@@ -54,6 +161,7 @@ public class Policy implements Show {
         Directive<? extends DirectiveValue> directive = this.directives.get(d.getClass());
         if (directive == null) {
             this.directives.put(d.getClass(), d);
+            this.optimise();
         }
     }
 

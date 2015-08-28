@@ -11,9 +11,7 @@ import com.shapesecurity.csp.tokens.Token;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 
 public class Parser {
@@ -149,8 +147,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<MediaType> parseMediaTypeList() throws ParseException {
-        ArrayList<MediaType> mediaTypes = new ArrayList<>();
+    private Set<MediaType> parseMediaTypeList() throws ParseException {
+        Set<MediaType> mediaTypes = new LinkedHashSet<>();
         if (this.hasNext(";")) {
             throw this.createError("media-type-list must contain at least one media-type");
         }
@@ -175,8 +173,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<SourceExpression> parseSourceList() throws ParseException {
-        ArrayList<SourceExpression> sourceExpressions = new ArrayList<>();
+    private Set<SourceExpression> parseSourceList() throws ParseException {
+        Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
         if (this.eat("'none'")) {
             sourceExpressions.add(None.INSTANCE);
             return sourceExpressions;
@@ -252,8 +250,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<AncestorSource> parseAncestorSourceList() throws ParseException {
-        ArrayList<AncestorSource> ancestorSources = new ArrayList<>();
+    private Set<AncestorSource> parseAncestorSourceList() throws ParseException {
+        Set<AncestorSource> ancestorSources = new LinkedHashSet<>();
         if (this.hasNext("'none'")) {
             this.advance();
             ancestorSources.add(None.INSTANCE);
@@ -286,8 +284,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<SandboxValue> parseSandboxTokenList() throws ParseException {
-        ArrayList<SandboxValue> sandboxTokens = new ArrayList<>();
+    private Set<SandboxValue> parseSandboxTokenList() throws ParseException {
+        Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
         while (this.hasNext() && !this.hasNext(";")) {
             sandboxTokens.add(this.parseSandboxToken());
         }
@@ -305,8 +303,8 @@ public class Parser {
     }
 
     @Nonnull
-    private List<URI> parseUriList() throws ParseException {
-        ArrayList<URI> uriList = new ArrayList<>();
+    private Set<URI> parseUriList() throws ParseException {
+        Set<URI> uriList = new LinkedHashSet<>();
         while (this.hasNext() && !this.hasNext(";")) {
             uriList.add(this.parseUri());
         }

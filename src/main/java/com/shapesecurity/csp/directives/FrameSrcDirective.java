@@ -3,13 +3,13 @@ package com.shapesecurity.csp.directives;
 import com.shapesecurity.csp.directiveValues.SourceExpression;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import java.util.Set;
 
 public class FrameSrcDirective extends SourceListDirective {
     @Nonnull
     private static final String name = "frame-src";
 
-    public FrameSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
+    public FrameSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(FrameSrcDirective.name, sourceExpressions);
     }
 }

@@ -71,9 +71,15 @@ function getHeaders(url) {
       hostname: url.hostname,
       port: url.port,
       path: url.path,
-      agent: false
+      agent: false,
+        headers: {
+          // twitter seeks Chrome or Firefox in UA string to serve CSP
+          'user-agent': 'Mozilla/5.0 (not a Firefox, not a Chrome, but; https://cspvalidator.org)',
+          'referer': 'https://cspvalidator.org'
+        }
     };
     let req = client.request(options, res => {
+      // TODO: limit redirect count
       if (res.statusCode >= 300 && res.statusCode < 400) {
         if (!{}.hasOwnProperty.call(res.headers, "location"))
           return next(new Error(`Received from ${url.href}: ${res.statusCode} HTTP response with no Location header`));

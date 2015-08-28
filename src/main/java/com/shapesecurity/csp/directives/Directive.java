@@ -5,8 +5,7 @@ import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -16,9 +15,9 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull
     // @Nonempty
-    private List<Value> values;
+    private Set<Value> values;
 
-    Directive(@Nonnull String name, @Nonnull List<Value> values) {
+    Directive(@Nonnull String name, @Nonnull Set<Value> values) {
         this.name = name;
         this.values = values;
     }
@@ -52,8 +51,8 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @Nonnull
-    private static <T> List<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
-        ArrayList<T> list = new ArrayList<>();
+    private static <T> Set<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
+        Set<T> set = new LinkedHashSet<>();
 
         if(a.iterator().hasNext() && b.iterator().hasNext() &&
                 (a.iterator().next() instanceof None != b.iterator().next() instanceof None)) {
@@ -61,14 +60,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         }
 
         for (T x : a) {
-            list.add(x);
+            set.add(x);
         }
         for (T x : b) {
-            if (!list.contains(x)) {
-                list.add(x);
-            }
+            set.add(x);
         }
-        return list;
+        return set;
     }
 
     public boolean contains(@Nonnull DirectiveValue value) {

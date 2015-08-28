@@ -349,7 +349,6 @@ public class ParserTest {
 
     @Test
     public void testNonceSource() throws ParseException, TokeniserException {
-        failsToParse("script-src 'self' https://example.com 'nonce-Nc3n83cnSAd3wc3Sasdfn939hc3'");
         assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
         Policy p = createPolicyWithDefaultOrigin("script-src 'nonce-MTIzNDU2Nw=='");
         Policy q = createPolicyWithDefaultOrigin("script-src 'nonce-MTIzNDU2Nw=='");
@@ -362,12 +361,25 @@ public class ParserTest {
 
     @Test
     public void testBase64Value() throws ParseException, TokeniserException {
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='").getDirectiveByType(ScriptSrcDirective.class).show());
-        failsToParse("script-src 'self' https://example.com 'nonce-123'"); // illegal length
-        failsToParse("script-src 'self' https://example.com 'nonce-123^'"); // illegal chars
-        failsToParse("script-src 'self' https://example.com 'nonce-12=+'"); // illegal padding
-        failsToParse("script-src 'self' https://example.com 'nonce-1^=='"); // illegal chars
-        failsToParse("script-src 'self' https://example.com 'nonce-1==='"); // illegal chars
+        ArrayList<Warning> warnings = new ArrayList<>();
+        // illegal decoded size
+        Parser.parse("script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='", "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        // illegal length
+        Parser.parse("script-src 'self' https://example.com 'nonce-123'", "https://origin", warnings);
+        assertEquals(2, warnings.size());
+        // illegal chars
+        Parser.parse("script-src 'self' https://example.com 'nonce-123^'", "https://origin", warnings);
+        assertEquals(3, warnings.size());
+        // illegal padding
+        Parser.parse("script-src 'self' https://example.com 'nonce-12=+'", "https://origin", warnings);
+        assertEquals(4, warnings.size());
+        // illegal padding
+        Parser.parse("script-src 'self' https://example.com 'nonce-1^=='", "https://origin", warnings);
+        assertEquals(5, warnings.size());
+        Parser.parse("script-src 'self' https://example.com 'nonce-1==='", "https://origin", warnings);
+        assertEquals(6, warnings.size());
+
 
 
     }

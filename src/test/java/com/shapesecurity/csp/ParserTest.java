@@ -10,6 +10,7 @@ import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.tokens.Token;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;

@@ -3,14 +3,15 @@ package com.shapesecurity.csp.data;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
 import com.shapesecurity.csp.directiveValues.KeywordSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
+import com.shapesecurity.csp.directiveValues.NonceSource;
+import com.shapesecurity.csp.directiveValues.SourceExpression;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Policy implements Show {
 

@@ -11,9 +11,10 @@ import com.shapesecurity.csp.interfaces.MatchesUri;
 
 import javax.annotation.Nonnull;
 import java.util.List;
+import java.util.Set;
 
 public abstract class SourceListDirective extends Directive<SourceExpression> implements MatchesUri, MatchesHash, MatchesNonce {
-    SourceListDirective(@Nonnull String name, @Nonnull List<SourceExpression> values) {
+    SourceListDirective(@Nonnull String name, @Nonnull Set<SourceExpression> values) {
         super(name, values);
     }
 

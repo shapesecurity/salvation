@@ -3,13 +3,13 @@ package com.shapesecurity.csp.directives;
 import com.shapesecurity.csp.directiveValues.SourceExpression;
 
 import javax.annotation.Nonnull;
-import java.util.List;
+import java.util.Set;
 
 public class MediaSrcDirective extends SourceListDirective {
     @Nonnull
     private static final String name = "media-src";
 
-    public MediaSrcDirective(@Nonnull List<SourceExpression> sourceExpressions) {
+    public MediaSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(MediaSrcDirective.name, sourceExpressions);
     }
 }

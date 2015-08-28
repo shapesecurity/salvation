@@ -201,11 +201,12 @@ public class Parser {
                     return KeywordSource.UnsafeRedirect;
                 default:
                     if (token.value.startsWith("'nonce-")) {
-                        Base64Value b;
+                        Base64Value b = new Base64Value(token.value.substring(7, token.value.length() - 1));
                         try {
-                            b = new Base64Value(token.value.substring(7, token.value.length() - 1));
-                        } catch (IllegalArgumentException | StringIndexOutOfBoundsException e) {
-                            throw this.createError(e.getMessage());
+                            b.validate();
+                        } catch (IllegalArgumentException e) {
+                            // warn if nonce-value is not valid base64
+                            this.warn(e.getMessage());
                         }
                         return new NonceSource(b);
                     } else if (token.value.startsWith("'sha")) {
@@ -223,9 +224,9 @@ public class Parser {
                             default:
                                 throw this.createError("unrecognised hash algorithm " + token.value.substring(1, 7));
                         }
-                        Base64Value b;
+                        Base64Value b = new Base64Value(token.value.substring(8, token.value.length() - 1));
                         try {
-                            b = new Base64Value(token.value.substring(8, token.value.length() - 1));
+                            b.validate();
                         } catch (IllegalArgumentException e) {
                             throw this.createError(e.getMessage());
                         }

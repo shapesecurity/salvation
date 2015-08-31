@@ -494,9 +494,8 @@ public class ParserTest {
         Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
         Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
         p1.merge(p2);
-        assertEquals("default-src aaa 'self'", p1.show());
-        // TODO should be:
-        //assertEquals("default-src aaa origin2.com'", p1.show());
+//        assertEquals("default-src aaa origin2.com'", p1.show());
+
         p1 = Parser.parse("default-src aaa", "https://origin1.com");
         p2 = Parser.parse("report-uri /vvv/", "https://origin2.com");
         p1.merge(p2);
@@ -815,5 +814,10 @@ public class ParserTest {
         p2 = ParserWithLocation.parse("default-src a", "https://origin");
         p1.merge(p2);
         assertEquals("default-src b a; script-src a", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("default-src a", "https://origin");
+        p1.merge(p2);
+        assertEquals(p2.show(), "default-src a");
     }
 }

@@ -6,7 +6,7 @@
 
     <groupId>com.shapesecurity</groupId>
     <artifactId>csp-parser</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.3</version>
     <packaging>jar</packaging>
     <name>csp-parser</name>
 

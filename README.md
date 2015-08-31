@@ -20,7 +20,7 @@ mvn install
 Parse a policy using one of the `Parser.parse` static methods. An `Origin` or `String` may be given as the origin. The third parameter, if given, will be populated with warnings.
 
 ```java
-ArrayList<Warning> warnings = new ArrayList();
+List<Warning> warnings = new ArrayList();
 Origin origin = URI.parse("http://example.com");
 String policyText = "...";
 Policy p = Parser.parse(policyText, origin, warnings);

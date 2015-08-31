@@ -13,4 +13,10 @@ public class FormActionDirective extends SourceListDirective {
     public FormActionDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(FormActionDirective.name, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new FormActionDirective(newValues);
+    }
 }

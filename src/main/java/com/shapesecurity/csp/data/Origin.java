@@ -19,6 +19,7 @@ public class Origin implements Show {
         this.port = port;
     }
 
+    // TODO: make ports integers everywhere
     @Nonnull
     public static String defaultPortForProtocol(@Nonnull String scheme) {
         switch (scheme.toLowerCase()) {
@@ -52,8 +53,9 @@ public class Origin implements Show {
     @Nonnull
     @Override
     public String show() {
+        boolean isDefaultPort = this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port);
         return this.scheme + "://" +
             this.host +
-            (this.port.isEmpty() || defaultPortForProtocol(this.scheme).equals(this.port) ? "" : ":" + this.port);
+            (isDefaultPort ? "" : ":" + this.port);
     }
 }

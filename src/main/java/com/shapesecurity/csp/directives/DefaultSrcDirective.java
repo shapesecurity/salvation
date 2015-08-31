@@ -12,4 +12,10 @@ public class DefaultSrcDirective extends SourceListDirective {
     public DefaultSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(DefaultSrcDirective.name, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new DefaultSrcDirective(newValues);
+    }
 }

@@ -12,4 +12,10 @@ public final class ConnectSrcDirective extends SourceListDirective {
     public ConnectSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(ConnectSrcDirective.NAME, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new ConnectSrcDirective(newValues);
+    }
 }

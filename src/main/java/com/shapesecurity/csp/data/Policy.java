@@ -42,7 +42,7 @@ public class Policy implements Show {
         }
         DefaultSrcDirective otherDefaults = other.getDirectiveByType(DefaultSrcDirective.class);
         if (otherDefaults != null) {
-            other.expandDefaultSrc(otherDefaults, other);
+            this.expandDefaultSrc(otherDefaults, other);
         }
         other.getDirectives().forEach(this::mergeDirective);
         this.optimise();

@@ -7,7 +7,7 @@ import com.shapesecurity.csp.interfaces.MatchesUri;
 
 import javax.annotation.Nonnull;
 
-public class KeywordSource implements SourceExpression, MatchesUri {
+public class KeywordSource implements SourceExpression, AncestorSource, MatchesUri {
     @Nonnull
     private final String value;
 
@@ -27,13 +27,13 @@ public class KeywordSource implements SourceExpression, MatchesUri {
     }
 
     @Nonnull
-    public static final SourceExpression Self = new KeywordSource("self");
+    public static final KeywordSource Self = new KeywordSource("self");
     @Nonnull
-    public static final SourceExpression UnsafeInline = new KeywordSource("unsafe-inline");
+    public static final KeywordSource UnsafeInline = new KeywordSource("unsafe-inline");
     @Nonnull
-    public static final SourceExpression UnsafeEval = new KeywordSource("unsafe-eval");
+    public static final KeywordSource UnsafeEval = new KeywordSource("unsafe-eval");
     @Nonnull
-    public static final SourceExpression UnsafeRedirect = new KeywordSource("unsafe-redirect");
+    public static final KeywordSource UnsafeRedirect = new KeywordSource("unsafe-redirect");
 
 }
 

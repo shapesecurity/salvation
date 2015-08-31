@@ -267,6 +267,9 @@ public class Parser {
     @Nonnull
     private AncestorSource parseAncestorSource() throws ParseException {
         Token token = this.advance();
+        if (token.value.equals("'self'")) {
+            return KeywordSource.Self;
+        }
         if (token.value.matches("^" + Constants.schemePart + ":$")) {
             return new SchemeSource(token.value.substring(0, token.value.length() - 1));
         } else {

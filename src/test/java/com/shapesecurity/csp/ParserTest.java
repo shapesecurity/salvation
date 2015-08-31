@@ -173,15 +173,14 @@ public class ParserTest {
         assertEquals("directive-name, directive-value", "frame-ancestors 'none'", createPolicyWithDefaultOrigin("frame-ancestors 'none'").getDirectiveByType(FrameAncestorsDirective.class).show());
 
         Policy p;
-        p = createPolicyWithDefaultOrigin("frame-ancestors https://example.com");
+        p = createPolicyWithDefaultOrigin("frame-ancestors 'self' https://example.com");
         Policy q;
         q = createPolicyWithDefaultOrigin("script-src abc; frame-ancestors http://example.com");
         FrameAncestorsDirective d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
         FrameAncestorsDirective d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
-        ScriptSrcDirective d3 = q.getDirectiveByType(ScriptSrcDirective.class);
 
         d1.merge(d2);
-        assertEquals("ancestor-source merge", "frame-ancestors https://example.com http://example.com", d1.show());
+        assertEquals("ancestor-source merge", "frame-ancestors 'self' https://example.com http://example.com", d1.show());
         assertFalse("ancestor-source inequality", d1.equals(d2));
 
         p = createPolicyWithDefaultOrigin("frame-ancestors http://example.com");
@@ -196,6 +195,7 @@ public class ParserTest {
         assertEquals("ancestor-source scheme-source equality", p.hashCode(), q.hashCode());
 
         failsToParse("frame-ancestors scheme::");
+        failsToParse("frame-ancestors 'none' 'self'");
     }
 
     @Test

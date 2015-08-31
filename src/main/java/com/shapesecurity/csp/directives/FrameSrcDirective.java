@@ -12,4 +12,10 @@ public class FrameSrcDirective extends SourceListDirective {
     public FrameSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(FrameSrcDirective.name, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new FrameSrcDirective(newValues);
+    }
 }

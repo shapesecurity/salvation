@@ -12,4 +12,10 @@ public class ChildSrcDirective extends SourceListDirective {
     public ChildSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(ChildSrcDirective.NAME, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new ChildSrcDirective(newValues);
+    }
 }

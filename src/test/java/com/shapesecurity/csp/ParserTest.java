@@ -143,6 +143,8 @@ public class ParserTest {
         assertEquals("directive-name, host-part *", "base-uri *", createAndShow("base-uri *"));
         assertEquals("directive-name, host-part *.", "base-uri *.a", createAndShow("base-uri *.a"));
 
+        assertEquals("represent origin host-source as 'self' keyword-source", "default-src 'self'", createPolicyWithDefaultOrigin("default-src http://example.com").show());
+
         failsToParse("connect-src 'none' scheme:");
         failsToParse("connect-src scheme: 'none'");
 
@@ -494,12 +496,12 @@ public class ParserTest {
         Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
         Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
         p1.merge(p2);
-//        assertEquals("default-src aaa origin2.com'", p1.show());
+        assertEquals("default-src aaa https://origin2.com", p1.show());
 
-        p1 = Parser.parse("default-src aaa", "https://origin1.com");
-        p2 = Parser.parse("report-uri /vvv/", "https://origin2.com");
+        p1 = Parser.parse("default-src default; connect-src a; script-src a; media-src a", "https://origin1.com");
+        p2 = Parser.parse("img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
         p1.merge(p2);
-        assertEquals("default-src aaa; report-uri https://origin2.com/vvv/", p1.show());
+        assertEquals("connect-src a; script-src a; media-src a; style-src default b; img-src default b; child-src default b; font-src default b; object-src default b", p1.show());
     }
 
     @Test
@@ -818,6 +820,6 @@ public class ParserTest {
         p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("default-src a", "https://origin");
         p1.merge(p2);
-        assertEquals(p2.show(), "default-src a");
+        assertEquals("default-src a", p2.show());
     }
 }

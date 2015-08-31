@@ -46,6 +46,11 @@ public class URI extends Origin implements DirectiveValue {
         this.path = path;
     }
 
+    public URI(@Nonnull Origin origin) {
+        super(origin.scheme, origin.host, origin.port);
+        this.path = null;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (!(other instanceof URI)) return false;

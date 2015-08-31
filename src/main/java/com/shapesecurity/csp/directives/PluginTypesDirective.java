@@ -13,4 +13,9 @@ public class PluginTypesDirective extends MediaTypeListDirective {
         super(PluginTypesDirective.name, mediaTypes);
     }
 
+    @Nonnull
+    @Override
+    protected Directive<MediaType> construct(Set<MediaType> newValues) {
+        return new PluginTypesDirective(newValues);
+    }
 }

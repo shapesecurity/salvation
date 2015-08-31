@@ -12,4 +12,10 @@ public class FontSrcDirective extends SourceListDirective {
     public FontSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(FontSrcDirective.name, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new FontSrcDirective(newValues);
+    }
 }

@@ -13,4 +13,10 @@ public class ScriptSrcDirective extends SourceListDirective {
     public ScriptSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(ScriptSrcDirective.NAME, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new ScriptSrcDirective(newValues);
+    }
 }

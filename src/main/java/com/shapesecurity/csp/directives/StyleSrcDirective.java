@@ -13,4 +13,10 @@ public class StyleSrcDirective extends SourceListDirective {
     public StyleSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(StyleSrcDirective.NAME, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new StyleSrcDirective(newValues);
+    }
 }

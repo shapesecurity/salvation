@@ -1,16 +1,14 @@
 package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
-import com.shapesecurity.csp.directiveValues.KeywordSource;
-import com.shapesecurity.csp.directiveValues.MediaType;
-import com.shapesecurity.csp.directiveValues.NonceSource;
-import com.shapesecurity.csp.directiveValues.SourceExpression;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Policy implements Show {
@@ -36,6 +34,9 @@ public class Policy implements Show {
     }
 
     public void merge(@Nonnull Policy other) {
+        if (!other.origin.equals(this.origin)) {
+            other.resolveSelf();
+        }
         DefaultSrcDirective defaults = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaults != null) {
             this.expandDefaultSrc(defaults, this);
@@ -46,6 +47,21 @@ public class Policy implements Show {
         }
         other.getDirectives().forEach(this::mergeDirective);
         this.optimise();
+        other.optimise();
+    }
+
+    private void resolveSelf() {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+            Directive<? extends DirectiveValue> directive = entry.getValue();
+            if (directive instanceof SourceListDirective) {
+                SourceListDirective sourceListDirective = (SourceListDirective) directive;
+                this.directives.put(entry.getKey(), sourceListDirective.bind(dv ->
+                    dv == KeywordSource.Self
+                        ? Collections.singleton(new HostSource(this.origin.scheme, this.origin.host, this.origin.port, null))
+                        : null
+                ));
+            }
+        }
     }
 
     private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective, @Nonnull Policy basePolicy) {
@@ -142,6 +158,19 @@ public class Policy implements Show {
         // * remove default-src directives with no source expressions
         if (defaultSources.isEmpty()) {
             this.directives.remove(DefaultSrcDirective.class);
+        }
+
+        // * replace host-sources that are equivalent to origin with 'self' keyword-source
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+            Directive<? extends DirectiveValue> directive = entry.getValue();
+            if (directive instanceof SourceListDirective) {
+                SourceListDirective sourceListDirective = (SourceListDirective) directive;
+                this.directives.put(entry.getKey(), sourceListDirective.bind(dv ->
+                    dv instanceof HostSource && ((HostSource) dv).matchesOnlyOrigin(this.origin)
+                        ? Collections.singleton(KeywordSource.Self)
+                        : null
+                ));
+            }
         }
     }
 

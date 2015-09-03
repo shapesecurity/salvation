@@ -12,4 +12,10 @@ public class MediaSrcDirective extends SourceListDirective {
     public MediaSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(MediaSrcDirective.name, sourceExpressions);
     }
+
+    @Nonnull
+    @Override
+    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+        return new MediaSrcDirective(newValues);
+    }
 }

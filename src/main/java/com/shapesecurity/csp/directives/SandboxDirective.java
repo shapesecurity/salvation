@@ -13,4 +13,9 @@ public class SandboxDirective extends Directive<SandboxValue> {
         super(SandboxDirective.NAME, values);
     }
 
+    @Nonnull
+    @Override
+    protected Directive<SandboxValue> construct(Set<SandboxValue> newValues) {
+        return new SandboxDirective(newValues);
+    }
 }

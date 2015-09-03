@@ -6,6 +6,7 @@ import com.shapesecurity.csp.interfaces.Show;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,7 +15,6 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     private final String name;
 
     @Nonnull
-    // @Nonempty
     private Set<Value> values;
 
     Directive(@Nonnull String name, @Nonnull Set<Value> values) {
@@ -25,6 +25,23 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull
     public final Stream<Value> values() {
         return values.stream();
+    }
+
+    @Nonnull
+    protected abstract Directive<Value> construct(Set<Value> newValues);
+
+    @Nonnull
+    public Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
+        Set<Value> newValues = new LinkedHashSet<>();
+        for (Value v : this.values) {
+            Set<? extends Value> result = f.apply(v);
+            if (result == null) {
+                newValues.add(v);
+            } else {
+                newValues.addAll(result);
+            }
+        }
+        return this.construct(newValues);
     }
 
     public final void merge(@Nonnull Directive<Value> other) {

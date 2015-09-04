@@ -8,6 +8,7 @@ import com.shapesecurity.csp.interfaces.Show;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class Policy implements Show {
@@ -32,22 +33,34 @@ public class Policy implements Show {
         this.origin = origin;
     }
 
+    public void intersect(@Nonnull Policy other) {
+        this.mergeUsingStrategy(other, this::intersectDirective);
+    }
+
     public void union(@Nonnull Policy other) {
+        this.mergeUsingStrategy(other, this::unionDirective);
+    }
+
+    private void mergeUsingStrategy(@Nonnull Policy other, Consumer<Directive<? extends DirectiveValue>> strategy) {
         if (this.directives.containsKey(ReportUriDirective.class) || other.directives.containsKey(ReportUriDirective.class)) {
-            throw new IllegalArgumentException("Cannot union policies if either policy contains a report-uri directive.");
+           throw new IllegalArgumentException("Cannot merge policies if either policy contains a report-uri directive.");
         }
-        if (!other.origin.equals(this.origin)) {
-            other.resolveSelf();
-        }
+        
+        this.resolveSelf();
+        other.resolveSelf();
+
         DefaultSrcDirective defaults = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaults != null) {
             this.expandDefaultSrc(defaults, this);
         }
+
         DefaultSrcDirective otherDefaults = other.getDirectiveByType(DefaultSrcDirective.class);
         if (otherDefaults != null) {
             this.expandDefaultSrc(otherDefaults, other);
         }
-        other.getDirectives().forEach(this::unionDirective);
+
+        other.getDirectives().forEach(strategy);
+
         this.optimise();
         other.optimise();
     }
@@ -177,11 +190,21 @@ public class Policy implements Show {
     }
 
     // union a directive if it does not exist; used for policy manipulation and composition
-    @SuppressWarnings("unchecked")
     private <V extends DirectiveValue, T extends Directive<V>> void unionDirective(@Nonnull T directive) {
+        @SuppressWarnings("unchecked")
         T oldDirective = (T) this.directives.get(directive.getClass());
         if (oldDirective != null) {
             oldDirective.union(directive);
+        } else {
+            this.directives.put(directive.getClass(), directive);
+        }
+    }
+
+    private <V extends DirectiveValue, T extends Directive<V>> void intersectDirective(@Nonnull T directive) {
+        @SuppressWarnings("unchecked")
+        T oldDirective = (T) this.directives.get(directive.getClass());
+        if (oldDirective != null) {
+            oldDirective.intersect(directive);
         } else {
             this.directives.put(directive.getClass(), directive);
         }

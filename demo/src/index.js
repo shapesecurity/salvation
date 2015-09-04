@@ -140,7 +140,7 @@ function* fetchHeader() {
       let policy = ParserWithLocation.parseSync("", dest.href);
       for (let header of headers) {
         try {
-          policy.mergeSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
+          policy.unionSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
         } catch(ex) {
           return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: header.value, url: url.href};
         }
@@ -186,7 +186,7 @@ function* directHeader(){
     let warnings = new ArrayList();
     for(let policyText of policyArray) {
       try {
-        policy.mergeSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
+        policy.unionSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
       } catch(ex) {
         return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: policyText };
       }

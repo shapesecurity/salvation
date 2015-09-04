@@ -727,16 +727,17 @@ public class ParserTest {
     public void testFutureDirectives() throws TokeniserException {
         try {
             ParserWithLocation.parse("referrer no-referrer", "https://origin");
+            fail();
         } catch (ParseException e1) {
             assertEquals("1:1: The referrer directive is not in the CSP specification yet.", e1.getMessage());
-            try {
-                ParserWithLocation.parse("upgrade-insecure-requests", "https://origin");
-            } catch (ParseException e2) {
-                assertEquals("1:1: The upgrade-insecure-requests directive is not in the CSP specification yet.", e2.getMessage());
-            }
-            return;
         }
-        fail();
+        try {
+            ParserWithLocation.parse("upgrade-insecure-requests", "https://origin");
+            fail();
+        } catch (ParseException e2) {
+            assertEquals("1:1: The upgrade-insecure-requests directive is not in the CSP specification yet.", e2.getMessage());
+        }
+
     }
 
     @Test
@@ -745,33 +746,33 @@ public class ParserTest {
             Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
             Policy p2 = ParserWithLocation.parse("script-src a", "https://origin");
             p1.union(p2);
+            fail();
         } catch (IllegalArgumentException e1) {
             assertEquals("'none' can only be unioned with another 'none'", e1.getMessage());
-            try {
-                Policy p1 = ParserWithLocation.parse("script-src a", "https://origin");
-                Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                p1.union(p2);
-            } catch (IllegalArgumentException e2) {
-                assertEquals("'none' can only be unioned with another 'none'", e2.getMessage());
-
-                {
-                    Policy p1 = ParserWithLocation.parse("script-src", "https://origin");
-                    Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                    p1.union(p2);
-                    assertEquals("script-src 'none'", p1.show());
-                }
-
-                {
-                    Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                    Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                    p1.union(p2);
-                    assertEquals("script-src 'none'", p1.show());
-                }
-                return;
-            }
-            return;
         }
-        fail();
+
+        try {
+            Policy p1 = ParserWithLocation.parse("script-src a", "https://origin");
+            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+            p1.union(p2);
+            fail();
+        } catch (IllegalArgumentException e2) {
+            assertEquals("'none' can only be unioned with another 'none'", e2.getMessage());
+        }
+
+        {
+            Policy p1 = ParserWithLocation.parse("script-src", "https://origin");
+            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+            p1.union(p2);
+            assertEquals("script-src 'none'", p1.show());
+        }
+
+        {
+            Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+            p1.union(p2);
+            assertEquals("script-src 'none'", p1.show());
+        }
     }
 
     @Test

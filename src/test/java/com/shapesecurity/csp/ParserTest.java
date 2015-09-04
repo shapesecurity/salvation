@@ -10,7 +10,6 @@ import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.MediaType;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.tokens.Token;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.annotation.Nonnull;
@@ -117,9 +116,9 @@ public class ParserTest {
         StyleSrcDirective d1 = p.getDirectiveByType(StyleSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         try {
-            d1.merge(d2);
+            d1.union(d2);
         } catch (IllegalArgumentException e) {
-            assertEquals("class com.shapesecurity.csp.directives.StyleSrcDirective can be merged with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
+            assertEquals("class com.shapesecurity.csp.directives.StyleSrcDirective can be unioned with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
         }
     }
 
@@ -181,8 +180,8 @@ public class ParserTest {
         FrameAncestorsDirective d1 = p.getDirectiveByType(FrameAncestorsDirective.class);
         FrameAncestorsDirective d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
 
-        d1.merge(d2);
-        assertEquals("ancestor-source merge", "frame-ancestors 'self' https://example.com http://example.com", d1.show());
+        d1.union(d2);
+        assertEquals("ancestor-source union", "frame-ancestors 'self' https://example.com http://example.com", d1.show());
         assertFalse("ancestor-source inequality", d1.equals(d2));
 
         p = createPolicyWithDefaultOrigin("frame-ancestors http://example.com");
@@ -211,12 +210,12 @@ public class ParserTest {
         q = createPolicyWithDefaultOrigin("style-src *");
         assertTrue("policy equality", p.equals(q));
         q = createPolicyWithDefaultOrigin("script-src *");
-        p.merge(q);
-        assertEquals("policy merge", "style-src *; script-src *", p.show());
+        p.union(q);
+        assertEquals("policy union", "style-src *; script-src *", p.show());
 
         q = createPolicyWithDefaultOrigin("script-src abc");
-        p.merge(q);
-        assertEquals("policy merge", "style-src *; script-src * abc", p.show());
+        p.union(q);
+        assertEquals("policy union", "style-src *; script-src * abc", p.show());
         p.setOrigin(URI.parse("http://qwe.zz:80"));
         assertEquals("policy origin", "http://qwe.zz", p.getOrigin().show());
 
@@ -241,8 +240,8 @@ public class ParserTest {
         PluginTypesDirective d2 = q.getDirectiveByType(PluginTypesDirective.class);
         ScriptSrcDirective d3 = q.getDirectiveByType(ScriptSrcDirective.class);
 
-        d1.merge(d2);
-        assertEquals("plugin-types merge", "plugin-types a/b c/d", d1.show());
+        d1.union(d2);
+        assertEquals("plugin-types union", "plugin-types a/b c/d", d1.show());
         p = createPolicyWithDefaultOrigin("plugin-types a/b");
         q = createPolicyWithDefaultOrigin("plugin-types a/c;");
         d1 = p.getDirectiveByType(PluginTypesDirective.class);
@@ -266,8 +265,8 @@ public class ParserTest {
         q = createPolicyWithDefaultOrigin("report-uri http://b");
         ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
         assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
-        d1.merge(q.getDirectiveByType(ReportUriDirective.class));
-        assertEquals("report-uri merge", "report-uri http://a http://b", d1.show());
+        d1.union(q.getDirectiveByType(ReportUriDirective.class));
+        assertEquals("report-uri union", "report-uri http://a http://b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
 
         // TODO relative URI is legal ?
@@ -286,14 +285,14 @@ public class ParserTest {
     }
 
     @Test
-    public void testMediaTypeMerge() throws ParseException, TokeniserException {
+    public void testMediaTypeUnion() throws ParseException, TokeniserException {
         Policy p;
         p = createPolicyWithDefaultOrigin("plugin-types a/b");
         Policy q;
         q = createPolicyWithDefaultOrigin("plugin-types c/d");
         PluginTypesDirective d1 = p.getDirectiveByType(PluginTypesDirective.class);
         PluginTypesDirective d2 = q.getDirectiveByType(PluginTypesDirective.class);
-        d1.merge(d2);
+        d1.union(d2);
         assertEquals("directive-name, directive-value", "plugin-types a/b c/d", d1.show());
     }
 
@@ -311,8 +310,8 @@ public class ParserTest {
         assertEquals("sandbox hashcode equality", p.hashCode(), q.hashCode());
         q = createPolicyWithDefaultOrigin("sandbox b; script-src a");
         assertFalse("sandbox directives equality", d1.equals(q.getDirectiveByType(SandboxDirective.class)));
-        d1.merge(q.getDirectiveByType(SandboxDirective.class));
-        assertEquals("sandbox merge", "sandbox a b", d1.show());
+        d1.union(q.getDirectiveByType(SandboxDirective.class));
+        assertEquals("sandbox union", "sandbox a b", d1.show());
         assertNotEquals("sandbox hashcode inequality", p.hashCode(), q.hashCode());
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
     }
@@ -339,8 +338,8 @@ public class ParserTest {
         Policy q = createPolicyWithDefaultOrigin("script-src c d");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
         assertFalse("source-list inequality", d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-        d1.merge(q.getDirectiveByType(ScriptSrcDirective.class));
-        assertEquals("source-list merge", "script-src http://a https://b c d", d1.show());
+        d1.union(q.getDirectiveByType(ScriptSrcDirective.class));
+        assertEquals("source-list union", "script-src http://a https://b c d", d1.show());
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         p = createPolicyWithDefaultOrigin("script-src http://a https://b");
         q = createPolicyWithDefaultOrigin("script-src http://a https://b");
@@ -492,15 +491,15 @@ public class ParserTest {
 
 
     @Test
-    public void testPolicyMerge() throws ParseException, TokeniserException {
+    public void testPolicyUnion() throws ParseException, TokeniserException {
         Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
         Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src aaa https://origin2.com", p1.show());
 
         p1 = Parser.parse("default-src default; connect-src a; script-src a; media-src a", "https://origin1.com");
         p2 = Parser.parse("img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("connect-src a; script-src a; media-src a; style-src default b; img-src default b; child-src default b; font-src default b; object-src default b", p1.show());
     }
 
@@ -741,31 +740,31 @@ public class ParserTest {
     }
 
     @Test
-    public void testMergeNone() throws ParseException, TokeniserException {
+    public void testUnionNone() throws ParseException, TokeniserException {
         try {
             Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
             Policy p2 = ParserWithLocation.parse("script-src a", "https://origin");
-            p1.merge(p2);
+            p1.union(p2);
         } catch (IllegalArgumentException e1) {
-            assertEquals("'none' can only be merged with another 'none'", e1.getMessage());
+            assertEquals("'none' can only be unioned with another 'none'", e1.getMessage());
             try {
                 Policy p1 = ParserWithLocation.parse("script-src a", "https://origin");
                 Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                p1.merge(p2);
+                p1.union(p2);
             } catch (IllegalArgumentException e2) {
-                assertEquals("'none' can only be merged with another 'none'", e2.getMessage());
+                assertEquals("'none' can only be unioned with another 'none'", e2.getMessage());
 
                 {
                     Policy p1 = ParserWithLocation.parse("script-src", "https://origin");
                     Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                    p1.merge(p2);
+                    p1.union(p2);
                     assertEquals("script-src 'none'", p1.show());
                 }
 
                 {
                     Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
                     Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-                    p1.merge(p2);
+                    p1.union(p2);
                     assertEquals("script-src 'none'", p1.show());
                 }
                 return;
@@ -776,50 +775,59 @@ public class ParserTest {
     }
 
     @Test
-    public void testMergeDefaultSrc() throws ParseException, TokeniserException {
+    public void testUnionDefaultSrc() throws ParseException, TokeniserException {
         Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
         Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
 
         p1 = ParserWithLocation.parse("default-src *", "https://origin");
         p2 = ParserWithLocation.parse("script-src b", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src *; script-src * b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a", "https://origin");
         p2 = ParserWithLocation.parse("script-src b", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src a; script-src a b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("script-src c", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src a; script-src b c", p1.show());
 
         p1 = ParserWithLocation.parse("img-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("img-src a c; script-src b c; default-src c", p1.show());
 
         p1 = ParserWithLocation.parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("style-src b", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src a c; script-src b c; img-src a d", p1.show());
 
         p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("default-src a", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src b a; script-src a", p1.show());
 
         p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("default-src a", "https://origin");
-        p1.merge(p2);
+        p1.union(p2);
         assertEquals("default-src a", p2.show());
+    }
+
+    @Test
+    public void testUnionReportUri() throws ParseException, TokeniserException {
+        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.union(p2);
+        assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
+
     }
 }

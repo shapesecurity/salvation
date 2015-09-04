@@ -8,7 +8,6 @@ import com.shapesecurity.csp.interfaces.Show;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class Policy implements Show {
@@ -33,7 +32,7 @@ public class Policy implements Show {
         this.origin = origin;
     }
 
-    public void merge(@Nonnull Policy other) {
+    public void union(@Nonnull Policy other) {
         if (!other.origin.equals(this.origin)) {
             other.resolveSelf();
         }
@@ -45,7 +44,7 @@ public class Policy implements Show {
         if (otherDefaults != null) {
             this.expandDefaultSrc(otherDefaults, other);
         }
-        other.getDirectives().forEach(this::mergeDirective);
+        other.getDirectives().forEach(this::unionDirective);
         this.optimise();
         other.optimise();
     }
@@ -67,28 +66,28 @@ public class Policy implements Show {
     private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective, @Nonnull Policy basePolicy) {
         Set<SourceExpression> defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
         if (!basePolicy.directives.containsKey(ScriptSrcDirective.class)) {
-            this.mergeDirective(new ScriptSrcDirective(defaultSources));
+            this.unionDirective(new ScriptSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(StyleSrcDirective.class)) {
-            this.mergeDirective(new StyleSrcDirective(defaultSources));
+            this.unionDirective(new StyleSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(ImgSrcDirective.class)) {
-            this.mergeDirective(new ImgSrcDirective(defaultSources));
+            this.unionDirective(new ImgSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(ChildSrcDirective.class)) {
-            this.mergeDirective(new ChildSrcDirective(defaultSources));
+            this.unionDirective(new ChildSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(ConnectSrcDirective.class)) {
-            this.mergeDirective(new ConnectSrcDirective(defaultSources));
+            this.unionDirective(new ConnectSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(FontSrcDirective.class)) {
-            this.mergeDirective(new FontSrcDirective(defaultSources));
+            this.unionDirective(new FontSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(MediaSrcDirective.class)) {
-            this.mergeDirective(new MediaSrcDirective(defaultSources));
+            this.unionDirective(new MediaSrcDirective(defaultSources));
         }
         if (!basePolicy.directives.containsKey(ObjectSrcDirective.class)) {
-            this.mergeDirective(new ObjectSrcDirective(defaultSources));
+            this.unionDirective(new ObjectSrcDirective(defaultSources));
         }
     }
 
@@ -174,12 +173,12 @@ public class Policy implements Show {
         }
     }
 
-    // merge a directive if it does not exist; used for policy manipulation and composition
+    // union a directive if it does not exist; used for policy manipulation and composition
     @SuppressWarnings("unchecked")
-    private <V extends DirectiveValue, T extends Directive<V>> void mergeDirective(@Nonnull T directive) {
+    private <V extends DirectiveValue, T extends Directive<V>> void unionDirective(@Nonnull T directive) {
         T oldDirective = (T) this.directives.get(directive.getClass());
         if (oldDirective != null) {
-            oldDirective.merge(directive);
+            oldDirective.union(directive);
         } else {
             this.directives.put(directive.getClass(), directive);
         }

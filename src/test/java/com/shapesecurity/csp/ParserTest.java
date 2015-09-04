@@ -834,7 +834,86 @@ public class ParserTest {
             p1.union(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot union policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.union(p2);
+        assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
+    }
+
+
+    @Test
+    public void testIntersect() throws ParseException, TokeniserException {
+        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src a b; script-src; style-src", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src 'none'; script-src; style-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src a; style-src b", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src a; style-src b", p1.show());
+
+
+        p1 = ParserWithLocation.parse("plugin-types a/b c/d e/f", "https://origin");
+        p2 = ParserWithLocation.parse("plugin-types c/d e/f", "https://origin");
+        p1.intersect(p2);
+        assertEquals("plugin-types c/d e/f", p1.show());
+
+        p1 = ParserWithLocation.parse("sandbox $ ' % ` !", "https://origin");
+        p2 = ParserWithLocation.parse("sandbox ` # '", "https://origin");
+        p1.intersect(p2);
+        assertEquals("sandbox ' `", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a b c", "https://origin");
+        p2 = ParserWithLocation.parse("script-src b c", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src b c", p1.show());
+
+        try {
+            p1 = ParserWithLocation.parse("script-src a", "https://origin");
+            p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin");
+            p1.intersect(p2);
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        try {
+            p1 = ParserWithLocation.parse("script-src a", "https://origin1");
+            p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
+            p1.intersect(p2);
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        try {
+            p1 = ParserWithLocation.parse("script-src 'none'", "https://origin1");
+            p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
+            p1.intersect(p2);
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        p1 = ParserWithLocation.parse("default-src 'self'; script-src https://origin1", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src https://origin1;", "https://origin2");
+        p1.intersect(p2);
+        assertEquals("default-src 'self'", p1.show());
+
+        try {
+            p1 = ParserWithLocation.parse("script-src a; report-uri /a", "https://origin");
+            p2 = ParserWithLocation.parse("script-src b", "https://origin");
+            p1.intersect(p2);
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
         }
     }
 }

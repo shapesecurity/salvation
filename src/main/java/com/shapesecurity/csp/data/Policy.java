@@ -33,6 +33,9 @@ public class Policy implements Show {
     }
 
     public void union(@Nonnull Policy other) {
+        if (this.directives.containsKey(ReportUriDirective.class) || other.directives.containsKey(ReportUriDirective.class)) {
+            throw new IllegalArgumentException("Cannot union policies if either policy contains a report-uri directive.");
+        }
         if (!other.origin.equals(this.origin)) {
             other.resolveSelf();
         }

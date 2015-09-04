@@ -824,10 +824,13 @@ public class ParserTest {
 
     @Test
     public void testUnionReportUri() throws ParseException, TokeniserException {
-        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
-        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
-        p1.union(p2);
-        assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
-
+        try {
+            Policy p1 = ParserWithLocation.parse("script-src a; report-uri /a", "https://origin");
+            Policy p2 = ParserWithLocation.parse("script-src b", "https://origin");
+            p1.union(p2);
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot union policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
     }
 }

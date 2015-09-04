@@ -829,6 +829,58 @@ public class ParserTest {
         Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.union(p2);
         assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
+    }
+
+
+    @Test
+    public void testIntersect() throws ParseException, TokeniserException {
+        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src a b; script-src; style-src", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src 'none'; script-src; style-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src a; style-src b", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src a; style-src b", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src; report-uri https://origin/x", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
+        p1.intersect(p2);
+        assertEquals("script-src; report-uri https://origin2/x", p1.show());
+
+        p1 = ParserWithLocation.parse("", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
+        p1.intersect(p2);
+        assertEquals("script-src b; report-uri https://origin2/x", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src 'none'", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
+        p1.intersect(p2);
+        // TODO not sure about this
+        assertEquals("script-src; report-uri https://origin2/x", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src 'self'", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src https://origin1; report-uri /x", "https://origin1");
+        p1.intersect(p2);
+        // TODO incorrect
+        assertEquals("script-src; report-uri https://origin1/x", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src'self'; script-src https://origin1", "https://origin1");
+        p2 = ParserWithLocation.parse("script-src https://origin1; report-uri /x", "https://origin2");
+        p1.intersect(p2);
+        // TODO incorrect
+        assertEquals("script-src; report-uri https://origin2/x", p1.show());
 
     }
 }

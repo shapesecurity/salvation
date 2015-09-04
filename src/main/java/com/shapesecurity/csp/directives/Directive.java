@@ -31,7 +31,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     protected abstract Directive<Value> construct(Set<Value> newValues);
 
     @Nonnull
-    public Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
+    public final Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
         Set<Value> newValues = new LinkedHashSet<>();
         for (Value v : this.values) {
             Set<? extends Value> result = f.apply(v);
@@ -50,6 +50,14 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
                     ", but found " + other.getClass());
         }
         this.values = Directive.union(this.values, other.values);
+    }
+
+    public final void intersect(@Nonnull Directive<Value> other) {
+        if (other.getClass() != this.getClass()) {
+            throw new IllegalArgumentException(this.getClass() + " can be unioned with " + this.getClass() +
+                    ", but found " + other.getClass());
+        }
+        this.values = Directive.intersect(this.values, other.values);
     }
 
     boolean equalsHelper(@Nonnull Directive<Value> other) {
@@ -71,8 +79,11 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     private static <T> Set<T> union(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
         Set<T> set = new LinkedHashSet<>();
 
-        if(a.iterator().hasNext() && b.iterator().hasNext() &&
-                (a.iterator().next() instanceof None != b.iterator().next() instanceof None)) {
+        Iterator<T> aIterator = a.iterator();
+        Iterator<T> bIterator = b.iterator();
+
+        if(aIterator.hasNext() && bIterator.hasNext() &&
+                (aIterator.next() instanceof None != bIterator.next() instanceof None)) {
             throw new IllegalArgumentException("'none' can only be unioned with another 'none'");
         }
 
@@ -85,7 +96,30 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         return set;
     }
 
-    public boolean contains(@Nonnull DirectiveValue value) {
+    @Nonnull
+    private static <T> Set<T> intersect(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
+        Set<T> set = new LinkedHashSet<>();
+
+        Iterator<T> aIterator = a.iterator();
+        Iterator<T> bIterator = b.iterator();
+
+        if(!aIterator.hasNext() || aIterator.next() instanceof None || !bIterator.hasNext() || bIterator.next() instanceof None) {
+            return set;
+        }
+
+        for (T x : a) {
+            for (T y : b) {
+                if (x.equals(y)) {
+                    set.add(x);
+                    break;
+                }
+            }
+        }
+
+        return set;
+    }
+
+    public final boolean contains(@Nonnull DirectiveValue value) {
         return values().anyMatch(value::equals);
     }
 

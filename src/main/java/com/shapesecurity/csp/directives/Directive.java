@@ -44,12 +44,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         return this.construct(newValues);
     }
 
-    public final void merge(@Nonnull Directive<Value> other) {
+    public final void union(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
-            throw new IllegalArgumentException(this.getClass() + " can be merged with " + this.getClass() +
+            throw new IllegalArgumentException(this.getClass() + " can be unioned with " + this.getClass() +
                     ", but found " + other.getClass());
         }
-        this.values = Directive.merge(this.values, other.values);
+        this.values = Directive.union(this.values, other.values);
     }
 
     boolean equalsHelper(@Nonnull Directive<Value> other) {
@@ -68,12 +68,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @Nonnull
-    private static <T> Set<T> merge(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
+    private static <T> Set<T> union(@Nonnull Iterable<T> a, @Nonnull Iterable<T> b) {
         Set<T> set = new LinkedHashSet<>();
 
         if(a.iterator().hasNext() && b.iterator().hasNext() &&
                 (a.iterator().next() instanceof None != b.iterator().next() instanceof None)) {
-            throw new IllegalArgumentException("'none' can only be merged with another 'none'");
+            throw new IllegalArgumentException("'none' can only be unioned with another 'none'");
         }
 
         for (T x : a) {

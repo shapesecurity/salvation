@@ -3,20 +3,30 @@
 $(function () {
   'use strict';
 
+  function flatMap(arr, f) {
+      return [].concat.apply([], arr.map(f));
+  }
+
   function colorize(tokens) {
-    return tokens.map(function (token){
+    return flatMap(tokens, function (token){
+      var sp = $('<span class="token">');
       switch (token.type) {
         case 'DirectiveName':
-          return '<span class="token directiveName" title="' + tooltipize(token.value) + ' ">' + token.value + '</span>';
+          return [sp.addClass('directiveName')
+            .attr('title', tooltipize(token.value))
+            .text(token.value), document.createTextNode(' ')];
         case 'DirectiveValue':
-          return '<span class="token directiveValue' + (token.value[0] === '\'' ? ' keyword' : '') + '">' + token.value + '</span>';
+          return [sp.addClass('directiveValue')
+            .addClass((token.value[0] === '\'' ? ' keyword' : ''))
+            .text(token.value), document.createTextNode(' ')];
         case 'DirectiveSeparator':
-          return '<span class="token directiveSeparator">' + token.value + '</span><br>';
+          return [sp.addClass('directiveSeparator').text(token.value), ($('<br>'))];
         default:
           return token.value;
       }
-    }).join(' ');
+    });
   }
+
   // TODO: add handler for fetchHeader form
 
   function tooltipize(directive) {
@@ -51,7 +61,7 @@ $(function () {
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
         console.info('unknown tooltip for ' + directive);
-        return 'Directive is either deprecated or not invented yet';
+        return 'Directive is either deprecated or not in the CSP specification yet';
     }
   }
 
@@ -71,7 +81,7 @@ $(function () {
         $('#output-title').text('Invalid policy' + (dest ? ' at ' + dest : ''));
         outputBody
           .append($('<p>').text(response.message))
-          .append($('<pre>').html(response.originalPolicy));
+          .append($('<pre>').text(response.originalPolicy));
       } else {
         $('#output-title').text(dest ? 'Error fetching CSP headers from ' + dest : 'Error');
         outputBody.text(response.message);
@@ -87,7 +97,7 @@ $(function () {
             .append($('<p>').text(warningText));
         }));
       }
-      outputBody.append($('<p>').html(colorize(response.tokens)));
+      outputBody.append($('<p>').append(colorize(response.tokens)));
     }
   }
 

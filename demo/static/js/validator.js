@@ -13,7 +13,11 @@ $(function () {
       switch (token.type) {
         case 'DirectiveName':
           return [sp.addClass('directiveName')
-            .attr('title', tooltipize(token.value))
+            .attr('data-toggle', 'popover')
+            .attr('data-trigger', 'hover')
+            .attr('data-placement', 'bottom')
+            .attr('title', token.value)
+            .attr('data-content', tooltipize(token.value))
             .text(token.value), document.createTextNode(' ')];
         case 'DirectiveValue':
           return [sp.addClass('directiveValue')
@@ -98,6 +102,7 @@ $(function () {
         }));
       }
       outputBody.append($('<p>').append(colorize(response.tokens)));
+      $('[data-toggle="popover"]').popover();
     }
   }
 

@@ -238,8 +238,17 @@ public class Parser {
                         if (matcher.find()) {
                             String scheme = matcher.group("scheme");
                             if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
-                            String port = matcher.group("port");
-                            port = port == null ? "" : port.substring(1, port.length());
+                            String portString = matcher.group("port");
+                            int port;
+                            if (portString == null) {
+                                port = scheme == null
+                                    ? Constants.EMPTY_PORT
+                                    : Origin.defaultPortForProtocol(scheme);
+                            } else {
+                                port = portString.equals(":*")
+                                    ? Constants.WILDCARD_PORT
+                                    : Integer.parseInt(portString.substring(1));
+                            }
                             String host = matcher.group("host");
                             String path = matcher.group("path");
                             return new HostSource(scheme, host, port, path);
@@ -277,8 +286,17 @@ public class Parser {
             if (matcher.find()) {
                 String scheme = matcher.group("scheme");
                 if (scheme != null) scheme = scheme.substring(0, scheme.length() - 3);
-                String port = matcher.group("port");
-                port = port == null ? "" : port.substring(1, port.length());
+                String portString = matcher.group("port");
+                int port;
+                if (portString == null) {
+                    port = scheme == null
+                            ? Constants.EMPTY_PORT
+                            : Origin.defaultPortForProtocol(scheme);
+                } else {
+                    port = portString.equals(":*")
+                            ? Constants.WILDCARD_PORT
+                            : Integer.parseInt(portString.substring(1));
+                }
                 String host = matcher.group("host");
                 String path = matcher.group("path");
                 return new HostSource(scheme, host, port, path);

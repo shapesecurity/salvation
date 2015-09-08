@@ -22,8 +22,15 @@ public class URI extends Origin implements DirectiveValue {
             throw new IllegalArgumentException("Invalid URI (missing scheme): " + uri);
         }
         scheme = scheme.substring(0, scheme.length() - 3);
-        String port = matcher.group("port");
-        port = port == null ? defaultPortForProtocol(scheme) : port.substring(1, port.length());
+        String portString = matcher.group("port");
+        int port;
+        if (portString == null) {
+            port = Origin.defaultPortForProtocol(scheme);
+        } else {
+            port = portString.equals(":*")
+                ? Constants.WILDCARD_PORT
+                : Integer.parseInt(portString.substring(1));
+        }
         String host = matcher.group("host");
         String path = matcher.group("path");
         if (path == null) {
@@ -41,7 +48,7 @@ public class URI extends Origin implements DirectiveValue {
         return new URI(origin.scheme, origin.host, origin.port, matcher.group("path"));
     }
 
-    public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull String port, @Nonnull String path) {
+    public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull int port, @Nonnull String path) {
         super(scheme, host, port);
         this.path = path;
     }

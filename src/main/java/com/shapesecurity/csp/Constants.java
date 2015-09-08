@@ -18,4 +18,9 @@ public class Constants {
     public static final Pattern relativeReportUriPattern = Pattern.compile("^(?<path>" + pathPart + ")" + queryFragmentPart + "$");
     public static final Pattern sandboxTokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
     public static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
+
+    // port-part constants
+    public static int WILDCARD_PORT = -200;
+    public static int EMPTY_PORT = -1;
+
 }

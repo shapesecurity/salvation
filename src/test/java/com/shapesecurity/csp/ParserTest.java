@@ -106,6 +106,9 @@ public class ParserTest {
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         p = createPolicyWithDefaultOrigin("style-src http://*.example.com:*");
         assertNotNull("policy should not be null", p);
+        assertEquals("style-src http://*.example.com:*", p.show());
+        p = createPolicyWithDefaultOrigin("style-src samba://*.example.com");
+        assertEquals("style-src samba://*.example.com", p.show());
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         failsToParse("abc");
         failsToParse("script-src *, ");

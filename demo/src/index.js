@@ -223,8 +223,8 @@ var options = {
   ciphers: "EECDH+ECDSA+AESGCM EECDH+aRSA+AESGCM EECDH+ECDSA+SHA384 EECDH+ECDSA+SHA256 EECDH+aRSA+SHA384 EECDH+aRSA+SHA256 EECDH+aRSA+RC4 EECDH EDH+aRSA RC4 !aNULL !eNULL !LOW !3DES !MD5 !EXP !PSK !SRP !DSS !RC4",
   honorCipherOrder: true
 };
-var port = process.env.PORT || 80;
-var tls_port = process.env.TLS_PORT || 443;
+var port = process.env.PORT || 9080;
+var tls_port = process.env.TLS_PORT || 9443;
 http.createServer(app.callback()).listen(port);
 console.log("server started at port " + port);
 https.createServer(options, app.callback()).listen(tls_port);

@@ -4,7 +4,6 @@ import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.*;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.interfaces.Show;
 import com.shapesecurity.csp.tokens.DirectiveNameToken;
 import com.shapesecurity.csp.tokens.DirectiveValueToken;
 import com.shapesecurity.csp.tokens.Token;
@@ -21,22 +20,42 @@ public class Parser {
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePrivate();
-    }
-
-    @Nonnull
-    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyAndAssertEOF();
+    }
+
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull
@@ -94,21 +113,51 @@ public class Parser {
         return new ParseException(message);
     }
 
+    protected boolean lookaheadSeparator() {
+        return this.hasNext(";") || this.hasNext(",");
+    }
+
+
     @Nonnull
-    protected Policy parsePrivate() throws ParseException {
+    protected Policy parsePolicy() throws ParseException {
         Policy policy = new Policy(this.origin);
         while (this.hasNext()) {
             if (this.eat(";")) continue;
             policy.addDirective(this.parseDirective());
             if (!this.eat(";")) {
-                if (this.hasNext()) {
-                    throw this.createError("expecting semicolon or end of policy but found " + this.advance().value);
-                } else {
-                    break;
-                }
+                break;
             }
         }
         return policy;
+    }
+
+    @Nonnull
+    protected Policy parsePolicyAndAssertEOF() throws ParseException {
+        Policy policy = this.parsePolicy();
+        if (this.hasNext()) {
+            throw this.createError("expecting end of policy but found " + this.advance().value);
+        }
+        return policy;
+    }
+
+    @Nonnull
+    protected List<Policy> parsePolicyList() throws ParseException {
+        List<Policy> policies = new ArrayList<>();
+        policies.add(this.parsePolicy());
+        while(this.hasNext(",")) {
+            while (this.eat(","));
+            policies.add(this.parsePolicy());
+        }
+        return policies;
+    }
+
+    @Nonnull
+    protected List<Policy> parsePolicyListAndAssertEOF() throws ParseException {
+        List<Policy> policies = this.parsePolicyList();
+        if (this.hasNext()) {
+            throw this.createError("expecting end of policy list but found " + this.advance().value);
+        }
+        return policies;
     }
 
     @Nonnull
@@ -149,14 +198,14 @@ public class Parser {
     @Nonnull
     private Set<MediaType> parseMediaTypeList() throws ParseException {
         Set<MediaType> mediaTypes = new LinkedHashSet<>();
-        if (this.hasNext(";")) {
+        if (this.lookaheadSeparator()) {
             throw this.createError("media-type-list must contain at least one media-type");
         }
         if (!this.hasNext()) {
             throw this.createUnexpectedEOF("media-type-list must contain at least one media-type");
         }
         mediaTypes.add(this.parseMediaType());
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext() && !this.lookaheadSeparator()) {
             mediaTypes.add(this.parseMediaType());
         }
         return mediaTypes;
@@ -179,7 +228,7 @@ public class Parser {
             sourceExpressions.add(None.INSTANCE);
             return sourceExpressions;
         }
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext() && !this.lookaheadSeparator()) {
             sourceExpressions.add(this.parseSourceExpression());
         }
         return sourceExpressions;
@@ -267,7 +316,7 @@ public class Parser {
             ancestorSources.add(None.INSTANCE);
             return ancestorSources;
         }
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext() && !this.lookaheadSeparator()) {
             ancestorSources.add(this.parseAncestorSource());
         }
         return ancestorSources;
@@ -308,7 +357,7 @@ public class Parser {
     @Nonnull
     private Set<SandboxValue> parseSandboxTokenList() throws ParseException {
         Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext() && !this.lookaheadSeparator()) {
             sandboxTokens.add(this.parseSandboxToken());
         }
         return sandboxTokens;
@@ -327,7 +376,7 @@ public class Parser {
     @Nonnull
     private Set<URI> parseUriList() throws ParseException {
         Set<URI> uriList = new LinkedHashSet<>();
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext() && !this.lookaheadSeparator()) {
             uriList.add(this.parseUri());
         }
         if (uriList.isEmpty()) {

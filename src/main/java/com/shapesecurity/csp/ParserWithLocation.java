@@ -6,27 +6,48 @@ import com.shapesecurity.csp.tokens.Token;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Collection;
+import java.util.List;
 
 public class ParserWithLocation extends Parser {
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, null).parsePrivate();
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, null).parsePolicy();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, warningsOut).parsePrivate();
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, warningsOut).parsePolicy();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), null).parsePrivate();
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), null).parsePolicy();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), warningsOut).parsePrivate();
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicy();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, Tokeniser.TokeniserException {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, Tokeniser.TokeniserException {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, Tokeniser.TokeniserException {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, warningsOut).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, Tokeniser.TokeniserException {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
     }
 
     // invariant: tokens will have non-null locations

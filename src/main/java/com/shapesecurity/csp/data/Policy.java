@@ -56,7 +56,7 @@ public class Policy implements Show {
 
         DefaultSrcDirective otherDefaults = other.getDirectiveByType(DefaultSrcDirective.class);
         if (otherDefaults != null) {
-            this.expandDefaultSrc(otherDefaults, other);
+            other.expandDefaultSrc(otherDefaults, other);
         }
 
         other.getDirectives().forEach(strategy);
@@ -167,11 +167,6 @@ public class Policy implements Show {
             this.directives.containsKey(MediaSrcDirective.class) &&
             this.directives.containsKey(ObjectSrcDirective.class)
         ) {
-            this.directives.remove(DefaultSrcDirective.class);
-        }
-
-        // * remove default-src directives with no source expressions
-        if (defaultSources.isEmpty()) {
             this.directives.remove(DefaultSrcDirective.class);
         }
 

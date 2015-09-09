@@ -15,6 +15,7 @@ import org.junit.Test;
 import javax.annotation.Nonnull;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 import static org.junit.Assert.*;
@@ -417,7 +418,7 @@ public class ParserTest {
 
     @Test
     public void testMatches() throws ParseException, TokeniserException {
-        Policy p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", "https://abc.com");
+        Policy p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", URI.parse("https://abc.com"));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
@@ -579,8 +580,8 @@ public class ParserTest {
         } catch (ParseException e) {
             assertNotNull(e.startLocation);
             assertEquals(1, e.startLocation.line);
-            assertEquals(13, e.startLocation.column);
-            assertEquals(12, e.startLocation.offset);
+            assertEquals(1, e.startLocation.column);
+            assertEquals(0, e.startLocation.offset);
             assertNotNull(e.endLocation);
             assertEquals(1, e.endLocation.line);
             assertEquals(13, e.endLocation.column);
@@ -617,6 +618,7 @@ public class ParserTest {
             assertEquals(1, e.location.line);
             assertEquals(4, e.location.column);
             assertEquals(3, e.location.offset);
+            assertEquals("1:4: expecting directive-name but found @@@", e.getMessage());
         }
     }
 
@@ -689,7 +691,7 @@ public class ParserTest {
         try {
             ParserWithLocation.parse("plugin-types", "https://origin");
         } catch (ParseException e) {
-            assertEquals("1:13: media-type-list must contain at least one media-type", e.getMessage());
+            assertEquals("1:1: media-type-list must contain at least one media-type", e.getMessage());
             return;
         }
         fail();
@@ -698,7 +700,7 @@ public class ParserTest {
     @Test
     public void testWarningTextWithLocation() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
-        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", "https://origin", warnings);
+        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", URI.parse("https://origin"), warnings);
         assertEquals(1, warnings.size());
         Warning warning = warnings.get(0);
         assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0", warning.show());
@@ -808,7 +810,7 @@ public class ParserTest {
         p1 = ParserWithLocation.parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("style-src b", "https://origin");
         p1.union(p2);
-        assertEquals("script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
+        assertEquals("default-src; script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
@@ -846,8 +848,13 @@ public class ParserTest {
 
     @Test
     public void testIntersect() throws ParseException, TokeniserException {
-        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
-        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        Policy p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
+        Policy p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.intersect(p2);
         assertEquals("default-src a b; script-src; style-src", p1.show());
 
@@ -878,7 +885,7 @@ public class ParserTest {
         assertEquals("script-src b c", p1.show());
 
         try {
-            p1 = ParserWithLocation.parse("script-src a", "https://origin");
+            p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));
             p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin");
             p1.intersect(p2);
             fail();
@@ -916,4 +923,75 @@ public class ParserTest {
             assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
         }
     }
+
+    @Test
+    public void testParseMulti() throws ParseException, TokeniserException {
+        List<Policy> pl = Parser.parseMulti("script-src a; script-src b, , script-src c; script-src d", "https://origin.com");
+        assertEquals(2, pl.size());
+        assertEquals("script-src a", pl.get(0).show());
+        assertEquals("script-src c", pl.get(1).show());
+
+        pl = Parser.parseMulti("script-src a,", URI.parse("https://origin.com"));
+        assertEquals(2, pl.size());
+        assertEquals("script-src a", pl.get(0).show());
+        assertEquals("", pl.get(1).show());
+
+        ArrayList<Warning> warnings = new ArrayList<>();
+        pl = Parser.parseMulti("script-src a,", URI.parse("https://origin.com"), warnings);
+        assertEquals(2, pl.size());
+        assertEquals("script-src a", pl.get(0).show());
+        assertEquals("", pl.get(1).show());
+        assertEquals(0, warnings.size());
+
+        warnings = new ArrayList<>();
+        pl = Parser.parseMulti("script-src a, sandbox", "https://origin.com", warnings);
+        assertEquals(2, pl.size());
+        assertEquals("script-src a", pl.get(0).show());
+        assertEquals("sandbox", pl.get(1).show());
+        assertEquals(0, warnings.size());
+
+        warnings = new ArrayList<>();
+        pl = ParserWithLocation.parseMulti("   plugin-types  a/b  , script-src 'unsafe-redirect'", "https://origin.com", warnings);
+        assertEquals(2, pl.size());
+        assertEquals("plugin-types a/b", pl.get(0).show());
+        assertEquals("script-src 'unsafe-redirect'", pl.get(1).show());
+        assertEquals(1, warnings.size());
+        assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0", warnings.get(0).show());
+
+        warnings = new ArrayList<>();
+        pl = ParserWithLocation.parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), warnings);
+        assertEquals(2, pl.size());
+        assertEquals("script-src a", pl.get(0).show());
+        assertEquals("frame-src b", pl.get(1).show());
+        assertEquals(1, warnings.size());
+        assertEquals("1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.get(0).show());
+
+        try {
+            pl.clear();
+            pl = Parser.parseMulti("script-src a,b", "https://origin.com");
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals(0, pl.size());
+            assertEquals("Unrecognised directive name: b", e1.getMessage());
+        }
+
+        try {
+            pl.clear();
+            pl = ParserWithLocation.parseMulti("allow 'none', options", "https://origin.com");
+            fail();
+        } catch (ParseException e1) {
+            assertEquals(0, pl.size());
+            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+        }
+
+        try {
+            pl.clear();
+            pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"));
+            fail();
+        } catch (ParseException e1) {
+            assertEquals(0, pl.size());
+            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+        }
+    }
+
 }

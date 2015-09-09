@@ -580,8 +580,8 @@ public class ParserTest {
         } catch (ParseException e) {
             assertNotNull(e.startLocation);
             assertEquals(1, e.startLocation.line);
-            assertEquals(13, e.startLocation.column);
-            assertEquals(12, e.startLocation.offset);
+            assertEquals(1, e.startLocation.column);
+            assertEquals(0, e.startLocation.offset);
             assertNotNull(e.endLocation);
             assertEquals(1, e.endLocation.line);
             assertEquals(13, e.endLocation.column);
@@ -691,7 +691,7 @@ public class ParserTest {
         try {
             ParserWithLocation.parse("plugin-types", "https://origin");
         } catch (ParseException e) {
-            assertEquals("1:13: media-type-list must contain at least one media-type", e.getMessage());
+            assertEquals("1:1: media-type-list must contain at least one media-type", e.getMessage());
             return;
         }
         fail();

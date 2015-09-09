@@ -1,11 +1,7 @@
 package com.shapesecurity.csp;
 
 import com.shapesecurity.csp.data.Location;
-import com.shapesecurity.csp.interfaces.Show;
-import com.shapesecurity.csp.tokens.DirectiveNameToken;
-import com.shapesecurity.csp.tokens.DirectiveSeparatorToken;
-import com.shapesecurity.csp.tokens.DirectiveValueToken;
-import com.shapesecurity.csp.tokens.Token;
+import com.shapesecurity.csp.tokens.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -27,7 +23,8 @@ public class Tokeniser {
         return new Tokeniser(sourceText).tokenise();
     }
 
-    private static final Pattern semi = Pattern.compile(";");
+    private static final Pattern directiveSeparator = Pattern.compile(";");
+    private static final Pattern policySeparator = Pattern.compile(",");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern directiveValuePattern = Pattern.compile("[^;,\0- \\x7F]+");
 
@@ -58,8 +55,9 @@ public class Tokeniser {
         return true;
     }
 
-    private boolean eatDirectiveSeparator() {
-        return this.eat(DirectiveSeparatorToken::new, Tokeniser.semi);
+    private boolean eatSeparator() {
+        return this.eat(DirectiveSeparatorToken::new, Tokeniser.directiveSeparator) ||
+            this.eat(PolicySeparatorToken::new, Tokeniser.policySeparator);
     }
 
     private boolean eatDirectiveName() {
@@ -94,16 +92,16 @@ public class Tokeniser {
     @Nonnull
     protected Token[] tokenise() throws TokeniserException {
         while (this.hasNext()) {
-            if (this.eatDirectiveSeparator()) continue;
+            if (this.eatSeparator()) continue;
             if (!this.eatDirectiveName()) {
                 throw this.createError("expecting directive-name but found " + this.next());
             }
-            if (this.eatDirectiveSeparator()) continue;
+            if (this.eatSeparator()) continue;
             while (this.hasNext()) {
                 if (!this.eatDirectiveValue()) {
                     throw this.createError("expecting directive-value but found " + this.next());
                 }
-                if (this.eatDirectiveSeparator()) break;
+                if (this.eatSeparator()) break;
             }
         }
         Token[] tokensArray = new Token[this.tokens.size()];

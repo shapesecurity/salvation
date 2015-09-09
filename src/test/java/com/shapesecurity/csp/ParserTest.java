@@ -808,7 +808,7 @@ public class ParserTest {
         p1 = ParserWithLocation.parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("style-src b", "https://origin");
         p1.union(p2);
-        assertEquals("script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
+        assertEquals("default-src; script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
@@ -846,8 +846,13 @@ public class ParserTest {
 
     @Test
     public void testIntersect() throws ParseException, TokeniserException {
-        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
-        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        Policy p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
+        Policy p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
+        p1.intersect(p2);
+        assertEquals("default-src", p1.show());
+
+        p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.intersect(p2);
         assertEquals("default-src a b; script-src; style-src", p1.show());
 

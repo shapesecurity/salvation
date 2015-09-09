@@ -4,10 +4,7 @@ import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.*;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
-import com.shapesecurity.csp.interfaces.Show;
-import com.shapesecurity.csp.tokens.DirectiveNameToken;
-import com.shapesecurity.csp.tokens.DirectiveValueToken;
-import com.shapesecurity.csp.tokens.Token;
+import com.shapesecurity.csp.tokens.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -21,22 +18,42 @@ public class Parser {
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePrivate();
-    }
-
-    @Nonnull
-    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyAndAssertEOF();
+    }
+
+    @Nonnull
+    public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull
     public static Policy parse(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePrivate();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyListAndAssertEOF();
+    }
+
+    @Nonnull
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin, @Nonnull Collection<Warning> warningsOut) throws ParseException, TokeniserException {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull
@@ -72,12 +89,16 @@ public class Parser {
         return this.index < this.tokens.length;
     }
 
-    private boolean hasNext(@Nonnull String value) {
-        return this.hasNext() && value.equals(this.tokens[this.index].value);
+    private boolean hasNext(@Nonnull Class<? extends Token> c) {
+        return this.hasNext() && c.isAssignableFrom(this.tokens[this.index].getClass());
     }
 
-    private boolean eat(@Nonnull String token) {
-        if (this.hasNext(token)) {
+    private boolean hasNext(@Nonnull Class<? extends Token> c, String v) {
+        return this.hasNext(c) && v.equals(this.tokens[this.index].value);
+    }
+
+    private boolean eat(@Nonnull Class<? extends Token> c) {
+        if (this.hasNext(c)) {
             this.advance();
             return true;
         }
@@ -94,69 +115,93 @@ public class Parser {
         return new ParseException(message);
     }
 
+
     @Nonnull
-    protected Policy parsePrivate() throws ParseException {
+    protected Policy parsePolicy() throws ParseException {
         Policy policy = new Policy(this.origin);
         while (this.hasNext()) {
-            if (this.eat(";")) continue;
+            if (this.eat(DirectiveSeparatorToken.class)) continue;
             policy.addDirective(this.parseDirective());
-            if (!this.eat(";")) {
-                if (this.hasNext()) {
-                    throw this.createError("expecting semicolon or end of policy but found " + this.advance().value);
-                } else {
-                    break;
-                }
+            if (!this.eat(DirectiveSeparatorToken.class)) {
+                break;
             }
         }
         return policy;
     }
 
     @Nonnull
-    private Directive<?> parseDirective() throws ParseException {
-        Token token = this.advance();
-        if (token instanceof DirectiveNameToken) {
-            switch (((DirectiveNameToken) token).subtype) {
-                case BaseUri: return new BaseUriDirective(this.parseSourceList());
-                case ChildSrc: return new ChildSrcDirective(this.parseSourceList());
-                case ConnectSrc: return new ConnectSrcDirective(this.parseSourceList());
-                case DefaultSrc: return new DefaultSrcDirective(this.parseSourceList());
-                case FontSrc: return new FontSrcDirective(this.parseSourceList());
-                case FormAction: return new FormActionDirective(this.parseSourceList());
-                case FrameAncestors: return new FrameAncestorsDirective(this.parseAncestorSourceList());
-                case FrameSrc:
-                    this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
-                    return new FrameSrcDirective(this.parseSourceList());
-                case ImgSrc: return new ImgSrcDirective(this.parseSourceList());
-                case MediaSrc: return new MediaSrcDirective(this.parseSourceList());
-                case ObjectSrc: return new ObjectSrcDirective(this.parseSourceList());
-                case PluginTypes: return new PluginTypesDirective(this.parseMediaTypeList());
-                case ReportUri: return new ReportUriDirective(this.parseUriList());
-                case Sandbox: return new SandboxDirective(this.parseSandboxTokenList());
-                case ScriptSrc: return new ScriptSrcDirective(this.parseSourceList());
-                case StyleSrc: return new StyleSrcDirective(this.parseSourceList());
-                case Referrer:
-                case UpgradeInsecureRequests:
-                    throw this.createError("The " + ((DirectiveNameToken) token).value + " directive is not in the CSP specification yet.");
-                case Allow:
-                    throw this.createError("The allow directive has been replaced with default-src and is not in the CSP specification.");
-                case Options:
-                    throw this.createError("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
-            }
+    protected Policy parsePolicyAndAssertEOF() throws ParseException {
+        Policy policy = this.parsePolicy();
+        if (this.hasNext()) {
+            throw this.createError("expecting end of policy but found " + this.advance().value);
         }
-        throw this.createError("expecting directive-name but found " + token.value);
+        return policy;
+    }
+
+    @Nonnull
+    protected List<Policy> parsePolicyList() throws ParseException {
+        List<Policy> policies = new ArrayList<>();
+        policies.add(this.parsePolicy());
+        while(this.hasNext(PolicySeparatorToken.class)) {
+            while (this.eat(PolicySeparatorToken.class));
+            policies.add(this.parsePolicy());
+        }
+        return policies;
+    }
+
+    @Nonnull
+    protected List<Policy> parsePolicyListAndAssertEOF() throws ParseException {
+        List<Policy> policies = this.parsePolicyList();
+        if (this.hasNext()) {
+            throw this.createError("expecting end of policy list but found " + this.advance().value);
+        }
+        return policies;
+    }
+
+    @Nonnull
+    private Directive<?> parseDirective() throws ParseException {
+        if (!this.hasNext(DirectiveNameToken.class)) {
+            throw this.createError("expecting directive-name but found " + this.advance().value);
+        }
+        DirectiveNameToken token = (DirectiveNameToken) this.advance();
+        switch (token.subtype) {
+            case BaseUri: return new BaseUriDirective(this.parseSourceList());
+            case ChildSrc: return new ChildSrcDirective(this.parseSourceList());
+            case ConnectSrc: return new ConnectSrcDirective(this.parseSourceList());
+            case DefaultSrc: return new DefaultSrcDirective(this.parseSourceList());
+            case FontSrc: return new FontSrcDirective(this.parseSourceList());
+            case FormAction: return new FormActionDirective(this.parseSourceList());
+            case FrameAncestors: return new FrameAncestorsDirective(this.parseAncestorSourceList());
+            case FrameSrc:
+                this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                return new FrameSrcDirective(this.parseSourceList());
+            case ImgSrc: return new ImgSrcDirective(this.parseSourceList());
+            case MediaSrc: return new MediaSrcDirective(this.parseSourceList());
+            case ObjectSrc: return new ObjectSrcDirective(this.parseSourceList());
+            case PluginTypes: return new PluginTypesDirective(this.parseMediaTypeList());
+            case ReportUri: return new ReportUriDirective(this.parseUriList());
+            case Sandbox: return new SandboxDirective(this.parseSandboxTokenList());
+            case ScriptSrc: return new ScriptSrcDirective(this.parseSourceList());
+            case StyleSrc: return new StyleSrcDirective(this.parseSourceList());
+            case Referrer:
+            case UpgradeInsecureRequests:
+                throw this.createError("The " + token.value + " directive is not in the CSP specification yet.");
+            case Allow:
+                throw this.createError("The allow directive has been replaced with default-src and is not in the CSP specification.");
+            case Options:
+                throw this.createError("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
+        }
+        throw this.createError("Not reached.");
     }
 
     @Nonnull
     private Set<MediaType> parseMediaTypeList() throws ParseException {
         Set<MediaType> mediaTypes = new LinkedHashSet<>();
-        if (this.hasNext(";")) {
+        if (!this.hasNext(DirectiveValueToken.class)) {
             throw this.createError("media-type-list must contain at least one media-type");
         }
-        if (!this.hasNext()) {
-            throw this.createUnexpectedEOF("media-type-list must contain at least one media-type");
-        }
         mediaTypes.add(this.parseMediaType());
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext(DirectiveValueToken.class)) {
             mediaTypes.add(this.parseMediaType());
         }
         return mediaTypes;
@@ -175,11 +220,12 @@ public class Parser {
     @Nonnull
     private Set<SourceExpression> parseSourceList() throws ParseException {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
-        if (this.eat("'none'")) {
+        if (this.hasNext(DirectiveValueToken.class, "'none'")) {
+            this.advance();
             sourceExpressions.add(None.INSTANCE);
             return sourceExpressions;
         }
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext(DirectiveValueToken.class)) {
             sourceExpressions.add(this.parseSourceExpression());
         }
         return sourceExpressions;
@@ -262,12 +308,12 @@ public class Parser {
     @Nonnull
     private Set<AncestorSource> parseAncestorSourceList() throws ParseException {
         Set<AncestorSource> ancestorSources = new LinkedHashSet<>();
-        if (this.hasNext("'none'")) {
+        if (this.hasNext(DirectiveValueToken.class, "'none'")) {
             this.advance();
             ancestorSources.add(None.INSTANCE);
             return ancestorSources;
         }
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext(DirectiveValueToken.class)) {
             ancestorSources.add(this.parseAncestorSource());
         }
         return ancestorSources;
@@ -308,7 +354,7 @@ public class Parser {
     @Nonnull
     private Set<SandboxValue> parseSandboxTokenList() throws ParseException {
         Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext(DirectiveValueToken.class)) {
             sandboxTokens.add(this.parseSandboxToken());
         }
         return sandboxTokens;
@@ -327,7 +373,7 @@ public class Parser {
     @Nonnull
     private Set<URI> parseUriList() throws ParseException {
         Set<URI> uriList = new LinkedHashSet<>();
-        while (this.hasNext() && !this.hasNext(";")) {
+        while (this.hasNext(DirectiveValueToken.class)) {
             uriList.add(this.parseUri());
         }
         if (uriList.isEmpty()) {

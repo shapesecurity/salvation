@@ -6,15 +6,13 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public final class ConnectSrcDirective extends SourceListDirective {
-    @Nonnull
-    private static final String NAME = "connect-src";
+    @Nonnull private static final String NAME = "connect-src";
 
     public ConnectSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(ConnectSrcDirective.NAME, sourceExpressions);
     }
 
-    @Nonnull
-    @Override
+    @Nonnull @Override
     protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new ConnectSrcDirective(newValues);
     }

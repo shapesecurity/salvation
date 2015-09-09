@@ -1,7 +1,7 @@
 package com.shapesecurity.csp.data;
 
-import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
+import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
 import com.shapesecurity.csp.interfaces.Show;
 
@@ -13,23 +13,19 @@ import java.util.stream.Collectors;
 
 public class Policy implements Show {
 
-    @Nonnull
-    private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
+    @Nonnull private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
+    @Nonnull private Origin origin;
 
-    @Nonnull
-    public Origin getOrigin() {
+    public Policy(@Nonnull Origin origin) {
+        this.directives = new LinkedHashMap<>();
+        this.origin = origin;
+    }
+
+    @Nonnull public Origin getOrigin() {
         return origin;
     }
 
     public void setOrigin(@Nonnull Origin origin) {
-        this.origin = origin;
-    }
-
-    @Nonnull
-    private Origin origin;
-
-    public Policy(@Nonnull Origin origin) {
-        this.directives = new LinkedHashMap<>();
         this.origin = origin;
     }
 
@@ -41,11 +37,14 @@ public class Policy implements Show {
         this.mergeUsingStrategy(other, this::unionDirective);
     }
 
-    private void mergeUsingStrategy(@Nonnull Policy other, Consumer<Directive<? extends DirectiveValue>> strategy) {
-        if (this.directives.containsKey(ReportUriDirective.class) || other.directives.containsKey(ReportUriDirective.class)) {
-           throw new IllegalArgumentException("Cannot merge policies if either policy contains a report-uri directive.");
+    private void mergeUsingStrategy(@Nonnull Policy other,
+        Consumer<Directive<? extends DirectiveValue>> strategy) {
+        if (this.directives.containsKey(ReportUriDirective.class) || other.directives
+            .containsKey(ReportUriDirective.class)) {
+            throw new IllegalArgumentException(
+                "Cannot merge policies if either policy contains a report-uri directive.");
         }
-        
+
         this.resolveSelf();
         other.resolveSelf();
 
@@ -66,21 +65,25 @@ public class Policy implements Show {
     }
 
     private void resolveSelf() {
-        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
+            .entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();
             if (directive instanceof SourceListDirective) {
                 SourceListDirective sourceListDirective = (SourceListDirective) directive;
-                this.directives.put(entry.getKey(), sourceListDirective.bind(dv ->
-                    dv == KeywordSource.Self
-                        ? Collections.singleton(new HostSource(this.origin.scheme, this.origin.host, this.origin.port, null))
-                        : null
-                ));
+                this.directives.put(entry.getKey(), sourceListDirective.bind(
+                    dv -> dv == KeywordSource.Self ?
+                        Collections.singleton(
+                            new HostSource(this.origin.scheme, this.origin.host, this.origin.port,
+                                null)) :
+                        null));
             }
         }
     }
 
-    private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective, @Nonnull Policy basePolicy) {
-        Set<SourceExpression> defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+    private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective,
+        @Nonnull Policy basePolicy) {
+        Set<SourceExpression> defaultSources =
+            defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
         if (!basePolicy.directives.containsKey(ScriptSrcDirective.class)) {
             this.unionDirective(new ScriptSrcDirective(defaultSources));
         }
@@ -108,86 +111,97 @@ public class Policy implements Show {
     }
 
     private void optimise() {
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
-        if (defaultSrcDirective == null) return;
-        Set<SourceExpression> defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null)
+            return;
+        Set<SourceExpression> defaultSources =
+            defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
 
         // * remove source directives that are equivalent to default-src
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-        if (scriptSrcDirective != null && defaultSources.equals(scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (scriptSrcDirective != null && defaultSources.equals(
+            scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(ScriptSrcDirective.class);
         }
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-        if (styleSrcDirective != null && defaultSources.equals(styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (styleSrcDirective != null && defaultSources.equals(
+            styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(StyleSrcDirective.class);
         }
         ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
-        if (imgSrcDirective != null && defaultSources.equals(imgSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (imgSrcDirective != null && defaultSources.equals(
+            imgSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(ImgSrcDirective.class);
         }
         ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
-        if (childSrcDirective != null && defaultSources.equals(childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (childSrcDirective != null && defaultSources.equals(
+            childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(ChildSrcDirective.class);
         }
-        ConnectSrcDirective connectSrcDirective = this.getDirectiveByType(ConnectSrcDirective.class);
-        if (connectSrcDirective != null && defaultSources.equals(connectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        ConnectSrcDirective connectSrcDirective =
+            this.getDirectiveByType(ConnectSrcDirective.class);
+        if (connectSrcDirective != null && defaultSources.equals(
+            connectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(ConnectSrcDirective.class);
         }
         FontSrcDirective fontSrcDirective = this.getDirectiveByType(FontSrcDirective.class);
-        if (fontSrcDirective != null && defaultSources.equals(fontSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (fontSrcDirective != null && defaultSources.equals(
+            fontSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(FontSrcDirective.class);
         }
         MediaSrcDirective mediaSrcDirective = this.getDirectiveByType(MediaSrcDirective.class);
-        if (mediaSrcDirective != null && defaultSources.equals(mediaSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (mediaSrcDirective != null && defaultSources.equals(
+            mediaSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(MediaSrcDirective.class);
         }
         ObjectSrcDirective objectSrcDirective = this.getDirectiveByType(ObjectSrcDirective.class);
-        if (objectSrcDirective != null && defaultSources.equals (objectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
+        if (objectSrcDirective != null && defaultSources.equals(
+            objectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
             this.directives.remove(ObjectSrcDirective.class);
         }
 
         // * remove default-src nonces if the policy contains both script-src and style-src directives
-        if (
-            this.directives.containsKey(ScriptSrcDirective.class) &&
-            this.directives.containsKey(StyleSrcDirective.class)
-        ) {
-            defaultSources = defaultSrcDirective.values().filter(x -> !(x instanceof NonceSource)).collect(Collectors.toCollection(LinkedHashSet::new));
+        if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
+            .containsKey(StyleSrcDirective.class)) {
+            defaultSources = defaultSrcDirective.values().filter(x -> !(x instanceof NonceSource))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
             defaultSrcDirective = new DefaultSrcDirective(defaultSources);
             this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
         }
 
         // * remove unnecessary default-src directives if all source directives exist
-        if (
-            this.directives.containsKey(ScriptSrcDirective.class) &&
+        if (this.directives.containsKey(ScriptSrcDirective.class) &&
             this.directives.containsKey(StyleSrcDirective.class) &&
             this.directives.containsKey(ImgSrcDirective.class) &&
             this.directives.containsKey(ChildSrcDirective.class) &&
             this.directives.containsKey(ConnectSrcDirective.class) &&
             this.directives.containsKey(FontSrcDirective.class) &&
             this.directives.containsKey(MediaSrcDirective.class) &&
-            this.directives.containsKey(ObjectSrcDirective.class)
-        ) {
+            this.directives.containsKey(ObjectSrcDirective.class)) {
             this.directives.remove(DefaultSrcDirective.class);
         }
 
         // * replace host-sources that are equivalent to origin with 'self' keyword-source
-        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
+            .entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();
             if (directive instanceof SourceListDirective) {
                 SourceListDirective sourceListDirective = (SourceListDirective) directive;
                 this.directives.put(entry.getKey(), sourceListDirective.bind(dv ->
-                    dv instanceof HostSource && ((HostSource) dv).matchesOnlyOrigin(this.origin)
-                        ? Collections.singleton(KeywordSource.Self)
-                        : null
-                ));
+                        dv instanceof HostSource && ((HostSource) dv)
+                            .matchesOnlyOrigin(this.origin) ?
+                            Collections.singleton(KeywordSource.Self) :
+                            null));
             }
         }
     }
 
     // union a directive if it does not exist; used for policy manipulation and composition
-    private <V extends DirectiveValue, T extends Directive<V>> void unionDirective(@Nonnull T directive) {
-        @SuppressWarnings("unchecked")
-        T oldDirective = (T) this.directives.get(directive.getClass());
+    private <V extends DirectiveValue, T extends Directive<V>> void unionDirective(
+        @Nonnull T directive) {
+        @SuppressWarnings("unchecked") T oldDirective =
+            (T) this.directives.get(directive.getClass());
         if (oldDirective != null) {
             oldDirective.union(directive);
         } else {
@@ -195,9 +209,10 @@ public class Policy implements Show {
         }
     }
 
-    private <V extends DirectiveValue, T extends Directive<V>> void intersectDirective(@Nonnull T directive) {
-        @SuppressWarnings("unchecked")
-        T oldDirective = (T) this.directives.get(directive.getClass());
+    private <V extends DirectiveValue, T extends Directive<V>> void intersectDirective(
+        @Nonnull T directive) {
+        @SuppressWarnings("unchecked") T oldDirective =
+            (T) this.directives.get(directive.getClass());
         if (oldDirective != null) {
             oldDirective.intersect(directive);
         } else {
@@ -214,41 +229,40 @@ public class Policy implements Show {
         }
     }
 
-    @Nonnull
-    public Collection<Directive<? extends DirectiveValue>> getDirectives() {
+    @Nonnull public Collection<Directive<? extends DirectiveValue>> getDirectives() {
         return this.directives.values();
     }
 
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public <V extends DirectiveValue, T extends Directive<V>> T getDirectiveByType(@Nonnull Class<T> type) {
+    @SuppressWarnings("unchecked") @Nullable
+    public <V extends DirectiveValue, T extends Directive<V>> T getDirectiveByType(
+        @Nonnull Class<T> type) {
         T d = (T) this.directives.get(type);
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return d;
     }
 
-    @Override
-    public boolean equals(@Nullable Object other) {
-        if (other == null || !(other instanceof Policy)) return false;
-        return this.directives.size() == ((Policy) other).directives.size() &&
-                this.directives.equals(((Policy) other).directives);
+    @Override public boolean equals(@Nullable Object other) {
+        if (other == null || !(other instanceof Policy))
+            return false;
+        return this.directives.size() == ((Policy) other).directives.size() && this.directives
+            .equals(((Policy) other).directives);
     }
 
-    @Override
-    public int hashCode() {
-        return this.directives.values().stream().map(Object::hashCode).reduce(0x19E465E0, (a, b) -> a ^ b);
+    @Override public int hashCode() {
+        return this.directives.values().stream().map(Object::hashCode)
+            .reduce(0x19E465E0, (a, b) -> a ^ b);
     }
 
-    @Nonnull
-    @Override
-    public String show() {
+    @Nonnull @Override public String show() {
         StringBuilder sb = new StringBuilder();
         if (this.directives.isEmpty()) {
             return "";
         }
         boolean first = true;
         for (Directive<?> d : this.directives.values()) {
-            if (!first) sb.append("; ");
+            if (!first)
+                sb.append("; ");
             first = false;
             sb.append(d.show());
         }
@@ -256,9 +270,12 @@ public class Policy implements Show {
     }
 
 
-    private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        if(this.defaultsAllowUnsafeInline()) return true;
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+    private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm,
+        @Nonnull Base64Value hashValue) {
+        if (this.defaultsAllowUnsafeInline())
+            return true;
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
@@ -266,8 +283,10 @@ public class Policy implements Show {
     }
 
     private boolean defaultsAllowNonce(@Nonnull Base64Value nonce) {
-        if(this.defaultsAllowUnsafeInline()) return true;
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (this.defaultsAllowUnsafeInline())
+            return true;
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
@@ -277,7 +296,8 @@ public class Policy implements Show {
 
     // 7.4.1
     private boolean defaultsAllowSource(@Nonnull URI s) {
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
@@ -285,7 +305,8 @@ public class Policy implements Show {
     }
 
     private boolean defaultsAllowUnsafeInline() {
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return false;
         }
@@ -317,8 +338,10 @@ public class Policy implements Show {
         return styleSrcDirective.matchesUri(this.origin, uri);
     }
 
-    public boolean allowsStyleWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        if (this.allowsUnsafeInlineStyle()) return true;
+    public boolean allowsStyleWithHash(@Nonnull HashAlgorithm algorithm,
+        @Nonnull Base64Value hashValue) {
+        if (this.allowsUnsafeInlineStyle())
+            return true;
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
             return this.defaultsAllowHash(algorithm, hashValue);
@@ -326,8 +349,10 @@ public class Policy implements Show {
         return styleSrcDirective.matchesHash(algorithm, hashValue);
     }
 
-    public boolean allowsScriptWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        if (this.allowsUnsafeInlineScript()) return true;
+    public boolean allowsScriptWithHash(@Nonnull HashAlgorithm algorithm,
+        @Nonnull Base64Value hashValue) {
+        if (this.allowsUnsafeInlineScript())
+            return true;
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
             return this.defaultsAllowHash(algorithm, hashValue);
@@ -352,7 +377,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsPlugin(@Nonnull MediaType mediaType) {
-        PluginTypesDirective pluginTypesDirective = this.getDirectiveByType(PluginTypesDirective.class);
+        PluginTypesDirective pluginTypesDirective =
+            this.getDirectiveByType(PluginTypesDirective.class);
         if (pluginTypesDirective == null) {
             return false;
         }
@@ -361,7 +387,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsScriptWithNonce(@Nonnull Base64Value nonce) {
-        if (this.allowsUnsafeInlineScript()) return true;
+        if (this.allowsUnsafeInlineScript())
+            return true;
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);
@@ -370,7 +397,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
-        if (this.allowsUnsafeInlineScript()) return true;
+        if (this.allowsUnsafeInlineScript())
+            return true;
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);
@@ -379,7 +407,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsConnectTo(@Nonnull URI uri) {
-        ConnectSrcDirective connectSrcDirective = this.getDirectiveByType(ConnectSrcDirective.class);
+        ConnectSrcDirective connectSrcDirective =
+            this.getDirectiveByType(ConnectSrcDirective.class);
         if (connectSrcDirective == null) {
             return this.defaultsAllowSource(uri);
         }

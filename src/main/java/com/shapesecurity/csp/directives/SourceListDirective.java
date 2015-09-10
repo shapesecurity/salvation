@@ -29,8 +29,9 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
             .anyMatch(x -> ((MatchesUri) x).matchesUri(origin, uri));
     }
 
-    public boolean matchesNonce(@Nonnull Base64Value nonce) {
-        return this.values().filter(x -> x instanceof MatchesNonce)
+    public boolean matchesNonce(@Nonnull String nonce) {
+        return this.values()
+            .filter(x -> x instanceof MatchesNonce)
             .anyMatch(x -> ((MatchesNonce) x).matchesNonce(nonce));
     }
 }

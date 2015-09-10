@@ -12,19 +12,15 @@ public class TokeniserWithLocation extends Tokeniser {
         super(sourceText);
     }
 
-    @Nonnull
-    private Location getLocation() {
-        return new Location(1, this.index + 1, this.index);
-    }
-
-    @Nonnull
-    public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
         return new TokeniserWithLocation(sourceText).tokenise();
     }
 
-    @Override
-    @Nonnull
-    protected TokeniserException createError(@Nonnull String message) {
+    @Nonnull private Location getLocation() {
+        return new Location(1, this.index + 1, this.index);
+    }
+
+    @Override @Nonnull protected TokeniserException createError(@Nonnull String message) {
         TokeniserException e = super.createError(message);
         e.location = this.getLocation();
         return e;

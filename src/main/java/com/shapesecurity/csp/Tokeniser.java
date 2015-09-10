@@ -11,26 +11,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Tokeniser {
-    @Nonnull
-    protected final ArrayList<Token> tokens;
-    @Nonnull
-    protected final String sourceText;
-    protected int index = 0;
-    protected final int length;
-
-    @Nonnull
-    public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
-        return new Tokeniser(sourceText).tokenise();
-    }
-
     private static final Pattern directiveSeparator = Pattern.compile(";");
     private static final Pattern policySeparator = Pattern.compile(",");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern directiveValuePattern = Pattern.compile("[^;,\0- \\x7F]+");
-
-    private static boolean isWhitespace(char ch) {
-        return ch == ' ' || ch == '\t';
-    }
+    @Nonnull protected final ArrayList<Token> tokens;
+    @Nonnull protected final String sourceText;
+    protected final int length;
+    protected int index = 0;
 
     protected Tokeniser(@Nonnull String sourceText) {
         this.tokens = new ArrayList<>();
@@ -39,15 +27,24 @@ public class Tokeniser {
         this.eatWhitespace();
     }
 
-    @Nonnull
-    protected TokeniserException createError(@Nonnull String message) {
+    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+        return new Tokeniser(sourceText).tokenise();
+    }
+
+    private static boolean isWhitespace(char ch) {
+        return ch == ' ' || ch == '\t';
+    }
+
+    @Nonnull protected TokeniserException createError(@Nonnull String message) {
         return new TokeniserException(message);
     }
 
     protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
-        if (this.index >= this.length) return false;
+        if (this.index >= this.length)
+            return false;
         Matcher matcher = pattern.matcher(this.sourceText);
-        if (!matcher.find(this.index) || matcher.start() != this.index) return false;
+        if (!matcher.find(this.index) || matcher.start() != this.index)
+            return false;
         int start = this.index;
         this.index = matcher.end();
         this.tokens.add(ctor.apply(this.sourceText.substring(start, this.index)));
@@ -56,8 +53,8 @@ public class Tokeniser {
     }
 
     private boolean eatSeparator() {
-        return this.eat(DirectiveSeparatorToken::new, Tokeniser.directiveSeparator) ||
-            this.eat(PolicySeparatorToken::new, Tokeniser.policySeparator);
+        return this.eat(DirectiveSeparatorToken::new, Tokeniser.directiveSeparator) || this
+            .eat(PolicySeparatorToken::new, Tokeniser.policySeparator);
     }
 
     private boolean eatDirectiveName() {
@@ -83,25 +80,28 @@ public class Tokeniser {
         int i = this.index;
         while (i < this.length) {
             char ch = this.sourceText.charAt(i);
-            if (Tokeniser.isWhitespace(ch) || ch == ';') break;
+            if (Tokeniser.isWhitespace(ch) || ch == ';')
+                break;
             ++i;
         }
         return this.sourceText.substring(this.index, i);
     }
 
-    @Nonnull
-    protected Token[] tokenise() throws TokeniserException {
+    @Nonnull protected Token[] tokenise() throws TokeniserException {
         while (this.hasNext()) {
-            if (this.eatSeparator()) continue;
+            if (this.eatSeparator())
+                continue;
             if (!this.eatDirectiveName()) {
                 throw this.createError("expecting directive-name but found " + this.next());
             }
-            if (this.eatSeparator()) continue;
+            if (this.eatSeparator())
+                continue;
             while (this.hasNext()) {
                 if (!this.eatDirectiveValue()) {
                     throw this.createError("expecting directive-value but found " + this.next());
                 }
-                if (this.eatSeparator()) break;
+                if (this.eatSeparator())
+                    break;
             }
         }
         Token[] tokensArray = new Token[this.tokens.size()];
@@ -109,16 +109,13 @@ public class Tokeniser {
     }
 
     public static class TokeniserException extends Exception {
-        @Nullable
-        public Location location;
+        @Nullable public Location location;
 
         public TokeniserException(@Nonnull String message) {
             super(message);
         }
 
-        @Nonnull
-        @Override
-        public String getMessage() {
+        @Nonnull @Override public String getMessage() {
             if (location == null) {
                 return super.getMessage();
             }

@@ -8,15 +8,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class Base64Value implements Show {
-    @Nonnull
-    private final String value;
+    @Nonnull private final String value;
+
+    public Base64Value(@Nonnull String value) {
+        this.value = value;
+    }
 
     public void validate() throws IllegalArgumentException {
 
         byte[] chars = value.getBytes(StandardCharsets.US_ASCII);
 
         if (chars.length % 4 != 0) {
-            throw new IllegalArgumentException("Invalid base64 string (should be multiple of 4 bytes: " + chars.length + "): " + value);
+            throw new IllegalArgumentException(
+                "Invalid base64 string (should be multiple of 4 bytes: " + chars.length + "): "
+                    + value);
         }
 
         int i;
@@ -25,26 +30,26 @@ public class Base64Value implements Show {
                 break;
             }
             if (!isBase64Chars(chars[i])) {
-                throw new IllegalArgumentException("Invalid base64 string (illegal characters): " + value);
+                throw new IllegalArgumentException(
+                    "Invalid base64 string (illegal characters): " + value);
             }
         }
         if (i < chars.length - 2) {
-            throw new IllegalArgumentException("Invalid base64 string (illegal characters): " + value);
+            throw new IllegalArgumentException(
+                "Invalid base64 string (illegal characters): " + value);
         }
         for (; i < chars.length; i++) {
             if (chars[i] != '=') {
-                throw new IllegalArgumentException("Invalid base64 string padding (illegal characters): " + value);
+                throw new IllegalArgumentException(
+                    "Invalid base64 string padding (illegal characters): " + value);
             }
         }
 
         byte[] bytes = Base64.getDecoder().decode(chars);
-        if(bytes.length < 16) {
-            throw new IllegalArgumentException("CSP specification recommends nonce-value to be at least 128 bits long (before encoding).");
+        if (bytes.length < 16) {
+            throw new IllegalArgumentException(
+                "CSP specification recommends nonce-value to be at least 128 bits long (before encoding).");
         }
-    }
-
-    public Base64Value(@Nonnull String value)  {
-        this.value = value;
     }
 
     private boolean isBase64Chars(byte ch) {
@@ -55,19 +60,16 @@ public class Base64Value implements Show {
             ch == '-' || ch == '_';
     }
 
-    @Override
-    public boolean equals(@Nullable Object other) {
-        return !(other == null || !(other instanceof Base64Value)) && this.value.equals(((Base64Value) other).value);
+    @Override public boolean equals(@Nullable Object other) {
+        return !(other == null || !(other instanceof Base64Value)) && this.value
+            .equals(((Base64Value) other).value);
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         return this.value.hashCode();
     }
 
-    @Nonnull
-    @Override
-    public String show() {
+    @Nonnull @Override public String show() {
         // TODO: figure out if we should do this
         // return this.value.replace('-', '+').replace('_', '/');
         return this.value;

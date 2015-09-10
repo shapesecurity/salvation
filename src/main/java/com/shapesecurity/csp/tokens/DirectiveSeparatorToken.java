@@ -8,9 +8,7 @@ public class DirectiveSeparatorToken extends Token {
         super(value);
     }
 
-    @Nonnull
-    @Override
-    public String toJSON() {
+    @Nonnull @Override public String toJSON() {
         return super.toJSON("DirectiveSeparator");
     }
 }

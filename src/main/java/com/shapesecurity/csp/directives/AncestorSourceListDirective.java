@@ -6,7 +6,8 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 abstract class AncestorSourceListDirective extends Directive<AncestorSource> {
-    AncestorSourceListDirective(@Nonnull String name, @Nonnull Set<AncestorSource> ancestorSources) {
+    AncestorSourceListDirective(@Nonnull String name,
+        @Nonnull Set<AncestorSource> ancestorSources) {
         super(name, ancestorSources);
     }
 }

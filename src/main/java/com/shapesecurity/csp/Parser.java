@@ -263,39 +263,37 @@ public class Parser {
                     return KeywordSource.UnsafeRedirect;
                 default:
                     if (token.value.startsWith("'nonce-")) {
-                        Base64Value b =
-                            new Base64Value(token.value.substring(7, token.value.length() - 1));
-                        try {
-                            b.validate();
-                        } catch (IllegalArgumentException e) {
-                            // warn if nonce-value is not valid base64
-                            this.warn(e.getMessage());
-                        }
-                        return new NonceSource(b);
+                        String nonce = token.value.substring(7, token.value.length() - 1);
+                        NonceSource nonceSource = new NonceSource(nonce);
+                        nonceSource.validationErrors().forEach(this::warn);
+                        return nonceSource;
                     } else if (token.value.startsWith("'sha")) {
-                        HashSource.HashAlgorithm algo;
+                        HashSource.HashAlgorithm algorithm;
                         switch (token.value.substring(4, 7)) {
                             case "256":
-                                algo = HashSource.HashAlgorithm.SHA256;
+                                algorithm = HashSource.HashAlgorithm.SHA256;
                                 break;
                             case "384":
-                                algo = HashSource.HashAlgorithm.SHA384;
+                                algorithm = HashSource.HashAlgorithm.SHA384;
                                 break;
                             case "512":
-                                algo = HashSource.HashAlgorithm.SHA512;
+                                algorithm = HashSource.HashAlgorithm.SHA512;
                                 break;
                             default:
                                 throw this.createError(
                                     "unrecognised hash algorithm " + token.value.substring(1, 7));
                         }
-                        Base64Value b =
-                            new Base64Value(token.value.substring(8, token.value.length() - 1));
-                        try {
-                            b.validate();
-                        } catch (IllegalArgumentException e) {
-                            throw this.createError(e.getMessage());
+                        String value = token.value.substring(8, token.value.length() - 1);
+                        // convert url-safe base64 to RFC4648 base64
+                        String safeValue = value.replace('-', '+').replace('_', '/');
+                        Base64Value base64Value = new Base64Value(safeValue);
+                        // warn if value is not RFC4648
+                        if (value.contains("-") || value.contains("_")) {
+                            this.warn("Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
                         }
-                        return new HashSource(algo, b);
+                        HashSource hashSource = new HashSource(algorithm, base64Value);
+                        hashSource.validationErrors().forEach(this::warn);
+                        return hashSource;
                     } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
                         return new SchemeSource(token.value.substring(0, token.value.length() - 1));
                     } else {

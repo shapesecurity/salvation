@@ -5,5 +5,5 @@ import com.shapesecurity.csp.data.Base64Value;
 import javax.annotation.Nonnull;
 
 public interface MatchesNonce {
-    boolean matchesNonce(@Nonnull Base64Value nonce);
+    boolean matchesNonce(@Nonnull String nonce);
 }

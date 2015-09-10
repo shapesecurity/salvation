@@ -282,15 +282,17 @@ public class Policy implements Show {
         return defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
 
-    private boolean defaultsAllowNonce(@Nonnull Base64Value nonce) {
-        if (this.defaultsAllowUnsafeInline())
-            return true;
-        DefaultSrcDirective defaultSrcDirective =
-            this.getDirectiveByType(DefaultSrcDirective.class);
+    private boolean defaultsAllowNonce(@Nonnull String nonce) {
+        if(this.defaultsAllowUnsafeInline()) return true;
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
         return defaultSrcDirective.matchesNonce(nonce);
+    }
+
+    private boolean defaultsAllowNonce(@Nonnull Base64Value nonce) {
+        return this.defaultsAllowNonce(nonce.value);
     }
 
 
@@ -386,9 +388,8 @@ public class Policy implements Show {
         return pluginTypesDirective.matchesMediaType(mediaType);
     }
 
-    public boolean allowsScriptWithNonce(@Nonnull Base64Value nonce) {
-        if (this.allowsUnsafeInlineScript())
-            return true;
+    public boolean allowsScriptWithNonce(@Nonnull String nonce) {
+        if (this.allowsUnsafeInlineScript()) return true;
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);
@@ -396,14 +397,21 @@ public class Policy implements Show {
         return scriptSrcDirective.matchesNonce(nonce);
     }
 
-    public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
-        if (this.allowsUnsafeInlineScript())
-            return true;
+    public boolean allowsScriptWithNonce(@Nonnull Base64Value nonce) {
+        return this.allowsScriptWithNonce(nonce.value);
+    }
+
+    public boolean allowsStyleWithNonce(@Nonnull String nonce) {
+        if (this.allowsUnsafeInlineScript()) return true;
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);
         }
         return styleSrcDirective.matchesNonce(nonce);
+    }
+
+    public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
+        return this.allowsStyleWithNonce(nonce.value);
     }
 
     public boolean allowsConnectTo(@Nonnull URI uri) {

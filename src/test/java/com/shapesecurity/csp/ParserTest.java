@@ -20,8 +20,7 @@ import java.util.Scanner;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
-public class ParserTest {
+@SuppressWarnings("ConstantConditions") public class ParserTest {
     private static int countIterable(Iterable<Directive<?>> a) {
         int count = 0;
         for (Object b : a) {
@@ -30,33 +29,34 @@ public class ParserTest {
         return count;
     }
 
-    @Nonnull
-    private static Policy createPolicyWithDefaultOrigin(@Nonnull String policy) throws ParseException, TokeniserException {
+    @Nonnull private static Policy createPolicyWithDefaultOrigin(@Nonnull String policy)
+        throws ParseException, TokeniserException {
         return Parser.parse(policy, "http://example.com");
     }
 
     private String createAndShow(@Nonnull String value) throws ParseException, TokeniserException {
-        return createPolicyWithDefaultOrigin(value).getDirectiveByType(BaseUriDirective.class).show();
+        return createPolicyWithDefaultOrigin(value).getDirectiveByType(BaseUriDirective.class)
+            .show();
     }
 
-    @Test
-    public void testEmptyPolicy() throws ParseException, TokeniserException {
+    @Test public void testEmptyPolicy() throws ParseException, TokeniserException {
         Policy p = createPolicyWithDefaultOrigin("");
         assertNotNull("empty policy should not be null", p);
-        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am")));
-        assertTrue("resource is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue("resource is allowed",
+            p.allowsScriptFromSource(URI.parse("https://www.def.am")));
+        assertTrue("resource is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512,
+            new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertTrue("resource is allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
 
 
     }
 
-    @Test
-    public void testTokeniser() throws ParseException, TokeniserException {
+    @Test public void testTokeniser() throws ParseException, TokeniserException {
         failsToParse("_sand _box   ;   ");
     }
 
-    @Test
-    public void testDuplicates() throws ParseException, TokeniserException {
+    @Test public void testDuplicates() throws ParseException, TokeniserException {
         Policy p;
         p = createPolicyWithDefaultOrigin("img-src a ;;; img-src b");
         assertNotNull("policy should not be null", p);
@@ -69,8 +69,7 @@ public class ParserTest {
         assertEquals("", "img-src a", imgSrcDirective.show());
     }
 
-    @Test
-    public void testParser() throws ParseException, TokeniserException {
+    @Test public void testParser() throws ParseException, TokeniserException {
 
         Policy p = createPolicyWithDefaultOrigin("font-src *");
         assertNotNull("policy should not be null", p);
@@ -122,7 +121,9 @@ public class ParserTest {
         try {
             d1.union(d2);
         } catch (IllegalArgumentException e) {
-            assertEquals("class com.shapesecurity.csp.directives.StyleSrcDirective can be unioned with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective", e.getMessage());
+            assertEquals(
+                "class com.shapesecurity.csp.directives.StyleSrcDirective can be unioned with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective",
+                e.getMessage());
         }
     }
 
@@ -135,18 +136,20 @@ public class ParserTest {
         fail();
     }
 
-    @Test
-    public void testSourceExpressionParsing() throws ParseException, TokeniserException {
+    @Test public void testSourceExpressionParsing() throws ParseException, TokeniserException {
         assertEquals("directive-name, no directive-value", "base-uri", createAndShow("base-uri"));
         assertEquals("directive-name, <tab>", "base-uri", createAndShow("base-uri\t"));
         assertEquals("directive-name, <space>", "base-uri", createAndShow("base-uri "));
         assertEquals("directive-name, 3*<space>", "base-uri", createAndShow("base-uri   "));
-        assertEquals("directive-name, scheme-part", "base-uri https:", createAndShow("base-uri https:"));
-        assertEquals("directive-name, 2*scheme-part", "base-uri file: javascript:", createAndShow("base-uri file: javascript: "));
+        assertEquals("directive-name, scheme-part", "base-uri https:",
+            createAndShow("base-uri https:"));
+        assertEquals("directive-name, 2*scheme-part", "base-uri file: javascript:",
+            createAndShow("base-uri file: javascript: "));
         assertEquals("directive-name, host-part *", "base-uri *", createAndShow("base-uri *"));
         assertEquals("directive-name, host-part *.", "base-uri *.a", createAndShow("base-uri *.a"));
 
-        assertEquals("represent origin host-source as 'self' keyword-source", "default-src 'self'", createPolicyWithDefaultOrigin("default-src http://example.com").show());
+        assertEquals("represent origin host-source as 'self' keyword-source", "default-src 'self'",
+            createPolicyWithDefaultOrigin("default-src http://example.com").show());
 
         failsToParse("connect-src 'none' scheme:");
         failsToParse("connect-src scheme: 'none'");
@@ -157,25 +160,48 @@ public class ParserTest {
 
         assertEquals("directive-name, port-part", "base-uri *:12", createAndShow("base-uri *:12"));
         failsToParse("base-uri *:ee");
-        assertEquals("directive-name, path-part", "base-uri */abc", createAndShow("base-uri */abc"));
+        assertEquals("directive-name, path-part", "base-uri */abc",
+            createAndShow("base-uri */abc"));
         failsToParse("base-uri *\n");
-        assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert", createAndShow("base-uri https://a.com:888/ert"));
+        assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
+            createAndShow("base-uri https://a.com:888/ert"));
 
-        assertEquals("directive-name, no directive-value", "child-src *", createPolicyWithDefaultOrigin("child-src *").getDirectiveByType(ChildSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "connect-src *", createPolicyWithDefaultOrigin("connect-src *").getDirectiveByType(ConnectSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "default-src *", createPolicyWithDefaultOrigin("default-src *").getDirectiveByType(DefaultSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "font-src *", createPolicyWithDefaultOrigin("font-src *").getDirectiveByType(FontSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "img-src *", createPolicyWithDefaultOrigin("img-src *").getDirectiveByType(ImgSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "media-src *", createPolicyWithDefaultOrigin("media-src *").getDirectiveByType(MediaSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "object-src *", createPolicyWithDefaultOrigin("object-src *").getDirectiveByType(ObjectSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "script-src *", createPolicyWithDefaultOrigin("script-src *").getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "style-src *", createPolicyWithDefaultOrigin("style-src *").getDirectiveByType(StyleSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "child-src *",
+            createPolicyWithDefaultOrigin("child-src *").getDirectiveByType(ChildSrcDirective.class)
+                .show());
+        assertEquals("directive-name, no directive-value", "connect-src *",
+            createPolicyWithDefaultOrigin("connect-src *")
+                .getDirectiveByType(ConnectSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "default-src *",
+            createPolicyWithDefaultOrigin("default-src *")
+                .getDirectiveByType(DefaultSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "font-src *",
+            createPolicyWithDefaultOrigin("font-src *").getDirectiveByType(FontSrcDirective.class)
+                .show());
+        assertEquals("directive-name, no directive-value", "img-src *",
+            createPolicyWithDefaultOrigin("img-src *").getDirectiveByType(ImgSrcDirective.class)
+                .show());
+        assertEquals("directive-name, no directive-value", "media-src *",
+            createPolicyWithDefaultOrigin("media-src *").getDirectiveByType(MediaSrcDirective.class)
+                .show());
+        assertEquals("directive-name, no directive-value", "object-src *",
+            createPolicyWithDefaultOrigin("object-src *")
+                .getDirectiveByType(ObjectSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "script-src *",
+            createPolicyWithDefaultOrigin("script-src *")
+                .getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "style-src *",
+            createPolicyWithDefaultOrigin("style-src *").getDirectiveByType(StyleSrcDirective.class)
+                .show());
     }
 
-    @Test
-    public void testAncestorSourceParsing() throws ParseException, TokeniserException {
-        assertEquals("directive-name, no directive-value", "frame-ancestors", createPolicyWithDefaultOrigin("frame-ancestors").getDirectiveByType(FrameAncestorsDirective.class).show());
-        assertEquals("directive-name, directive-value", "frame-ancestors 'none'", createPolicyWithDefaultOrigin("frame-ancestors 'none'").getDirectiveByType(FrameAncestorsDirective.class).show());
+    @Test public void testAncestorSourceParsing() throws ParseException, TokeniserException {
+        assertEquals("directive-name, no directive-value", "frame-ancestors",
+            createPolicyWithDefaultOrigin("frame-ancestors")
+                .getDirectiveByType(FrameAncestorsDirective.class).show());
+        assertEquals("directive-name, directive-value", "frame-ancestors 'none'",
+            createPolicyWithDefaultOrigin("frame-ancestors 'none'")
+                .getDirectiveByType(FrameAncestorsDirective.class).show());
 
         Policy p;
         p = createPolicyWithDefaultOrigin("frame-ancestors 'self' https://example.com");
@@ -185,7 +211,8 @@ public class ParserTest {
         FrameAncestorsDirective d2 = q.getDirectiveByType(FrameAncestorsDirective.class);
 
         d1.union(d2);
-        assertEquals("ancestor-source union", "frame-ancestors 'self' https://example.com http://example.com", d1.show());
+        assertEquals("ancestor-source union",
+            "frame-ancestors 'self' https://example.com http://example.com", d1.show());
         assertFalse("ancestor-source inequality", d1.equals(d2));
 
         p = createPolicyWithDefaultOrigin("frame-ancestors http://example.com");
@@ -203,8 +230,7 @@ public class ParserTest {
         failsToParse("frame-ancestors 'none' 'self'");
     }
 
-    @Test
-    public void testPolicy() throws ParseException, TokeniserException {
+    @Test public void testPolicy() throws ParseException, TokeniserException {
         Policy p;
         p = createPolicyWithDefaultOrigin("");
         assertEquals("policy show", "", p.show());
@@ -225,15 +251,22 @@ public class ParserTest {
 
     }
 
-    @Test()
-    public void testPluginTypesParsing() throws ParseException, TokeniserException {
+    @Test() public void testPluginTypesParsing() throws ParseException, TokeniserException {
         failsToParse("plugin-types");
         // XXX: technically allowed via ietf-token if an RFC introduces a type/subtype that is empty
         failsToParse("plugin-types /");
-        assertEquals("directive-name, directive-value", "plugin-types a/b", createPolicyWithDefaultOrigin("plugin-types a/b").getDirectiveByType(PluginTypesDirective.class).show());
-        assertEquals("directive-name, directive-value", "plugin-types a/b c/d", createPolicyWithDefaultOrigin("plugin-types a/b c/d").getDirectiveByType(PluginTypesDirective.class).show());
-        assertEquals("directive-name, directive-value", "plugin-types x-a/x-b", createPolicyWithDefaultOrigin("plugin-types x-a/x-b").getDirectiveByType(PluginTypesDirective.class).show());
-        assertEquals("directive-name, directive-value", "plugin-types X-A/X-B", createPolicyWithDefaultOrigin("plugin-types X-A/X-B").getDirectiveByType(PluginTypesDirective.class).show());
+        assertEquals("directive-name, directive-value", "plugin-types a/b",
+            createPolicyWithDefaultOrigin("plugin-types a/b")
+                .getDirectiveByType(PluginTypesDirective.class).show());
+        assertEquals("directive-name, directive-value", "plugin-types a/b c/d",
+            createPolicyWithDefaultOrigin("plugin-types a/b c/d")
+                .getDirectiveByType(PluginTypesDirective.class).show());
+        assertEquals("directive-name, directive-value", "plugin-types x-a/x-b",
+            createPolicyWithDefaultOrigin("plugin-types x-a/x-b")
+                .getDirectiveByType(PluginTypesDirective.class).show());
+        assertEquals("directive-name, directive-value", "plugin-types X-A/X-B",
+            createPolicyWithDefaultOrigin("plugin-types X-A/X-B")
+                .getDirectiveByType(PluginTypesDirective.class).show());
 
         Policy p;
         p = createPolicyWithDefaultOrigin("plugin-types a/b");
@@ -258,8 +291,7 @@ public class ParserTest {
         assertEquals("plugin-types hashcode equality", d1.hashCode(), d2.hashCode());
     }
 
-    @Test
-    public void testReportUri() throws ParseException, TokeniserException {
+    @Test public void testReportUri() throws ParseException, TokeniserException {
         failsToParse("report-uri ");
         failsToParse("report-uri #");
         failsToParse("report-uri a");
@@ -268,7 +300,8 @@ public class ParserTest {
         Policy q;
         q = createPolicyWithDefaultOrigin("report-uri http://b");
         ReportUriDirective d1 = p.getDirectiveByType(ReportUriDirective.class);
-        assertFalse("report-uri inequality", d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
+        assertFalse("report-uri inequality",
+            d1.equals(q.getDirectiveByType(ReportUriDirective.class)));
         d1.union(q.getDirectiveByType(ReportUriDirective.class));
         assertEquals("report-uri union", "report-uri http://a http://b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
@@ -288,8 +321,7 @@ public class ParserTest {
 
     }
 
-    @Test
-    public void testMediaTypeUnion() throws ParseException, TokeniserException {
+    @Test public void testMediaTypeUnion() throws ParseException, TokeniserException {
         Policy p;
         p = createPolicyWithDefaultOrigin("plugin-types a/b");
         Policy q;
@@ -300,11 +332,12 @@ public class ParserTest {
         assertEquals("directive-name, directive-value", "plugin-types a/b c/d", d1.show());
     }
 
-    @Test
-    public void testSandboxParsing() throws ParseException, TokeniserException {
+    @Test public void testSandboxParsing() throws ParseException, TokeniserException {
         failsToParse("sandbox a!*\n");
         failsToParse("sandbox a!*^:");
-        assertEquals("sandbox is valid", "sandbox abc", createPolicyWithDefaultOrigin("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
+        assertEquals("sandbox is valid", "sandbox abc",
+            createPolicyWithDefaultOrigin("sandbox abc").getDirectiveByType(SandboxDirective.class)
+                .show());
         Policy p;
         p = createPolicyWithDefaultOrigin("sandbox a");
         Policy q;
@@ -313,48 +346,71 @@ public class ParserTest {
         assertTrue("sandbox equals", d1.equals(q.getDirectiveByType(SandboxDirective.class)));
         assertEquals("sandbox hashcode equality", p.hashCode(), q.hashCode());
         q = createPolicyWithDefaultOrigin("sandbox b; script-src a");
-        assertFalse("sandbox directives equality", d1.equals(q.getDirectiveByType(SandboxDirective.class)));
+        assertFalse("sandbox directives equality",
+            d1.equals(q.getDirectiveByType(SandboxDirective.class)));
         d1.union(q.getDirectiveByType(SandboxDirective.class));
         assertEquals("sandbox union", "sandbox a b", d1.show());
         assertNotEquals("sandbox hashcode inequality", p.hashCode(), q.hashCode());
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
     }
 
-    @Test
-    public void testHashSource() throws ParseException, TokeniserException {
-        failsToParse("script-src 'self' https://example.com 'sha255-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
-        failsToParse("script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='").getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'").getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").getDirectiveByType(ScriptSrcDirective.class).show());
-        Policy p = createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-        Policy q = createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+    @Test public void testHashSource() throws ParseException, TokeniserException {
+        failsToParse(
+            "script-src 'self' https://example.com 'sha255-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
+        failsToParse(
+            "script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'");
+        assertEquals("directive-name, directive-value",
+            "script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='",
+            createPolicyWithDefaultOrigin(
+                "script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='")
+                .getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value",
+            "script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'",
+            createPolicyWithDefaultOrigin(
+                "script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'")
+                .getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals("directive-name, directive-value",
+            "script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='",
+            createPolicyWithDefaultOrigin(
+                "script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+                .getDirectiveByType(ScriptSrcDirective.class).show());
+        Policy p = createPolicyWithDefaultOrigin(
+            "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        Policy q = createPolicyWithDefaultOrigin(
+            "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
         assertEquals("hash-source hashcode equality", p.hashCode(), q.hashCode());
         ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
         assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
-        q = createPolicyWithDefaultOrigin("script-src 'sha512-HD6Xh+Y6oIZnXv4XqbKxrb6t3RkoPYv+NkqOBE8MwkssuATRE2aFBp8Nm9kp/Xn5a4l2Ki8QkX5qIUlbXQgO4Q=='");
-        assertFalse("hash-source inequality", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        q = createPolicyWithDefaultOrigin(
+            "script-src 'sha512-HD6Xh+Y6oIZnXv4XqbKxrb6t3RkoPYv+NkqOBE8MwkssuATRE2aFBp8Nm9kp/Xn5a4l2Ki8QkX5qIUlbXQgO4Q=='");
+        assertFalse("hash-source inequality",
+            d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
     }
 
-    @Test
-    public void sourceListTest() throws ParseException, TokeniserException {
-        Policy p = createPolicyWithDefaultOrigin("script-src http://a https://b; style-src http://e");
+    @Test public void sourceListTest() throws ParseException, TokeniserException {
+        Policy p =
+            createPolicyWithDefaultOrigin("script-src http://a https://b; style-src http://e");
         Policy q = createPolicyWithDefaultOrigin("script-src c d");
         ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
-        assertFalse("source-list inequality", d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        assertFalse("source-list inequality",
+            d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         d1.union(q.getDirectiveByType(ScriptSrcDirective.class));
         assertEquals("source-list union", "script-src http://a https://b c d", d1.show());
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         p = createPolicyWithDefaultOrigin("script-src http://a https://b");
         q = createPolicyWithDefaultOrigin("script-src http://a https://b");
         d1 = p.getDirectiveByType(ScriptSrcDirective.class);
-        assertTrue("source-list equality", d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+        assertTrue("source-list equality",
+            d1.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
         assertEquals("source-list hashcode equality", p.hashCode(), q.hashCode());
     }
 
-    @Test
-    public void testNonceSource() throws ParseException, TokeniserException {
-        assertEquals("directive-name, directive-value", "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='", createPolicyWithDefaultOrigin("script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='").getDirectiveByType(ScriptSrcDirective.class).show());
+    @Test public void testNonceSource() throws ParseException, TokeniserException {
+        assertEquals("directive-name, directive-value",
+            "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='",
+            createPolicyWithDefaultOrigin(
+                "script-src 'self' https://example.com 'nonce-MTIzNDU2Nw=='")
+                .getDirectiveByType(ScriptSrcDirective.class).show());
         Policy p = createPolicyWithDefaultOrigin("script-src 'nonce-MTIzNDU2Nw=='");
         Policy q = createPolicyWithDefaultOrigin("script-src 'nonce-MTIzNDU2Nw=='");
         ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
@@ -364,41 +420,51 @@ public class ParserTest {
         assertFalse("sandbox !equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
     }
 
-    @Test
-    public void testBase64Value() throws ParseException, TokeniserException {
+    @Test public void testBase64Value() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
         // illegal decoded size
-        Parser.parse("script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='", "https://origin", warnings);
+        Parser.parse("script-src 'self' https://example.com 'nonce-aGVsbG8gd29ybGQ='",
+            "https://origin", warnings);
         assertEquals(1, warnings.size());
         // illegal length
-        Parser.parse("script-src 'self' https://example.com 'nonce-123'", "https://origin", warnings);
+        Parser
+            .parse("script-src 'self' https://example.com 'nonce-123'", "https://origin", warnings);
         assertEquals(2, warnings.size());
         // illegal chars
-        Parser.parse("script-src 'self' https://example.com 'nonce-123^'", "https://origin", warnings);
+        Parser.parse("script-src 'self' https://example.com 'nonce-123^'", "https://origin",
+            warnings);
         assertEquals(3, warnings.size());
         // illegal padding
-        Parser.parse("script-src 'self' https://example.com 'nonce-12=+'", "https://origin", warnings);
+        Parser.parse("script-src 'self' https://example.com 'nonce-12=+'", "https://origin",
+            warnings);
         assertEquals(4, warnings.size());
         // illegal padding
-        Parser.parse("script-src 'self' https://example.com 'nonce-1^=='", "https://origin", warnings);
+        Parser.parse("script-src 'self' https://example.com 'nonce-1^=='", "https://origin",
+            warnings);
         assertEquals(5, warnings.size());
-        Parser.parse("script-src 'self' https://example.com 'nonce-1==='", "https://origin", warnings);
+        Parser.parse("script-src 'self' https://example.com 'nonce-1==='", "https://origin",
+            warnings);
         assertEquals(6, warnings.size());
 
 
-
     }
 
-    @Test
-    public void testKeywordSource() throws ParseException, TokeniserException {
-        assertEquals("directive-name, directive-value", "img-src example.com 'self'", createPolicyWithDefaultOrigin("img-src example.com 'self'").getDirectiveByType(ImgSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-inline'", createPolicyWithDefaultOrigin("img-src example.com 'unsafe-inline'").getDirectiveByType(ImgSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-eval'", createPolicyWithDefaultOrigin("img-src example.com 'unsafe-eval'").getDirectiveByType(ImgSrcDirective.class).show());
-        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-redirect'", createPolicyWithDefaultOrigin("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
+    @Test public void testKeywordSource() throws ParseException, TokeniserException {
+        assertEquals("directive-name, directive-value", "img-src example.com 'self'",
+            createPolicyWithDefaultOrigin("img-src example.com 'self'")
+                .getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-inline'",
+            createPolicyWithDefaultOrigin("img-src example.com 'unsafe-inline'")
+                .getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-eval'",
+            createPolicyWithDefaultOrigin("img-src example.com 'unsafe-eval'")
+                .getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-redirect'",
+            createPolicyWithDefaultOrigin("img-src example.com 'unsafe-redirect'")
+                .getDirectiveByType(ImgSrcDirective.class).show());
     }
 
-    @Test
-    public void testContains() throws ParseException, TokeniserException {
+    @Test public void testContains() throws ParseException, TokeniserException {
         Policy p = createPolicyWithDefaultOrigin("script-src a b c");
         Policy q = createPolicyWithDefaultOrigin("script-src a");
         Policy r = createPolicyWithDefaultOrigin("script-src m");
@@ -416,13 +482,16 @@ public class ParserTest {
         assertFalse("directive doesn't contain", d1.contains(value));
     }
 
-    @Test
-    public void testMatches() throws ParseException, TokeniserException {
-        Policy p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", URI.parse("https://abc.com"));
+    @Test public void testMatches() throws ParseException, TokeniserException {
+        Policy p = Parser.parse(
+            "default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am",
+            URI.parse("https://abc.com"));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
-        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
-        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed",
+            p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        assertFalse("resource is not allowed",
+            p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("http://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.com/12")));
@@ -430,49 +499,85 @@ public class ParserTest {
         assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
 
 
-        p = Parser.parse("script-src https: 'self' http://a 'unsafe-inline'", URI.parse("https://abc.com"));
+        p = Parser.parse("script-src https: 'self' http://a 'unsafe-inline'",
+            URI.parse("https://abc.com"));
         assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
 
         //assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaTypeListDirective.MediaType("a", "b")));
-        assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
-        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("default-src 'none'").allowsPlugin(new MediaType("z", "b")));
-        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));
-        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "d")));
-        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d").allowsPlugin(new MediaType("", "b")));
+        assertTrue("plugin is allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d")
+            .allowsPlugin(new MediaType("a", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("default-src 'none'")
+            .allowsPlugin(new MediaType("z", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d")
+            .allowsPlugin(new MediaType("z", "b")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d")
+            .allowsPlugin(new MediaType("a", "d")));
+        assertFalse("plugin is not allowed", createPolicyWithDefaultOrigin("plugin-types a/b c/d")
+            .allowsPlugin(new MediaType("", "b")));
 
-        assertTrue("script hash is allowed", createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse("script hash is not allowed", createPolicyWithDefaultOrigin("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertTrue("script hash is allowed", createPolicyWithDefaultOrigin(
+            "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+            .allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("script hash is not allowed", createPolicyWithDefaultOrigin(
+            "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+            .allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
-        assertTrue("style hash is allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse("style hash is not allowed", createPolicyWithDefaultOrigin("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='").allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertTrue("style hash is allowed", createPolicyWithDefaultOrigin(
+            "style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+            .allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("style hash is not allowed", createPolicyWithDefaultOrigin(
+            "style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+            .allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
-        assertTrue("script nonce is allowed", createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='").allowsScriptWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("script nonce is not allowed", createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='").allowsScriptWithNonce(new Base64Value("cGl6ZGE=")));
-        assertTrue("style nonce is allowed", createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='").allowsStyleWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='").allowsStyleWithNonce(new Base64Value("cGl6ZGE=")));
+        assertTrue("script nonce is allowed",
+            createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='")
+                .allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("script nonce is not allowed",
+            createPolicyWithDefaultOrigin("script-src 'nonce-0gQAAA=='")
+                .allowsScriptWithNonce(new Base64Value("cGl6ZGE=")));
+        assertTrue("style nonce is allowed",
+            createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='")
+                .allowsStyleWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed",
+            createPolicyWithDefaultOrigin("style-src 'nonce-0gQAAA=='")
+                .allowsStyleWithNonce(new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
         assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
-        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
-        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed",
+            p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        assertFalse("resource is not allowed",
+            p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
         assertFalse("inline style is not allowed", p.allowsUnsafeInlineStyle());
-        assertFalse("script hash is not allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse("style hash is not allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
-        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("script hash is not allowed",
+            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("style hash is not allowed",
+            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertFalse("script nonce is not allowed",
+            p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed",
+            p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
 
 
-        p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
+        p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/",
+            "https://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         //assertTrue("resource is allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
 
         // CSP spec 4.2.2 9
-        assertTrue("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is not allowed",
+            p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
         assertTrue("inline style is allowed", p.allowsUnsafeInlineStyle());
-        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertTrue("style hash is allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512,
+            new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue("style hash is allowed",
+            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
         assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("https://abc.com")));
         assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("http://good.com/")));
@@ -482,8 +587,7 @@ public class ParserTest {
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://aaa.good.com/")));
     }
 
-    @Test
-    public void testURIandOrigins() {
+    @Test public void testURIandOrigins() {
         URI u1 = URI.parse("http://a/123");
         URI u2 = URI.parse("http://a:80/");
         u1 = URI.parseWithOrigin(URI.parse("https://www"), "/34");
@@ -494,21 +598,24 @@ public class ParserTest {
     }
 
 
-    @Test
-    public void testPolicyUnion() throws ParseException, TokeniserException {
+    @Test public void testPolicyUnion() throws ParseException, TokeniserException {
         Policy p1 = Parser.parse("default-src aaa", "https://origin1.com");
         Policy p2 = Parser.parse("default-src 'self'", "https://origin2.com");
         p1.union(p2);
         assertEquals("default-src aaa https://origin2.com", p1.show());
 
-        p1 = Parser.parse("default-src default; connect-src a; script-src a; media-src a", "https://origin1.com");
-        p2 = Parser.parse("img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
+        p1 = Parser.parse("default-src default; connect-src a; script-src a; media-src a",
+            "https://origin1.com");
+        p2 = Parser.parse("img-src b; style-src b; font-src b; child-src b; object-src b",
+            "https://origin2.com");
         p1.union(p2);
-        assertEquals("connect-src a; script-src a; media-src a; style-src default b; img-src default b; child-src default b; font-src default b; object-src default b", p1.show());
+        assertEquals(
+            "connect-src a; script-src a; media-src a; style-src default b; img-src default b; child-src default b; font-src default b; object-src default b",
+            p1.show());
     }
 
-    @Test
-    public void testRealData() throws FileNotFoundException, ParseException, TokeniserException {
+    @Test public void testRealData()
+        throws FileNotFoundException, ParseException, TokeniserException {
         Scanner sc = new Scanner(this.getClass().getClassLoader().getResourceAsStream("csp.txt"));
         while (sc.hasNextLine()) {
             Policy p;
@@ -526,18 +633,18 @@ public class ParserTest {
         }
     }
 
-    @Test
-    public void testWarnings() throws ParseException, TokeniserException {
+    @Test public void testWarnings() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
         Policy p1 = Parser.parse("frame-src aaa", "https://origin", warnings);
 
         assertEquals("frame-src aaa", p1.show());
         assertEquals(1, warnings.size());
-        assertEquals("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.iterator().next().message);
+        assertEquals(
+            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            warnings.iterator().next().message);
     }
 
-    @Test
-    public void testParseExceptionLocation() throws TokeniserException {
+    @Test public void testParseExceptionLocation() throws TokeniserException {
         try {
             ParserWithLocation.parse("script-src aaa 'none' bbb", "https://origin");
         } catch (ParseException e) {
@@ -555,8 +662,7 @@ public class ParserTest {
         fail();
     }
 
-    @Test
-    public void testParseExceptionLocationReportUriEOF() throws TokeniserException {
+    @Test public void testParseExceptionLocationReportUriEOF() throws TokeniserException {
         try {
             ParserWithLocation.parse("report-uri", "https://origin");
         } catch (ParseException e) {
@@ -573,8 +679,7 @@ public class ParserTest {
         fail();
     }
 
-    @Test
-    public void testParseExceptionLocationEmptyMediaTypeListEOF() throws TokeniserException {
+    @Test public void testParseExceptionLocationEmptyMediaTypeListEOF() throws TokeniserException {
         try {
             ParserWithLocation.parse("plugin-types", "https://origin");
         } catch (ParseException e) {
@@ -591,8 +696,7 @@ public class ParserTest {
         fail();
     }
 
-    @Test
-    public void testParseExceptionLocationEmptyMediaTypeList() throws TokeniserException {
+    @Test public void testParseExceptionLocationEmptyMediaTypeList() throws TokeniserException {
         try {
             ParserWithLocation.parse("    plugin-types     ; script-src aaa", "https://origin");
         } catch (ParseException e) {
@@ -609,8 +713,7 @@ public class ParserTest {
         fail();
     }
 
-    @Test
-    public void testTokeniserExceptionLocation() {
+    @Test public void testTokeniserExceptionLocation() {
         try {
             TokeniserWithLocation.tokenise("   @@@   ");
         } catch (TokeniserException e) {
@@ -622,8 +725,7 @@ public class ParserTest {
         }
     }
 
-    @Test
-    public void testTokenLocation() throws TokeniserException {
+    @Test public void testTokenLocation() throws TokeniserException {
         Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
         assertEquals(3, tokens.length);
         assertNotNull(tokens[0].startLocation);
@@ -652,8 +754,7 @@ public class ParserTest {
         assertEquals(18, tokens[2].endLocation.offset);
     }
 
-    @Test
-    public void testWarningLocationFrameSrc() throws ParseException, TokeniserException {
+    @Test public void testWarningLocationFrameSrc() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
         ParserWithLocation.parse("frame-src aaa", "https://origin", warnings);
         assertEquals(1, warnings.size());
@@ -669,8 +770,8 @@ public class ParserTest {
         assertEquals(9, warning.endLocation.offset);
     }
 
-    @Test
-    public void testWarningLocationUnsafeRedirect() throws ParseException, TokeniserException {
+    @Test public void testWarningLocationUnsafeRedirect()
+        throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
         ParserWithLocation.parse("script-src 'unsafe-redirect'", "https://origin", warnings);
         assertEquals(1, warnings.size());
@@ -686,67 +787,71 @@ public class ParserTest {
         assertEquals(28, warning.endLocation.offset);
     }
 
-    @Test
-    public void testErrorTextWithLocation() throws ParseException, TokeniserException {
+    @Test public void testErrorTextWithLocation() throws ParseException, TokeniserException {
         try {
             ParserWithLocation.parse("plugin-types", "https://origin");
         } catch (ParseException e) {
-            assertEquals("1:1: media-type-list must contain at least one media-type", e.getMessage());
+            assertEquals("1:1: media-type-list must contain at least one media-type",
+                e.getMessage());
             return;
         }
         fail();
     }
 
-    @Test
-    public void testWarningTextWithLocation() throws ParseException, TokeniserException {
+    @Test public void testWarningTextWithLocation() throws ParseException, TokeniserException {
         ArrayList<Warning> warnings = new ArrayList<>();
-        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", URI.parse("https://origin"), warnings);
+        ParserWithLocation
+            .parse("script-src 'unsafe-redirect' aaa", URI.parse("https://origin"), warnings);
         assertEquals(1, warnings.size());
         Warning warning = warnings.get(0);
-        assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0", warning.show());
+        assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0",
+            warning.show());
     }
 
-    @Test
-    public void testAllowDirective() throws TokeniserException {
+    @Test public void testAllowDirective() throws TokeniserException {
         try {
             ParserWithLocation.parse("allow 'none'", "https://origin");
         } catch (ParseException e1) {
-            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+            assertEquals(
+                "1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
+                e1.getMessage());
             return;
         }
         fail();
     }
 
-    @Test
-    public void testOptionsDirective() throws TokeniserException {
+    @Test public void testOptionsDirective() throws TokeniserException {
         try {
             ParserWithLocation.parse("options inline-script", "https://origin");
         } catch (ParseException e1) {
-            assertEquals("1:1: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.", e1.getMessage());
+            assertEquals(
+                "1:1: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.",
+                e1.getMessage());
             return;
         }
         fail();
     }
 
-    @Test
-    public void testFutureDirectives() throws TokeniserException {
+    @Test public void testFutureDirectives() throws TokeniserException {
         try {
             ParserWithLocation.parse("referrer no-referrer", "https://origin");
             fail();
         } catch (ParseException e1) {
-            assertEquals("1:1: The referrer directive is not in the CSP specification yet.", e1.getMessage());
+            assertEquals("1:1: The referrer directive is not in the CSP specification yet.",
+                e1.getMessage());
         }
         try {
             ParserWithLocation.parse("upgrade-insecure-requests", "https://origin");
             fail();
         } catch (ParseException e2) {
-            assertEquals("1:1: The upgrade-insecure-requests directive is not in the CSP specification yet.", e2.getMessage());
+            assertEquals(
+                "1:1: The upgrade-insecure-requests directive is not in the CSP specification yet.",
+                e2.getMessage());
         }
 
     }
 
-    @Test
-    public void testUnionNone() throws ParseException, TokeniserException {
+    @Test public void testUnionNone() throws ParseException, TokeniserException {
         try {
             Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
             Policy p2 = ParserWithLocation.parse("script-src a", "https://origin");
@@ -780,8 +885,7 @@ public class ParserTest {
         }
     }
 
-    @Test
-    public void testUnionDefaultSrc() throws ParseException, TokeniserException {
+    @Test public void testUnionDefaultSrc() throws ParseException, TokeniserException {
         Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
         Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.union(p2);
@@ -807,10 +911,12 @@ public class ParserTest {
         p1.union(p2);
         assertEquals("img-src a c; script-src b c; default-src c", p1.show());
 
-        p1 = ParserWithLocation.parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
+        p1 = ParserWithLocation
+            .parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
         p2 = ParserWithLocation.parse("style-src b", "https://origin");
         p1.union(p2);
-        assertEquals("default-src; script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b", p1.show());
+        assertEquals("default-src; script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b",
+            p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
@@ -828,15 +934,15 @@ public class ParserTest {
         assertEquals("default-src a", p2.show());
     }
 
-    @Test
-    public void testUnionReportUri() throws ParseException, TokeniserException {
+    @Test public void testUnionReportUri() throws ParseException, TokeniserException {
         try {
             Policy p1 = ParserWithLocation.parse("script-src a; report-uri /a", "https://origin");
             Policy p2 = ParserWithLocation.parse("script-src b", "https://origin");
             p1.union(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
+                e1.getMessage());
         }
 
         Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
@@ -846,8 +952,7 @@ public class ParserTest {
     }
 
 
-    @Test
-    public void testIntersect() throws ParseException, TokeniserException {
+    @Test public void testIntersect() throws ParseException, TokeniserException {
         Policy p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
         Policy p2 = ParserWithLocation.parse("default-src c; img-src d", "https://origin");
         p1.intersect(p2);
@@ -890,7 +995,8 @@ public class ParserTest {
             p1.intersect(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
+                e1.getMessage());
         }
 
         try {
@@ -898,7 +1004,8 @@ public class ParserTest {
             p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
             p1.intersect(p2);
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
+                e1.getMessage());
         }
 
         try {
@@ -906,10 +1013,12 @@ public class ParserTest {
             p2 = ParserWithLocation.parse("script-src b; report-uri /x", "https://origin2");
             p1.intersect(p2);
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
+                e1.getMessage());
         }
 
-        p1 = ParserWithLocation.parse("default-src 'self'; script-src https://origin1", "https://origin1");
+        p1 = ParserWithLocation
+            .parse("default-src 'self'; script-src https://origin1", "https://origin1");
         p2 = ParserWithLocation.parse("script-src https://origin1;", "https://origin2");
         p1.intersect(p2);
         assertEquals("default-src 'self'", p1.show());
@@ -920,13 +1029,15 @@ public class ParserTest {
             p1.intersect(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
+                e1.getMessage());
         }
     }
 
-    @Test
-    public void testParseMulti() throws ParseException, TokeniserException {
-        List<Policy> pl = Parser.parseMulti("script-src a; script-src b, , script-src c; script-src d", "https://origin.com");
+    @Test public void testParseMulti() throws ParseException, TokeniserException {
+        List<Policy> pl = Parser
+            .parseMulti("script-src a; script-src b, , script-src c; script-src d",
+                "https://origin.com");
         assertEquals(2, pl.size());
         assertEquals("script-src a", pl.get(0).show());
         assertEquals("script-src c", pl.get(1).show());
@@ -951,20 +1062,25 @@ public class ParserTest {
         assertEquals(0, warnings.size());
 
         warnings = new ArrayList<>();
-        pl = ParserWithLocation.parseMulti("   plugin-types  a/b  , script-src 'unsafe-redirect'", "https://origin.com", warnings);
+        pl = ParserWithLocation.parseMulti("   plugin-types  a/b  , script-src 'unsafe-redirect'",
+            "https://origin.com", warnings);
         assertEquals(2, pl.size());
         assertEquals("plugin-types a/b", pl.get(0).show());
         assertEquals("script-src 'unsafe-redirect'", pl.get(1).show());
         assertEquals(1, warnings.size());
-        assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0", warnings.get(0).show());
+        assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0",
+            warnings.get(0).show());
 
         warnings = new ArrayList<>();
-        pl = ParserWithLocation.parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), warnings);
+        pl = ParserWithLocation
+            .parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), warnings);
         assertEquals(2, pl.size());
         assertEquals("script-src a", pl.get(0).show());
         assertEquals("frame-src b", pl.get(1).show());
         assertEquals(1, warnings.size());
-        assertEquals("1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.", warnings.get(0).show());
+        assertEquals(
+            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            warnings.get(0).show());
 
         try {
             pl.clear();
@@ -981,16 +1097,21 @@ public class ParserTest {
             fail();
         } catch (ParseException e1) {
             assertEquals(0, pl.size());
-            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+            assertEquals(
+                "1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
+                e1.getMessage());
         }
 
         try {
             pl.clear();
-            pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"));
+            pl = ParserWithLocation
+                .parseMulti("allow 'none', referrer", URI.parse("https://origin.com"));
             fail();
         } catch (ParseException e1) {
             assertEquals(0, pl.size());
-            assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", e1.getMessage());
+            assertEquals(
+                "1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
+                e1.getMessage());
         }
     }
 

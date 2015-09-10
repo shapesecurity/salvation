@@ -4,15 +4,25 @@ import com.shapesecurity.csp.Constants;
 import com.shapesecurity.csp.directives.DirectiveValue;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.regex.Matcher;
 
 public class URI extends Origin implements DirectiveValue {
-    @Nonnull
-    public final String path;
+    @Nullable public final String path;
 
 
-    @Nonnull
-    public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
+    public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull int port,
+        @Nonnull String path) {
+        super(scheme, host, port);
+        this.path = path;
+    }
+
+    public URI(@Nonnull Origin origin) {
+        super(origin.scheme, origin.host, origin.port);
+        this.path = null;
+    }
+
+    @Nonnull public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
         Matcher matcher = Constants.hostSourcePattern.matcher(uri);
         if (!matcher.find()) {
             throw new IllegalArgumentException("Invalid URI: " + uri);
@@ -27,9 +37,9 @@ public class URI extends Origin implements DirectiveValue {
         if (portString == null) {
             port = Origin.defaultPortForProtocol(scheme);
         } else {
-            port = portString.equals(":*")
-                ? Constants.WILDCARD_PORT
-                : Integer.parseInt(portString.substring(1));
+            port = portString.equals(":*") ?
+                Constants.WILDCARD_PORT :
+                Integer.parseInt(portString.substring(1));
         }
         String host = matcher.group("host");
         String path = matcher.group("path");
@@ -39,8 +49,7 @@ public class URI extends Origin implements DirectiveValue {
         return new URI(scheme, host, port, path);
     }
 
-    @Nonnull
-    public static URI parseWithOrigin(@Nonnull Origin origin, @Nonnull String uri) {
+    @Nonnull public static URI parseWithOrigin(@Nonnull Origin origin, @Nonnull String uri) {
         Matcher matcher = Constants.relativeReportUriPattern.matcher(uri);
         if (!matcher.find()) {
             return URI.parse(uri);
@@ -48,33 +57,20 @@ public class URI extends Origin implements DirectiveValue {
         return new URI(origin.scheme, origin.host, origin.port, matcher.group("path"));
     }
 
-    public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull int port, @Nonnull String path) {
-        super(scheme, host, port);
-        this.path = path;
-    }
-
-    public URI(@Nonnull Origin origin) {
-        super(origin.scheme, origin.host, origin.port);
-        this.path = null;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof URI)) return false;
+    @Override public boolean equals(Object other) {
+        if (!(other instanceof URI))
+            return false;
         URI otherUri = (URI) other;
         return super.equals(other) && this.path.equals(otherUri.path);
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode() {
         int h = super.hashCode();
         h ^= this.path.hashCode() ^ 0x3F8C5C1C;
         return h;
     }
 
-    @Nonnull
-    @Override
-    public String show() {
+    @Nonnull @Override public String show() {
         return super.show() + this.path;
     }
 }

@@ -6,15 +6,13 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class FontSrcDirective extends SourceListDirective {
-    @Nonnull
-    private static final String name = "font-src";
+    @Nonnull private static final String name = "font-src";
 
     public FontSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(FontSrcDirective.name, sourceExpressions);
     }
 
-    @Nonnull
-    @Override
+    @Nonnull @Override
     protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new FontSrcDirective(newValues);
     }

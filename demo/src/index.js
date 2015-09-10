@@ -137,10 +137,14 @@ function* fetchHeader() {
       return { error: true, message: `no CSP headers found at ${url.href}`, url: url.href };
     } else {
       let warnings = new ArrayList();
-      let policy = ParserWithLocation.parseSync("", dest.href);
+      let policy = null;
       for (let header of headers) {
         try {
-          policy.unionSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
+          if(!policy) {
+            policy = ParserWithLocation.parseSync(header.value, dest.href, warnings);
+          } else {
+            policy.intersectSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
+          }
         } catch(ex) {
           return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: header.value, url: url.href};
         }
@@ -182,11 +186,15 @@ function* directHeader(){
   };
   try {
     let policyArray = [].concat(this.query["headerValue[]"]);
-    let policy = ParserWithLocation.parseSync("", "http://example.com");
+    let policy = null;
     let warnings = new ArrayList();
     for(let policyText of policyArray) {
       try {
-        policy.unionSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
+        if(!policy) {
+          policy = ParserWithLocation.parseSync(policyText, "http://example.com", warnings);
+        } else {
+          policy.intersectSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
+        }
       } catch(ex) {
         return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: policyText };
       }
@@ -229,4 +237,3 @@ http.createServer(app.callback()).listen(port);
 console.log("server started at port " + port);
 https.createServer(options, app.callback()).listen(tls_port);
 console.log("TLS server started at port " + tls_port);
-

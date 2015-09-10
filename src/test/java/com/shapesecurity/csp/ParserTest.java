@@ -427,26 +427,57 @@ import static org.junit.Assert.*;
             "https://origin", warnings);
         assertEquals(1, warnings.size());
         // illegal length
-        Parser
-            .parse("script-src 'self' https://example.com 'nonce-123'", "https://origin", warnings);
-        assertEquals(2, warnings.size());
+        warnings.clear();
+        Parser.parse("script-src 'self' https://example.com 'nonce-/9j/4AAQSkZJRgABAQAA'",
+            "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        assertEquals(
+            "CSP specification recommends nonce-value to be at least 128 bits long (before encoding)",
+            warnings.get(0).show());
         // illegal chars
-        Parser.parse("script-src 'self' https://example.com 'nonce-123^'", "https://origin",
-            warnings);
-        assertEquals(3, warnings.size());
+        warnings.clear();
+        Parser.parse("script-src 'self' https://example.com 'nonce-12rwf5tegfszeq23ewv4cgefw43^'",
+            "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        assertEquals(
+            "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation",
+            warnings.get(0).show());
         // illegal padding
+        warnings.clear();
         Parser.parse("script-src 'self' https://example.com 'nonce-12=+'", "https://origin",
             warnings);
-        assertEquals(4, warnings.size());
+        assertEquals(1, warnings.size());
         // illegal padding
+        warnings.clear();
         Parser.parse("script-src 'self' https://example.com 'nonce-1^=='", "https://origin",
             warnings);
-        assertEquals(5, warnings.size());
+        assertEquals(1, warnings.size());
+        warnings.clear();
         Parser.parse("script-src 'self' https://example.com 'nonce-1==='", "https://origin",
             warnings);
-        assertEquals(6, warnings.size());
-
-
+        assertEquals(1, warnings.size());
+        assertEquals(
+            "Invalid base64-value (bad padding). Consider using RFC4648 compliant base64 encoding implementation",
+            warnings.get(0).show());
+        // illegal decoded size
+        warnings.clear();
+        Parser.parse("script-src 'self' https://example.com 'nonce-31231asda_dsdsxc'",
+            "https://origin", warnings);
+        assertEquals(2, warnings.size());
+        assertEquals(
+            "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation",
+            warnings.get(0).show());
+        assertEquals(
+            "CSP specification recommends nonce-value to be at least 128 bits long (before encoding)",
+            warnings.get(1).show());
+        warnings.clear();
+        Parser.parse(
+            "script-src 'self' 'sha256-K7gNU3sdo-OL0wNhqoVWhr3g6s1xYv72ol_pe_Unols=' https://example.com",
+            "https://origin", warnings);
+        assertEquals(1, warnings.size());
+        assertEquals(
+            "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation",
+            warnings.get(0).show());
     }
 
     @Test public void testKeywordSource() throws ParseException, TokeniserException {

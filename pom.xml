@@ -42,22 +42,7 @@
                 <artifactId>findbugs-maven-plugin</artifactId>
                 <version>3.0.0</version>
 
-                <executions>
-                    <!--
-                        Ensures that FindBugs inspects source code when project is compiled.
-                    -->
-                    <execution>
-                        <id>analyze-compile</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-
                 <configuration>
-                    <skip>${skipITs}</skip>
-
                     <!-- Include only class we interested in -->
                     <!--<includeFilterFile>findbugs-include.xml</includeFilterFile>-->
                     <!--

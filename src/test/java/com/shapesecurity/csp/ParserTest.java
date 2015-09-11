@@ -1123,6 +1123,22 @@ import static org.junit.Assert.*;
         }
 
         try {
+            ParserWithLocation.parse("script-src a, script-src b", "https://origin.com", new ArrayList<>());
+            fail();
+        } catch (ParseException e1) {
+            assertEquals(0, pl.size());
+            assertEquals("1:13: expecting end of policy but found ,", e1.getMessage());
+        }
+
+        try {
+            Parser.parse("script-src a, script-src b", "https://origin.com");
+            fail();
+        } catch (ParseException e1) {
+            assertEquals(0, pl.size());
+            assertEquals("expecting end of policy but found ,", e1.getMessage());
+        }
+
+        try {
             pl.clear();
             pl = ParserWithLocation.parseMulti("allow 'none', options", "https://origin.com");
             fail();

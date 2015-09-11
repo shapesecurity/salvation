@@ -22,27 +22,27 @@ public class ParserWithLocation extends Parser {
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin)
         throws ParseException, Tokeniser.TokeniserException {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, null).parsePolicy();
+            origin, null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin,
         @Nonnull Collection<Warning> warningsOut)
         throws ParseException, Tokeniser.TokeniserException {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, warningsOut).parsePolicy();
+            origin, warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin)
         throws ParseException, Tokeniser.TokeniserException {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), null).parsePolicy();
+            URI.parse(origin), null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin,
         @Nonnull Collection<Warning> warningsOut)
         throws ParseException, Tokeniser.TokeniserException {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), warningsOut).parsePolicy();
+            URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull

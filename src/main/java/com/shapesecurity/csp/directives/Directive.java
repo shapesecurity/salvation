@@ -1,5 +1,6 @@
 package com.shapesecurity.csp.directives;
 
+import com.shapesecurity.csp.directiveValues.HostSource;
 import com.shapesecurity.csp.directiveValues.None;
 import com.shapesecurity.csp.interfaces.Show;
 
@@ -7,6 +8,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -28,17 +30,28 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         Iterator<T> aIterator = a.iterator();
         Iterator<T> bIterator = b.iterator();
 
-        if (aIterator.hasNext() && bIterator.hasNext() &&
-            (aIterator.next() instanceof None != bIterator.next() instanceof None)) {
-            throw new IllegalArgumentException("'none' can only be unioned with another 'none'");
+
+        if ((aIterator.hasNext() && aIterator.next() == None.INSTANCE)) {
+            set.addAll(b);
+            return set;
         }
 
-        for (T x : a) {
-            set.add(x);
+        if ((bIterator.hasNext() && bIterator.next() == None.INSTANCE)) {
+            set.addAll(a);
+            return set;
         }
-        for (T x : b) {
-            set.add(x);
+
+        set.addAll(a);
+        set.addAll(b);
+
+        Optional<T> star =
+            set.stream().filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
+                .findAny();
+        if (star.isPresent()) {
+            set.removeIf(y -> y instanceof HostSource);
+            set.add(star.get());
         }
+
         return set;
     }
 
@@ -48,12 +61,25 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         Iterator<T> aIterator = a.iterator();
         Iterator<T> bIterator = b.iterator();
 
-        if (!aIterator.hasNext() || aIterator.next() instanceof None || !bIterator.hasNext()
-            || bIterator.next() instanceof None) {
+        if (!aIterator.hasNext() || aIterator.next() == None.INSTANCE ||
+            !bIterator.hasNext() || bIterator.next() == None.INSTANCE) {
+            return set;
+        }
+
+        Optional<T> star =
+            b.stream().filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
+                .findAny();
+        if (star.isPresent()) {
+            set.addAll(a);
             return set;
         }
 
         for (T x : a) {
+            if (x instanceof HostSource && ((HostSource) x).show().equals("*")) {
+                set.clear();
+                set.addAll(b);
+                return set;
+            }
             if (b.contains(x)) {
                 set.add(x);
             }

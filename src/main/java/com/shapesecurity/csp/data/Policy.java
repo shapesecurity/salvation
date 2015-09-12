@@ -1,5 +1,6 @@
 package com.shapesecurity.csp.data;
 
+import com.shapesecurity.csp.Constants;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 
 public class Policy implements Show {
 
+    private final static Set<SourceExpression> justNone = Collections.singleton(None.INSTANCE);
     @Nonnull private final Map<Class<?>, Directive<? extends DirectiveValue>> directives;
     @Nonnull private Origin origin;
 
@@ -48,20 +50,12 @@ public class Policy implements Show {
         this.resolveSelf();
         other.resolveSelf();
 
-        DefaultSrcDirective defaults = this.getDirectiveByType(DefaultSrcDirective.class);
-        if (defaults != null) {
-            this.expandDefaultSrc(defaults, this);
-        }
-
-        DefaultSrcDirective otherDefaults = other.getDirectiveByType(DefaultSrcDirective.class);
-        if (otherDefaults != null) {
-            other.expandDefaultSrc(otherDefaults, other);
-        }
+        this.expandDefaultSrc();
+        other.expandDefaultSrc();
 
         other.getDirectives().forEach(strategy);
 
         this.optimise();
-        other.optimise();
     }
 
     private void resolveSelf() {
@@ -80,92 +74,119 @@ public class Policy implements Show {
         }
     }
 
-    private void expandDefaultSrc(@Nonnull DefaultSrcDirective defaultSrcDirective,
-        @Nonnull Policy basePolicy) {
-        Set<SourceExpression> defaultSources =
-            defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-        if (!basePolicy.directives.containsKey(ScriptSrcDirective.class)) {
+    private void expandDefaultSrc() {
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
+        Set<SourceExpression> defaultSources;
+        if (defaultSrcDirective == null) {
+            defaultSources = new LinkedHashSet<>();
+            defaultSources.add(new HostSource(null, "*", Constants.WILDCARD_PORT, null));
+            this.directives.put(DefaultSrcDirective.class, new DefaultSrcDirective(defaultSources));
+        } else {
+            defaultSources =
+                defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+        }
+
+        if (!this.directives.containsKey(ScriptSrcDirective.class)) {
             this.unionDirective(new ScriptSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(StyleSrcDirective.class)) {
+        if (!this.directives.containsKey(StyleSrcDirective.class)) {
             this.unionDirective(new StyleSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(ImgSrcDirective.class)) {
+        if (!this.directives.containsKey(ImgSrcDirective.class)) {
             this.unionDirective(new ImgSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(ChildSrcDirective.class)) {
+        if (!this.directives.containsKey(ChildSrcDirective.class)) {
             this.unionDirective(new ChildSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(ConnectSrcDirective.class)) {
+        if (!this.directives.containsKey(ConnectSrcDirective.class)) {
             this.unionDirective(new ConnectSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(FontSrcDirective.class)) {
+        if (!this.directives.containsKey(FontSrcDirective.class)) {
             this.unionDirective(new FontSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(MediaSrcDirective.class)) {
+        if (!this.directives.containsKey(MediaSrcDirective.class)) {
             this.unionDirective(new MediaSrcDirective(defaultSources));
         }
-        if (!basePolicy.directives.containsKey(ObjectSrcDirective.class)) {
+        if (!this.directives.containsKey(ObjectSrcDirective.class)) {
             this.unionDirective(new ObjectSrcDirective(defaultSources));
         }
     }
 
+    private <V extends SourceExpression, T extends Directive<V>> void eliminateRedundantSourceExpression(
+        @Nonnull Set<SourceExpression> defaultSources, Class<T> type) {
+        T directive = this.getDirectiveByType(type);
+        if (directive != null) {
+            Set<SourceExpression> values =
+                directive.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            if (defaultSources.equals(values)
+                || (defaultSources.isEmpty() || defaultSources.equals(Policy.justNone)) && (
+                values.isEmpty() || values.equals(Policy.justNone))) {
+                this.directives.remove(type);
+            }
+        }
+    }
+
     private void optimise() {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
+            .entrySet()) {
+            Directive<? extends DirectiveValue> directive = entry.getValue();
+            if (directive instanceof SourceListDirective) {
+                SourceListDirective sourceListDirective = (SourceListDirective) directive;
+                Optional<SourceExpression> star = sourceListDirective.values()
+                    .filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
+                    .findAny();
+                if (star.isPresent()) {
+                    // * remove all other host sources in source list that contains *
+                    Set<SourceExpression> newSources =
+                        sourceListDirective.values().filter(x -> !(x instanceof HostSource))
+                            .collect(Collectors.toCollection(LinkedHashSet::new));
+                    newSources.add(star.get());
+                    this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));
+                } else {
+                    this.directives.put(entry.getKey(), sourceListDirective.bind(dv -> {
+                        // * replace host-sources that are equivalent to origin with 'self' keyword-source
+                        if (dv instanceof HostSource && ((HostSource) dv)
+                            .matchesOnlyOrigin(this.origin)) {
+                            return Collections.singleton(KeywordSource.Self);
+                        }
+                        // * replace 'none' with empty
+                        if (dv == None.INSTANCE) {
+                            return Collections.emptySet();
+                        }
+                        // no change
+                        return null;
+                    }));
+                }
+            }
+        }
+
         DefaultSrcDirective defaultSrcDirective =
             this.getDirectiveByType(DefaultSrcDirective.class);
-        if (defaultSrcDirective == null)
-            return;
-        Set<SourceExpression> defaultSources =
-            defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+
+        Set<SourceExpression> defaultSources;
+        if (defaultSrcDirective == null) {
+            defaultSources = new LinkedHashSet<>();
+            defaultSources.add(new HostSource(null, "*", Constants.WILDCARD_PORT, null));
+        } else {
+            defaultSources =
+                defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+        }
 
         // * remove source directives that are equivalent to default-src
-        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-        if (scriptSrcDirective != null && defaultSources.equals(
-            scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(ScriptSrcDirective.class);
-        }
-        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-        if (styleSrcDirective != null && defaultSources.equals(
-            styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(StyleSrcDirective.class);
-        }
-        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
-        if (imgSrcDirective != null && defaultSources.equals(
-            imgSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(ImgSrcDirective.class);
-        }
-        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
-        if (childSrcDirective != null && defaultSources.equals(
-            childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(ChildSrcDirective.class);
-        }
-        ConnectSrcDirective connectSrcDirective =
-            this.getDirectiveByType(ConnectSrcDirective.class);
-        if (connectSrcDirective != null && defaultSources.equals(
-            connectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(ConnectSrcDirective.class);
-        }
-        FontSrcDirective fontSrcDirective = this.getDirectiveByType(FontSrcDirective.class);
-        if (fontSrcDirective != null && defaultSources.equals(
-            fontSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(FontSrcDirective.class);
-        }
-        MediaSrcDirective mediaSrcDirective = this.getDirectiveByType(MediaSrcDirective.class);
-        if (mediaSrcDirective != null && defaultSources.equals(
-            mediaSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(MediaSrcDirective.class);
-        }
-        ObjectSrcDirective objectSrcDirective = this.getDirectiveByType(ObjectSrcDirective.class);
-        if (objectSrcDirective != null && defaultSources.equals(
-            objectSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)))) {
-            this.directives.remove(ObjectSrcDirective.class);
-        }
+        this.eliminateRedundantSourceExpression(defaultSources, ScriptSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, StyleSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, ImgSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, ChildSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, ConnectSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, FontSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, MediaSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, ObjectSrcDirective.class);
 
         // * remove default-src nonces if the policy contains both script-src and style-src directives
         if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
             .containsKey(StyleSrcDirective.class)) {
-            defaultSources = defaultSrcDirective.values().filter(x -> !(x instanceof NonceSource))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+            defaultSources.removeIf(x -> x instanceof NonceSource);
             defaultSrcDirective = new DefaultSrcDirective(defaultSources);
             this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
         }
@@ -182,17 +203,11 @@ public class Policy implements Show {
             this.directives.remove(DefaultSrcDirective.class);
         }
 
-        // * replace host-sources that are equivalent to origin with 'self' keyword-source
-        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
-            .entrySet()) {
-            Directive<? extends DirectiveValue> directive = entry.getValue();
-            if (directive instanceof SourceListDirective) {
-                SourceListDirective sourceListDirective = (SourceListDirective) directive;
-                this.directives.put(entry.getKey(), sourceListDirective.bind(dv ->
-                        dv instanceof HostSource && ((HostSource) dv)
-                            .matchesOnlyOrigin(this.origin) ?
-                            Collections.singleton(KeywordSource.Self) :
-                            null));
+        // remove `default-src *`
+        if (defaultSources.size() == 1) {
+            SourceExpression first = defaultSources.iterator().next();
+            if (first instanceof HostSource && first.show().equals("*")) {
+                this.directives.remove(DefaultSrcDirective.class);
             }
         }
     }
@@ -225,6 +240,7 @@ public class Policy implements Show {
         Directive<? extends DirectiveValue> directive = this.directives.get(d.getClass());
         if (directive == null) {
             this.directives.put(d.getClass(), d);
+            this.expandDefaultSrc();
             this.optimise();
         }
     }

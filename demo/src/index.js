@@ -126,10 +126,10 @@ function* fetchHeader() {
   try {
     let dest = URL.parse(this.query.url);
     if (!dest.protocol || !dest.hostname) {
-      return { error: true, message: `invalid URL: ${this.query.url}`, url: url.href };
+      return { error: true, message: `invalid URL: ${this.query.url}`, url: dest.href };
     }
     if (isNonRoutableIp(dest.hostname)) {
-      return { error: true, message: `non-routable IP address: ${dest.hostname}`, url: url.href };
+      return { error: true, message: `non-routable IP address: ${dest.hostname}`, url: dest.href };
     }
     let {url, headers} = yield getHeaders(dest);
 
@@ -137,18 +137,16 @@ function* fetchHeader() {
       return { error: true, message: `no CSP headers found at ${url.href}`, url: url.href };
     } else {
       let warnings = new ArrayList();
-      let policy = null;
+      let policies = [];
       for (let header of headers) {
         try {
-          if(!policy) {
-            policy = ParserWithLocation.parseSync(header.value, dest.href, warnings);
-          } else {
-            policy.intersectSync(ParserWithLocation.parseSync(header.value, dest.href, warnings));
-          }
+          [].push.apply(policies, ParserWithLocation.parseMultiSync(header.value, dest.href, warnings).toArraySync());
         } catch(ex) {
           return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: header.value, url: url.href};
         }
       }
+      let policy = policies.shift();
+      policies.forEach(p => { policy.intersectSync(p); });
       let policyText = policy.showSync();
       return {
         message: "policy is valid",
@@ -185,19 +183,33 @@ function* directHeader(){
     return { error: true, message: "no headerValue[] request parameter given" }
   };
   try {
-    let policyArray = [].concat(this.query["headerValue[]"]);
-    let policy = null;
+    let policyTexts = [].concat(this.query["headerValue[]"]);
+    let policies = [];
     let warnings = new ArrayList();
-    for(let policyText of policyArray) {
-      try {
-        if(!policy) {
-          policy = ParserWithLocation.parseSync(policyText, "http://example.com", warnings);
-        } else {
-          policy.intersectSync(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
-        }
+    for(let policyText of policyTexts) {
+      try {  
+        policies.push(ParserWithLocation.parseSync(policyText, "http://example.com", warnings));
       } catch(ex) {
-        return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: policyText };
+        if(ex.cause) { // node-java error
+          console.log(ex.cause.getMessageSync());
+          return { error: true, message: `CSP parsing error: ${ex.cause.getMessageSync()}`, originalPolicy: policyText };
+        } else { // other error
+          console.log("unexpected error: " + ex.stack);
+          info = { error: true, message: "unexpected error" };
+        } 
       }
+    }
+
+    let policy = policies.shift();
+    switch (this.query.strategy) {
+      case "union":
+        policies.forEach(p => { policy.unionSync(p); });
+        break;
+      case "intersection":
+        policies.forEach(p => { policy.intersectSync(p); });
+        break;
+      default:
+        info = { error: true, message: "Unknown merging strategy" };
     }
     let finalPolicyText = policy.showSync();
     info = {
@@ -206,8 +218,7 @@ function* directHeader(){
       warnings: warnings.toArraySync().map(x => x.showSync())
     };
   } catch(ex) {
-    // node-java error
-    if(ex.cause) {
+    if(ex.cause) { // node-java error
       console.log(ex.cause.getMessageSync());
       info = { error: true, message: `${ex.cause.getMessageSync()}` };
     } else { // other error

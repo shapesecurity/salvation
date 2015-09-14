@@ -31,15 +31,15 @@ export default function() {
         </div>
       </div>
 
-      <h3>Validate CSP String</h3>
-      <p>Validate a raw CSP header/value string.</p>
+      <h3>Validate/Manipulate CSP Strings</h3>
+      <p>Validate and merge using intersect or union strategy.</p>
       <div class="well">
         <form role="form" id="directHeader" action="/directHeader">
           <div id="directHeaderInputTemplate" class="row">
             <div class="col-md-12">
                 <div class="input-group">
                   <span class="input-group-btn">
-                    <button class="btn btn-add btn-success" type="button">
+                    <button class="btn btn-add btn-success" type="button" title="add/remove a policy">
                       <span class="glyphicon glyphicon-plus"></span>
                     </button>
                   </span>
@@ -47,6 +47,14 @@ export default function() {
                   <input type="text" id="headerValue" name="headerValue[]" class="form-control" autocomplete="off"/>
                   <span class="input-group-btn">
                     <button class="btn btn-info btn-go" type="submit">Go!</button>
+                     <button class="btn btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true">
+                     <span class="caret"></span>
+                     <span class="sr-only">Toggle Strategy Selection</span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu" aria-expanded="false" aria-labelledby="dLabel">
+                      <li role="presentation"><a role="menuitem" data-value="intersect">Intersect</a></li>
+                      <li role="presentation"><a role="menuitem" data-value="union">Union</a></li>
+                    </ul>
                   </span>
                 </div>
             </div>

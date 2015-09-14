@@ -1,11 +1,7 @@
-/*global $ document console*/
+/*global $ document*/
 /*eslint quotes: [1, "single"]*/
 $(function () {
   'use strict';
-
-  function flatMap(arr, f) {
-      return [].concat.apply([], arr.map(f));
-  }
 
   function colorize(tokens) {
     return flatMap(tokens, function (token){
@@ -30,8 +26,6 @@ $(function () {
       }
     });
   }
-
-  // TODO: add handler for fetchHeader form
 
   function tooltipize(directive) {
     switch(directive) {
@@ -64,7 +58,6 @@ $(function () {
       case 'frame-ancestors':
         return 'The frame-ancestors specifies the sources that can embed the current page';
       default:
-        console.info('unknown tooltip for ' + directive);
         return 'Directive is either deprecated or not in the CSP specification yet';
     }
   }
@@ -142,12 +135,26 @@ $(function () {
     });
   });
 
+  var strategy = 'intersect';
+  $('.dropdown-menu li a').first().parents('li').addClass('active');
+  
+
+  $('.dropdown-menu li a').click(function(){
+    $(this).parents('.dropdown-menu').find('li').removeClass('active');
+    $(this).parents('li').addClass('active');
+    strategy = $(this).attr('data-value');
+  });
+
+  function flatMap(arr, f) {
+      return [].concat.apply([], arr.map(f));
+  }
+
   $('#directHeader').on('submit', function (evt) {
     evt.preventDefault();
     $('.btn.btn-info').prop('disabled', true);
     var cspElements = [].slice.call(document.querySelectorAll('input[name="headerValue[]"]'));
     var cspArray = $.param({'headerValue[]': cspElements.map(function(el) { return el.value; })});
-
+    cspArray += '&strategy=' + strategy;
     $.ajax('/directHeader', {
       timeout: 5e3,
       headers: {

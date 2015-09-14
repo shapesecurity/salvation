@@ -32,7 +32,7 @@ export function reportViolation(report) {
 effective directive: ${report["effective-directive"]}
 on: ${report["document-uri"]}
 blocked URI: ${report["blocked-uri"]}
-original policy: ${["original-policy"]}
+original policy: ${report["original-policy"]}
 user-agent: ${report["user-agent"]}
 referrer: ${report["referrer"]}
 status code: ${report["status-code"]}

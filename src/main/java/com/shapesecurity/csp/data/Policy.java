@@ -299,8 +299,10 @@ public class Policy implements Show {
     }
 
     private boolean defaultsAllowNonce(@Nonnull String nonce) {
-        if(this.defaultsAllowUnsafeInline()) return true;
-        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (this.defaultsAllowUnsafeInline())
+            return true;
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
@@ -405,7 +407,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsScriptWithNonce(@Nonnull String nonce) {
-        if (this.allowsUnsafeInlineScript()) return true;
+        if (this.allowsUnsafeInlineScript())
+            return true;
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);
@@ -418,7 +421,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsStyleWithNonce(@Nonnull String nonce) {
-        if (this.allowsUnsafeInlineScript()) return true;
+        if (this.allowsUnsafeInlineScript())
+            return true;
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
             return this.defaultsAllowNonce(nonce);

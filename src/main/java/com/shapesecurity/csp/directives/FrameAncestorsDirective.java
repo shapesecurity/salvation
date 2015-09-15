@@ -12,8 +12,7 @@ public class FrameAncestorsDirective extends AncestorSourceListDirective {
         super(FrameAncestorsDirective.name, ancestorSources);
     }
 
-    @Nonnull @Override
-    protected Directive<AncestorSource> construct(Set<AncestorSource> newValues) {
+    @Nonnull @Override public Directive<AncestorSource> construct(Set<AncestorSource> newValues) {
         return new FrameAncestorsDirective(newValues);
     }
 }

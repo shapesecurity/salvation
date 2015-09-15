@@ -71,25 +71,25 @@ import static org.junit.Assert.*;
 
     @Test public void testParser() throws ParseException, TokeniserException {
 
-        Policy p = createPolicyWithDefaultOrigin("font-src *");
+        Policy p = createPolicyWithDefaultOrigin("font-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("form-action *");
+        p = createPolicyWithDefaultOrigin("form-action a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         p = createPolicyWithDefaultOrigin("frame-ancestors 'none'");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("frame-src *");
+        p = createPolicyWithDefaultOrigin("frame-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("img-src *");
+        p = createPolicyWithDefaultOrigin("img-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("media-src *");
+        p = createPolicyWithDefaultOrigin("media-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("object-src *");
+        p = createPolicyWithDefaultOrigin("object-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         p = createPolicyWithDefaultOrigin("plugin-types */*");
@@ -101,7 +101,7 @@ import static org.junit.Assert.*;
         p = createPolicyWithDefaultOrigin("sandbox allow-scripts");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
-        p = createPolicyWithDefaultOrigin("script-src *");
+        p = createPolicyWithDefaultOrigin("script-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, countIterable(p.getDirectives()));
         p = createPolicyWithDefaultOrigin("style-src http://*.example.com:*");
@@ -114,8 +114,8 @@ import static org.junit.Assert.*;
         failsToParse("script-src *, ");
         failsToParse("zzscript-src *; bla");
 
-        p = createPolicyWithDefaultOrigin("style-src *");
-        Policy q = createPolicyWithDefaultOrigin("script-src *");
+        p = createPolicyWithDefaultOrigin("style-src a");
+        Policy q = createPolicyWithDefaultOrigin("script-src a");
         StyleSrcDirective d1 = p.getDirectiveByType(StyleSrcDirective.class);
         ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
         try {
@@ -166,33 +166,33 @@ import static org.junit.Assert.*;
         assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
             createAndShow("base-uri https://a.com:888/ert"));
 
-        assertEquals("directive-name, no directive-value", "child-src *",
-            createPolicyWithDefaultOrigin("child-src *").getDirectiveByType(ChildSrcDirective.class)
+        assertEquals("directive-name, no directive-value", "child-src a",
+            createPolicyWithDefaultOrigin("child-src a").getDirectiveByType(ChildSrcDirective.class)
                 .show());
-        assertEquals("directive-name, no directive-value", "connect-src *",
-            createPolicyWithDefaultOrigin("connect-src *")
+        assertEquals("directive-name, no directive-value", "connect-src a",
+            createPolicyWithDefaultOrigin("connect-src a")
                 .getDirectiveByType(ConnectSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "default-src *",
-            createPolicyWithDefaultOrigin("default-src *")
+        assertEquals("directive-name, no directive-value", "default-src a",
+            createPolicyWithDefaultOrigin("default-src a")
                 .getDirectiveByType(DefaultSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "font-src *",
-            createPolicyWithDefaultOrigin("font-src *").getDirectiveByType(FontSrcDirective.class)
-                .show());
-        assertEquals("directive-name, no directive-value", "img-src *",
-            createPolicyWithDefaultOrigin("img-src *").getDirectiveByType(ImgSrcDirective.class)
-                .show());
-        assertEquals("directive-name, no directive-value", "media-src *",
-            createPolicyWithDefaultOrigin("media-src *").getDirectiveByType(MediaSrcDirective.class)
-                .show());
-        assertEquals("directive-name, no directive-value", "object-src *",
-            createPolicyWithDefaultOrigin("object-src *")
+        assertEquals("directive-name, no directive-value", "font-src a",
+            createPolicyWithDefaultOrigin("font-src a")
+                .getDirectiveByType(FontSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "img-src a",
+            createPolicyWithDefaultOrigin("img-src a")
+                .getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "media-src a",
+            createPolicyWithDefaultOrigin("media-src a")
+                .getDirectiveByType(MediaSrcDirective.class).show());
+        assertEquals("directive-name, no directive-value", "object-src a",
+            createPolicyWithDefaultOrigin("object-src a")
                 .getDirectiveByType(ObjectSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "script-src *",
-            createPolicyWithDefaultOrigin("script-src *")
+        assertEquals("directive-name, no directive-value", "script-src a",
+            createPolicyWithDefaultOrigin("script-src a")
                 .getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals("directive-name, no directive-value", "style-src *",
-            createPolicyWithDefaultOrigin("style-src *").getDirectiveByType(StyleSrcDirective.class)
-                .show());
+        assertEquals("directive-name, no directive-value", "style-src a",
+            createPolicyWithDefaultOrigin("style-src a")
+                .getDirectiveByType(StyleSrcDirective.class).show());
     }
 
     @Test public void testAncestorSourceParsing() throws ParseException, TokeniserException {
@@ -231,23 +231,24 @@ import static org.junit.Assert.*;
     }
 
     @Test public void testPolicy() throws ParseException, TokeniserException {
-        Policy p;
-        p = createPolicyWithDefaultOrigin("");
-        assertEquals("policy show", "", p.show());
-        p = createPolicyWithDefaultOrigin("style-src *");
-        assertEquals("policy show", "style-src *", p.show());
-        Policy q;
-        q = createPolicyWithDefaultOrigin("style-src *");
-        assertTrue("policy equality", p.equals(q));
-        q = createPolicyWithDefaultOrigin("script-src *");
-        p.union(q);
-        assertEquals("policy union", "style-src *; script-src *", p.show());
+//        Policy a = createPolicyWithDefaultOrigin("");
+//        assertEquals("policy show", "", a.show());
 
-        q = createPolicyWithDefaultOrigin("script-src abc");
-        p.union(q);
-        assertEquals("policy union", "style-src *; script-src * abc", p.show());
-        p.setOrigin(URI.parse("http://qwe.zz:80"));
-        assertEquals("policy origin", "http://qwe.zz", p.getOrigin().show());
+        Policy b = createPolicyWithDefaultOrigin("style-src *");
+        assertEquals("policy show", "", b.show());
+
+//        assertTrue("policy equality", a.equals(b));
+//
+//        Policy c = createPolicyWithDefaultOrigin("script-src *");
+//        b.union(c);
+//        assertEquals("policy union", "", b.show());
+//
+//        Policy d = createPolicyWithDefaultOrigin("script-src abc");
+//        b.union(d);
+//        assertEquals("policy union", "style-src *; script-src * abc", b.show());
+//
+//        a.setOrigin(URI.parse("http://qwe.zz:80"));
+//        assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());
 
     }
 
@@ -635,13 +636,13 @@ import static org.junit.Assert.*;
         p1.union(p2);
         assertEquals("default-src aaa https://origin2.com", p1.show());
 
-        p1 = Parser.parse("default-src default; connect-src a; script-src a; media-src a",
+        p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a",
             "https://origin1.com");
-        p2 = Parser.parse("img-src b; style-src b; font-src b; child-src b; object-src b",
+        p2 = Parser.parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b",
             "https://origin2.com");
         p1.union(p2);
         assertEquals(
-            "connect-src a; script-src a; media-src a; style-src default b; img-src default b; child-src default b; font-src default b; object-src default b",
+            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b",
             p1.show());
     }
 
@@ -882,69 +883,80 @@ import static org.junit.Assert.*;
 
     }
 
-    @Test public void testUnionNone() throws ParseException, TokeniserException {
-        try {
-            Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-            Policy p2 = ParserWithLocation.parse("script-src a", "https://origin");
-            p1.union(p2);
-            fail();
-        } catch (IllegalArgumentException e1) {
-            assertEquals("'none' can only be unioned with another 'none'", e1.getMessage());
-        }
+    @Test public void testNone() throws ParseException, TokeniserException {
+        Policy p1, p2;
 
-        try {
-            Policy p1 = ParserWithLocation.parse("script-src a", "https://origin");
-            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-            p1.union(p2);
-            fail();
-        } catch (IllegalArgumentException e2) {
-            assertEquals("'none' can only be unioned with another 'none'", e2.getMessage());
-        }
+        p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src a", "https://origin");
+        p1.union(p2);
+        assertEquals("script-src a", p1.show());
 
-        {
-            Policy p1 = ParserWithLocation.parse("script-src", "https://origin");
-            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-            p1.union(p2);
-            assertEquals("script-src 'none'", p1.show());
-        }
+        p1 = ParserWithLocation.parse("script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.union(p2);
+        assertEquals("script-src a", p1.show());
 
-        {
-            Policy p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-            Policy p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
-            p1.union(p2);
-            assertEquals("script-src 'none'", p1.show());
-        }
+        p1 = ParserWithLocation.parse("script-src", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.union(p2);
+        assertEquals("script-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.union(p2);
+        assertEquals("script-src", p1.show());
+
+
+        p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src a", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p2 = ParserWithLocation.parse("script-src 'none'", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src", p1.show());
     }
 
     @Test public void testUnionDefaultSrc() throws ParseException, TokeniserException {
-        Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
-        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        Policy p1 = ParserWithLocation.parse("default-src a b", "https://origin");
+        Policy p2 = ParserWithLocation.parse("default-src; script-src x; style-src y", "https://origin");
         p1.union(p2);
         assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
 
-        p1 = ParserWithLocation.parse("default-src *", "https://origin");
-        p2 = ParserWithLocation.parse("script-src b", "https://origin");
+        p1 = ParserWithLocation.parse("default-src *; script-src", "https://origin");
+        p2 = ParserWithLocation.parse("default-src; script-src b", "https://origin");
         p1.union(p2);
-        assertEquals("default-src *; script-src * b", p1.show());
+        assertEquals("script-src b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a", "https://origin");
-        p2 = ParserWithLocation.parse("script-src b", "https://origin");
+        p2 = ParserWithLocation.parse("default-src; script-src b", "https://origin");
         p1.union(p2);
         assertEquals("default-src a; script-src a b", p1.show());
 
         p1 = ParserWithLocation.parse("default-src a; script-src b", "https://origin");
-        p2 = ParserWithLocation.parse("script-src c", "https://origin");
+        p2 = ParserWithLocation.parse("default-src; script-src c", "https://origin");
         p1.union(p2);
         assertEquals("default-src a; script-src b c", p1.show());
 
-        p1 = ParserWithLocation.parse("img-src a; script-src b", "https://origin");
+        p1 = ParserWithLocation.parse("default-src; img-src a; script-src b", "https://origin");
         p2 = ParserWithLocation.parse("default-src c", "https://origin");
         p1.union(p2);
-        assertEquals("img-src a c; script-src b c; default-src c", p1.show());
+        assertEquals("default-src c; img-src a c; script-src b c", p1.show());
 
         p1 = ParserWithLocation
             .parse("default-src 'nonce-VJKP7yRkG1Ih3BqNrUN7'; script-src a", "https://origin");
-        p2 = ParserWithLocation.parse("style-src b", "https://origin");
+        p2 = ParserWithLocation.parse("default-src; style-src b", "https://origin");
         p1.union(p2);
         assertEquals("default-src; script-src a; style-src 'nonce-VJKP7yRkG1Ih3BqNrUN7' b",
             p1.show());
@@ -958,11 +970,6 @@ import static org.junit.Assert.*;
         p2 = ParserWithLocation.parse("default-src a", "https://origin");
         p1.union(p2);
         assertEquals("default-src b a; script-src a", p1.show());
-
-        p1 = ParserWithLocation.parse("default-src b; script-src a", "https://origin");
-        p2 = ParserWithLocation.parse("default-src a", "https://origin");
-        p1.union(p2);
-        assertEquals("default-src a", p2.show());
     }
 
     @Test public void testUnionReportUri() throws ParseException, TokeniserException {
@@ -977,7 +984,7 @@ import static org.junit.Assert.*;
         }
 
         Policy p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
-        Policy p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
+        Policy p2 = ParserWithLocation.parse("default-src; script-src x; style-src y", "https://origin");
         p1.union(p2);
         assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
     }
@@ -989,7 +996,7 @@ import static org.junit.Assert.*;
         p1.intersect(p2);
         assertEquals("default-src", p1.show());
 
-        p1 = ParserWithLocation.parse("default-src a b ", "https://origin");
+        p1 = ParserWithLocation.parse("default-src a b", "https://origin");
         p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.intersect(p2);
         assertEquals("default-src a b; script-src; style-src", p1.show());
@@ -997,7 +1004,7 @@ import static org.junit.Assert.*;
         p1 = ParserWithLocation.parse("default-src 'none'", "https://origin");
         p2 = ParserWithLocation.parse("script-src x; style-src y", "https://origin");
         p1.intersect(p2);
-        assertEquals("default-src 'none'; script-src; style-src", p1.show());
+        assertEquals("default-src", p1.show());
 
         p1 = ParserWithLocation.parse("script-src a", "https://origin");
         p2 = ParserWithLocation.parse("script-src a; style-src b", "https://origin");

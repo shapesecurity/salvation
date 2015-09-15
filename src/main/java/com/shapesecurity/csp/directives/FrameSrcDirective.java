@@ -13,7 +13,7 @@ public class FrameSrcDirective extends SourceListDirective {
     }
 
     @Nonnull @Override
-    protected Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new FrameSrcDirective(newValues);
     }
 }

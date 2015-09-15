@@ -98,8 +98,8 @@ public class Parser {
         return this.hasNext() && c.isAssignableFrom(this.tokens[this.index].getClass());
     }
 
-    private boolean hasNext(@Nonnull Class<? extends Token> c, String v) {
-        return this.hasNext(c) && v.equals(this.tokens[this.index].value);
+    private Token peek() {
+        return this.tokens[this.index];
     }
 
     private boolean eat(@Nonnull Class<? extends Token> c) {
@@ -237,7 +237,8 @@ public class Parser {
 
     @Nonnull private Set<SourceExpression> parseSourceList() throws ParseException {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
-        if (this.hasNext(DirectiveValueToken.class, "'none'")) {
+        if (this.hasNext(DirectiveValueToken.class) && this.peek().value
+            .equalsIgnoreCase("'none'")) {
             this.advance();
             sourceExpressions.add(None.INSTANCE);
             return sourceExpressions;
@@ -251,7 +252,7 @@ public class Parser {
     @Nonnull private SourceExpression parseSourceExpression() throws ParseException {
         Token token = this.advance();
         if (token instanceof DirectiveValueToken) {
-            switch (token.value) {
+            switch (token.value.toLowerCase()) {
                 case "'self'":
                     return KeywordSource.Self;
                 case "'unsafe-inline'":
@@ -267,7 +268,7 @@ public class Parser {
                         NonceSource nonceSource = new NonceSource(nonce);
                         nonceSource.validationErrors().forEach(this::warn);
                         return nonceSource;
-                    } else if (token.value.startsWith("'sha")) {
+                    } else if (token.value.toLowerCase().startsWith("'sha")) {
                         HashSource.HashAlgorithm algorithm;
                         switch (token.value.substring(4, 7)) {
                             case "256":
@@ -289,7 +290,8 @@ public class Parser {
                         Base64Value base64Value = new Base64Value(safeValue);
                         // warn if value is not RFC4648
                         if (value.contains("-") || value.contains("_")) {
-                            this.warn("Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
+                            this.warn(
+                                "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
                         }
                         HashSource hashSource = new HashSource(algorithm, base64Value);
                         hashSource.validationErrors().forEach(this::warn);
@@ -325,7 +327,8 @@ public class Parser {
 
     @Nonnull private Set<AncestorSource> parseAncestorSourceList() throws ParseException {
         Set<AncestorSource> ancestorSources = new LinkedHashSet<>();
-        if (this.hasNext(DirectiveValueToken.class, "'none'")) {
+        if (this.hasNext(DirectiveValueToken.class) && this.peek().value
+            .equalsIgnoreCase("'none'")) {
             this.advance();
             ancestorSources.add(None.INSTANCE);
             return ancestorSources;

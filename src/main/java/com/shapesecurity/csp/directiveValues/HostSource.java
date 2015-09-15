@@ -60,7 +60,9 @@ public class HostSource implements SourceExpression, AncestorSource {
             this.port == Constants.WILDCARD_PORT || (this.port == Constants.EMPTY_PORT ?
                 uriUsesDefaultPort :
                 (uri.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == uri.port));
-        boolean pathMatches = this.path == null || this.path.matches(uri.path);
+        boolean pathMatches = this.path == null || (this.path.endsWith("/") ?
+            uri.path.toLowerCase().startsWith(this.path.toLowerCase()) :
+            this.path.equalsIgnoreCase(uri.path));
         return schemeMatches && hostMatches && portMatches && pathMatches;
     }
 

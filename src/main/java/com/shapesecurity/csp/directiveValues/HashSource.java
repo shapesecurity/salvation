@@ -18,25 +18,23 @@ public class HashSource implements SourceExpression, MatchesHash {
         this.value = value;
     }
 
-    public List<String> validationErrors() {
-        List<String> errors = new ArrayList<>();
+    public void validationErrors() {
         switch (this.algorithm) {
             case SHA256:
                 if (this.value.size() != 32)
-                    errors.add("Invalid SHA-256 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException("Invalid SHA-256 value (wrong length): " + this.value.size());
                 break;
             case SHA384:
                 if (this.value.size() != 48)
-                    errors.add("Invalid SHA-384 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException("Invalid SHA-384 value (wrong length): " + this.value.size());
                 break;
             case SHA512:
                 if (this.value.size() != 64)
-                    errors.add("Invalid SHA-512 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException("Invalid SHA-512 value (wrong length): " + this.value.size());
                 break;
             default:
                 throw new RuntimeException("Not reached.");
         }
-        return errors;
     }
 
     @Nonnull @Override public String show() {

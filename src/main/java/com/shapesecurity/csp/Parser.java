@@ -294,7 +294,11 @@ public class Parser {
                                 "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
                         }
                         HashSource hashSource = new HashSource(algorithm, base64Value);
-                        hashSource.validationErrors().forEach(this::warn);
+                        try {
+                            hashSource.validationErrors();
+                        } catch (IllegalArgumentException e) {
+                            throw this.createError(e.getMessage());
+                        }
                         return hashSource;
                     } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
                         return new SchemeSource(token.value.substring(0, token.value.length() - 1));

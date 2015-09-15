@@ -231,25 +231,24 @@ import static org.junit.Assert.*;
     }
 
     @Test public void testPolicy() throws ParseException, TokeniserException {
-//        Policy a = createPolicyWithDefaultOrigin("");
-//        assertEquals("policy show", "", a.show());
+        Policy a = createPolicyWithDefaultOrigin("");
+        assertEquals("policy show", "", a.show());
 
         Policy b = createPolicyWithDefaultOrigin("style-src *");
         assertEquals("policy show", "", b.show());
 
-//        assertTrue("policy equality", a.equals(b));
-//
-//        Policy c = createPolicyWithDefaultOrigin("script-src *");
-//        b.union(c);
-//        assertEquals("policy union", "", b.show());
-//
-//        Policy d = createPolicyWithDefaultOrigin("script-src abc");
-//        b.union(d);
-//        assertEquals("policy union", "style-src *; script-src * abc", b.show());
-//
-//        a.setOrigin(URI.parse("http://qwe.zz:80"));
-//        assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());
+        assertTrue("policy equality", a.equals(b));
 
+        Policy c = createPolicyWithDefaultOrigin("script-src *");
+        b.union(c);
+        assertEquals("policy union", "", b.show());
+
+        Policy d = createPolicyWithDefaultOrigin("script-src abc");
+        b.union(d);
+        assertEquals("policy union", "", b.show());
+
+        a.setOrigin(URI.parse("http://qwe.zz:80"));
+        assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());
     }
 
     @Test() public void testPluginTypesParsing() throws ParseException, TokeniserException {
@@ -306,10 +305,7 @@ import static org.junit.Assert.*;
         d1.union(q.getDirectiveByType(ReportUriDirective.class));
         assertEquals("report-uri union", "report-uri http://a http://b", d1.show());
         assertNotEquals("report-uri hashcode shouldn't match", p.hashCode(), q.hashCode());
-
-        // TODO relative URI is legal ?
-        //p = createPolicyWithDefaultOrigin("report-uri  a");
-        //q = createPolicyWithDefaultOrigin("report-uri a; ");
+        
         p = createPolicyWithDefaultOrigin("report-uri  https://a");
         q = createPolicyWithDefaultOrigin("report-uri https://a; ");
         assertEquals("report-uri hashcode match", p.hashCode(), q.hashCode());

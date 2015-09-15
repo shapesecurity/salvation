@@ -66,7 +66,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         return values.stream();
     }
 
-    @Nonnull protected abstract Directive<Value> construct(Set<Value> newValues);
+    @Nonnull public abstract Directive<Value> construct(Set<Value> newValues);
 
     @Nonnull public final Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
         Set<Value> newValues = new LinkedHashSet<>();

@@ -4,22 +4,20 @@ import com.shapesecurity.csp.Constants;
 import com.shapesecurity.csp.directives.DirectiveValue;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.regex.Matcher;
 
 public class URI extends Origin implements DirectiveValue {
-    @Nullable public final String path;
+    @Nonnull public final String path;
 
 
-    public URI(@Nonnull String scheme, @Nonnull String host, @Nonnull int port,
-        @Nonnull String path) {
+    public URI(@Nonnull String scheme, @Nonnull String host, int port, @Nonnull String path) {
         super(scheme, host, port);
         this.path = path;
     }
 
     public URI(@Nonnull Origin origin) {
         super(origin.scheme, origin.host, origin.port);
-        this.path = null;
+        this.path = "";
     }
 
     @Nonnull public static URI parse(@Nonnull String uri) throws IllegalArgumentException {

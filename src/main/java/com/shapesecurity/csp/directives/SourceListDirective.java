@@ -30,8 +30,7 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
     }
 
     public boolean matchesNonce(@Nonnull String nonce) {
-        return this.values()
-            .filter(x -> x instanceof MatchesNonce)
+        return this.values().filter(x -> x instanceof MatchesNonce)
             .anyMatch(x -> ((MatchesNonce) x).matchesNonce(nonce));
     }
 }

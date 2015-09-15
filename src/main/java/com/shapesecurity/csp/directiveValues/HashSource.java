@@ -20,17 +20,17 @@ public class HashSource implements SourceExpression, MatchesHash {
 
     public List<String> validationErrors() {
         List<String> errors = new ArrayList<>();
-        switch(this.algorithm) {
+        switch (this.algorithm) {
             case SHA256:
-                if(this.value.size() != 32)
+                if (this.value.size() != 32)
                     errors.add("Invalid SHA-256 value (wrong length): " + this.value.size());
                 break;
             case SHA384:
-                if(this.value.size() != 48)
+                if (this.value.size() != 48)
                     errors.add("Invalid SHA-384 value (wrong length): " + this.value.size());
                 break;
             case SHA512:
-                if(this.value.size() != 64)
+                if (this.value.size() != 64)
                     errors.add("Invalid SHA-512 value (wrong length): " + this.value.size());
                 break;
             default:
@@ -39,9 +39,7 @@ public class HashSource implements SourceExpression, MatchesHash {
         return errors;
     }
 
-    @Nonnull
-    @Override
-    public String show() {
+    @Nonnull @Override public String show() {
         return "'" + this.algorithm.show() + "-" + this.value.show() + "'";
     }
 

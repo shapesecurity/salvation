@@ -12,7 +12,7 @@ public class ReportUriDirective extends Directive<URI> {
         super(ReportUriDirective.NAME, uris);
     }
 
-    @Nonnull @Override protected Directive<URI> construct(Set<URI> newValues) {
+    @Nonnull @Override public Directive<URI> construct(Set<URI> newValues) {
         return new ReportUriDirective(newValues);
     }
 }

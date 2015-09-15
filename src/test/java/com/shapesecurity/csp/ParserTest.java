@@ -398,26 +398,26 @@ import static org.junit.Assert.*;
 
         try {
             createPolicyWithDefaultOrigin(
-                "script-src 'sha256-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+                "script-src 'sha256-gpw4BEAbByf3D3PUQV4WJADL5Xs='");
             fail();
         } catch (ParseException e) {
-            assertEquals("Invalid SHA-256 value (wrong length): 40", e.getMessage());
+            assertEquals("Invalid SHA-256 value (wrong length): 20", e.getMessage());
         }
 
         try {
             createPolicyWithDefaultOrigin(
-                "script-src 'sha384-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+                "script-src 'sha384-gpw4BEAbByf3D3PUQV4WJADL5Xs='");
             fail();
         } catch (ParseException e) {
-            assertEquals("Invalid SHA-384 value (wrong length): 40", e.getMessage());
+            assertEquals("Invalid SHA-384 value (wrong length): 20", e.getMessage());
         }
 
         try {
             createPolicyWithDefaultOrigin(
-                "script-src 'sha512-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+                "script-src 'sha512-gpw4BEAbByf3D3PUQV4WJADL5Xs='");
             fail();
         } catch (ParseException e) {
-            assertEquals("Invalid SHA-512 value (wrong length): 40", e.getMessage());
+            assertEquals("Invalid SHA-512 value (wrong length): 20", e.getMessage());
         }
     }
 

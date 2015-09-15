@@ -30,17 +30,6 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         Iterator<T> aIterator = a.iterator();
         Iterator<T> bIterator = b.iterator();
 
-
-        if ((aIterator.hasNext() && aIterator.next() == None.INSTANCE)) {
-            set.addAll(b);
-            return set;
-        }
-
-        if ((bIterator.hasNext() && bIterator.next() == None.INSTANCE)) {
-            set.addAll(a);
-            return set;
-        }
-
         set.addAll(a);
         set.addAll(b);
 
@@ -119,7 +108,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     public final void intersect(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
             throw new IllegalArgumentException(
-                this.getClass() + " can be unioned with " + this.getClass() +
+                this.getClass() + " can be intersected with " + this.getClass() +
                     ", but found " + other.getClass());
         }
         this.values = Directive.intersect(this.values, other.values);

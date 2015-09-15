@@ -1,4 +1,4 @@
-csp-parser
+salvation
 ==========
 
 This is a general purpose library for working with Content Security Policy policies.

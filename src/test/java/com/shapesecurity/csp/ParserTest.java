@@ -125,6 +125,14 @@ import static org.junit.Assert.*;
                 "class com.shapesecurity.csp.directives.StyleSrcDirective can be unioned with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective",
                 e.getMessage());
         }
+
+        try {
+            d1.intersect(d2);
+        } catch (IllegalArgumentException e) {
+            assertEquals(
+                "class com.shapesecurity.csp.directives.StyleSrcDirective can be intersected with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective",
+                e.getMessage());
+        }
     }
 
     private void failsToParse(String policy) {
@@ -195,7 +203,7 @@ import static org.junit.Assert.*;
                 .getDirectiveByType(StyleSrcDirective.class).show());
     }
 
-    @Test public void testAncestorSourceParsing() throws ParseException, TokeniserException {
+    @Test public void testAncestorSource() throws ParseException, TokeniserException {
         assertEquals("directive-name, no directive-value", "frame-ancestors",
             createPolicyWithDefaultOrigin("frame-ancestors")
                 .getDirectiveByType(FrameAncestorsDirective.class).show());
@@ -228,6 +236,11 @@ import static org.junit.Assert.*;
 
         failsToParse("frame-ancestors scheme::");
         failsToParse("frame-ancestors 'none' 'self'");
+
+        p = createPolicyWithDefaultOrigin("frame-ancestors *");
+        q = createPolicyWithDefaultOrigin("frame-ancestors http://example.com");
+        p.union(q);
+        assertEquals("frame-ancestors *", p.show());
     }
 
     @Test public void testPolicy() throws ParseException, TokeniserException {
@@ -382,6 +395,30 @@ import static org.junit.Assert.*;
             "script-src 'sha512-HD6Xh+Y6oIZnXv4XqbKxrb6t3RkoPYv+NkqOBE8MwkssuATRE2aFBp8Nm9kp/Xn5a4l2Ki8QkX5qIUlbXQgO4Q=='");
         assertFalse("hash-source inequality",
             d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
+
+        try {
+            createPolicyWithDefaultOrigin(
+                "script-src 'sha256-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+            fail();
+        } catch (ParseException e) {
+            assertEquals("Invalid SHA-256 value (wrong length): 40", e.getMessage());
+        }
+
+        try {
+            createPolicyWithDefaultOrigin(
+                "script-src 'sha384-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+            fail();
+        } catch (ParseException e) {
+            assertEquals("Invalid SHA-384 value (wrong length): 40", e.getMessage());
+        }
+
+        try {
+            createPolicyWithDefaultOrigin(
+                "script-src 'sha512-YTI1M2I5ODBlYzM1NzNkNWRmNGM5ZWQ5N2M5N2ZlZmE0MjFlMmVlYQ=='");
+            fail();
+        } catch (ParseException e) {
+            assertEquals("Invalid SHA-512 value (wrong length): 40", e.getMessage());
+        }
     }
 
     @Test public void sourceListTest() throws ParseException, TokeniserException {
@@ -834,6 +871,7 @@ import static org.junit.Assert.*;
         Warning warning = warnings.get(0);
         assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0",
             warning.show());
+        assertEquals("Warning: 'unsafe-redirect' has been removed from CSP as of version 2.0", warning.toString());
     }
 
     @Test public void testAllowDirective() throws TokeniserException {
@@ -1022,6 +1060,11 @@ import static org.junit.Assert.*;
         p2 = ParserWithLocation.parse("script-src b c", "https://origin");
         p1.intersect(p2);
         assertEquals("script-src b c", p1.show());
+
+        p1 = ParserWithLocation.parse("script-src a b c", "https://origin");
+        p2 = ParserWithLocation.parse("default-src 'none'; script-src b c", "https://origin");
+        p1.intersect(p2);
+        assertEquals("script-src b c; default-src", p1.show());
 
         try {
             p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));

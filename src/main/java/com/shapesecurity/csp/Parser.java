@@ -290,7 +290,8 @@ public class Parser {
                         Base64Value base64Value = new Base64Value(safeValue);
                         // warn if value is not RFC4648
                         if (value.contains("-") || value.contains("_")) {
-                            this.warn("Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
+                            this.warn(
+                                "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
                         }
                         HashSource hashSource = new HashSource(algorithm, base64Value);
                         hashSource.validationErrors().forEach(this::warn);

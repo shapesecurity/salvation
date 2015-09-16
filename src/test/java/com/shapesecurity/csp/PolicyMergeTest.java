@@ -4,12 +4,18 @@ import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.URI;
+import com.shapesecurity.csp.directiveValues.HashSource;
 import com.shapesecurity.csp.directiveValues.HostSource;
+import com.shapesecurity.csp.directiveValues.None;
+import com.shapesecurity.csp.directiveValues.SourceExpression;
+import com.shapesecurity.csp.directives.DefaultSrcDirective;
 import com.shapesecurity.csp.directives.ScriptSrcDirective;
 import com.shapesecurity.csp.directives.StyleSrcDirective;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -246,6 +252,68 @@ public class PolicyMergeTest extends CSPTest {
                 "class com.shapesecurity.csp.directives.StyleSrcDirective can be intersected with class com.shapesecurity.csp.directives.StyleSrcDirective, but found class com.shapesecurity.csp.directives.ScriptSrcDirective",
                 e.getMessage());
         }
+    }
+
+    @Test
+    public void testUnionDirective() throws ParseException, TokeniserException {
+        Policy p;
+        Set<SourceExpression> set = new LinkedHashSet<>();
+
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        StyleSrcDirective d1 = new StyleSrcDirective(set);
+        p.unionDirective(d1);
+        assertEquals(
+            "default-src 'self'; script-src a; report-uri http://example.com/z; style-src 'self' http://abc.com/",
+            p.show());
+
+        set.clear();
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        DefaultSrcDirective d2 = new DefaultSrcDirective(set);
+        p.unionDirective(d2);
+        assertEquals(
+            "default-src 'self' http://abc.com/; script-src a; report-uri http://example.com/z",
+            p.show());
+
+        set.clear();
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        set.add(HostSource.WILDCARD);
+        DefaultSrcDirective d3 = new DefaultSrcDirective(set);
+        p.unionDirective(d3);
+        assertEquals("script-src a; report-uri http://example.com/z", p.show());
+    }
+
+    @Test
+    public void testIntersectDirective() throws ParseException, TokeniserException {
+        Policy p;
+        Set<SourceExpression> set = new LinkedHashSet<>();
+
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        StyleSrcDirective d1 = new StyleSrcDirective(set);
+        p.intersectDirective(d1);
+        assertEquals(
+            "default-src 'self'; script-src a; report-uri http://example.com/z; style-src",
+            p.show());
+
+        set.clear();
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        DefaultSrcDirective d2 = new DefaultSrcDirective(set);
+        p.intersectDirective(d2);
+        assertEquals(
+            "default-src; script-src a; report-uri http://example.com/z",
+            p.show());
+
+        set.clear();
+        p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
+        set.add(new HostSource("http", "abc.com", 80, "/"));
+        set.add(HostSource.WILDCARD);
+        DefaultSrcDirective d3 = new DefaultSrcDirective(set);
+        p.intersectDirective(d3);
+        assertEquals("default-src 'self'; script-src a; report-uri http://example.com/z", p.show());
     }
 
 }

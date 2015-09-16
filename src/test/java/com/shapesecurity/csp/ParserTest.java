@@ -7,13 +7,12 @@ import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.data.URI;
 import com.shapesecurity.csp.data.Warning;
 import com.shapesecurity.csp.directiveValues.HashSource;
+
 import com.shapesecurity.csp.directives.*;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.junit.Assert.*;
 

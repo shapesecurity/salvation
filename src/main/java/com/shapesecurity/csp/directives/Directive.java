@@ -6,10 +6,7 @@ import com.shapesecurity.csp.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -80,7 +77,8 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull public abstract Directive<Value> construct(Set<Value> newValues);
 
-    @Nonnull public final Directive<Value> clone() {
+    @SuppressWarnings("CloneDoesntCallSuperClone")
+    @Nonnull @Override public final Directive<Value> clone() {
         Set<Value> s = new LinkedHashSet<>();
         s.addAll(this.values);
         return this.construct(s);

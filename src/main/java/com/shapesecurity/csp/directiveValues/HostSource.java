@@ -11,7 +11,7 @@ import java.util.Objects;
 public class HostSource implements SourceExpression, AncestorSource {
     @Nullable private final String scheme;
     @Nonnull private final String host;
-    @Nonnull private final int port;
+    private final int port;
     @Nullable private final String path;
 
     public HostSource(@Nullable String scheme, @Nonnull String host, int port,

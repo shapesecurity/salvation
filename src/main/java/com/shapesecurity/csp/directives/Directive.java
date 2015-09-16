@@ -83,6 +83,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull public abstract Directive<Value> construct(Set<Value> newValues);
 
+    @Nonnull public final Directive<Value> clone() {
+        Set<Value> s = new LinkedHashSet<>();
+        s.addAll(this.values);
+        return this.construct(s);
+    }
+
     @Nonnull public final Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
         Set<Value> newValues = new LinkedHashSet<>();
         for (Value v : this.values) {

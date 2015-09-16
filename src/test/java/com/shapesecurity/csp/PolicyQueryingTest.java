@@ -69,10 +69,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
 
-        p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
-        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
-        assertTrue("resource is allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        p = Parser.parse("default-src *:*", "http://abc.com");
+        assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("http://abc.am")));
         assertTrue("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
     }
 
     @Test

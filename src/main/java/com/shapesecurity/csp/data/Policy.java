@@ -80,7 +80,7 @@ public class Policy implements Show {
         Set<SourceExpression> defaultSources;
         if (defaultSrcDirective == null) {
             defaultSources = new LinkedHashSet<>();
-            defaultSources.add(new HostSource(null, "*", Constants.WILDCARD_PORT, null));
+            defaultSources.add(HostSource.WILDCARD);
             this.directives.put(DefaultSrcDirective.class, new DefaultSrcDirective(defaultSources));
         } else {
             defaultSources =
@@ -134,7 +134,7 @@ public class Policy implements Show {
             if (directive instanceof SourceListDirective) {
                 SourceListDirective sourceListDirective = (SourceListDirective) directive;
                 Optional<SourceExpression> star = sourceListDirective.values()
-                    .filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
+                    .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
                     .findAny();
                 if (star.isPresent()) {
                     // * remove all other host sources in source list that contains *
@@ -167,7 +167,7 @@ public class Policy implements Show {
         Set<SourceExpression> defaultSources;
         if (defaultSrcDirective == null) {
             defaultSources = new LinkedHashSet<>();
-            defaultSources.add(new HostSource(null, "*", Constants.WILDCARD_PORT, null));
+            defaultSources.add(HostSource.WILDCARD);
         } else {
             defaultSources =
                 defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
@@ -206,7 +206,7 @@ public class Policy implements Show {
         // remove `default-src *`
         if (defaultSources.size() == 1) {
             SourceExpression first = defaultSources.iterator().next();
-            if (first instanceof HostSource && first.show().equals("*")) {
+            if (first instanceof HostSource && ((HostSource) first).isWildcard()) {
                 this.directives.remove(DefaultSrcDirective.class);
             }
         }

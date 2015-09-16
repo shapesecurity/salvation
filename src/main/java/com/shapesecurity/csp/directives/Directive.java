@@ -27,15 +27,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull private static <T> Set<T> union(@Nonnull Set<T> a, @Nonnull Set<T> b) {
         Set<T> set = new LinkedHashSet<>();
 
-        Iterator<T> aIterator = a.iterator();
-        Iterator<T> bIterator = b.iterator();
-
         set.addAll(a);
         set.addAll(b);
 
-        Optional<T> star =
-            set.stream().filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
-                .findAny();
+        Optional<T> star = set.stream()
+            .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
+            .findAny();
         if (star.isPresent()) {
             set.removeIf(y -> y instanceof HostSource);
             set.add(star.get());
@@ -55,16 +52,16 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
             return set;
         }
 
-        Optional<T> star =
-            b.stream().filter(x -> x instanceof HostSource && ((HostSource) x).show().equals("*"))
-                .findAny();
+        Optional<T> star = b.stream()
+            .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
+            .findAny();
         if (star.isPresent()) {
             set.addAll(a);
             return set;
         }
 
         for (T x : a) {
-            if (x instanceof HostSource && ((HostSource) x).show().equals("*")) {
+            if (x instanceof HostSource && ((HostSource) x).isWildcard()) {
                 set.clear();
                 set.addAll(b);
                 return set;
@@ -82,6 +79,12 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @Nonnull public abstract Directive<Value> construct(Set<Value> newValues);
+
+    @Nonnull public final Directive<Value> clone() {
+        Set<Value> s = new LinkedHashSet<>();
+        s.addAll(this.values);
+        return this.construct(s);
+    }
 
     @Nonnull public final Directive<Value> bind(@Nonnull Function<Value, Set<? extends Value>> f) {
         Set<Value> newValues = new LinkedHashSet<>();

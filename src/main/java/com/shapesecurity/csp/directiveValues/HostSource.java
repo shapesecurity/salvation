@@ -18,17 +18,19 @@ public class HostSource implements SourceExpression, AncestorSource {
         @Nullable String path) {
         this.scheme = scheme;
         this.host = host;
-        if (this.scheme == null && port == Constants.EMPTY_PORT) {
-            port = Constants.WILDCARD_PORT;
-        }
         this.port = port;
         this.path = path;
     }
+
+    private static final int WILDCARD_HASHCODE = 0x9F4E3EEA;
+    public static final HostSource WILDCARD = new HostSource(null, "*", Constants.EMPTY_PORT, null);
 
     @Override public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof HostSource))
             return false;
         HostSource otherPrime = (HostSource) other;
+        if (this.isWildcard() && otherPrime.isWildcard())
+            return true;
         return Objects.equals(this.scheme, otherPrime.scheme) &&
             Objects.equals(this.host, otherPrime.host) &&
             this.port == otherPrime.port &&
@@ -36,6 +38,9 @@ public class HostSource implements SourceExpression, AncestorSource {
     }
 
     @Override public int hashCode() {
+        if (this.isWildcard()) {
+            return WILDCARD_HASHCODE;
+        }
         int h = 0;
         if (this.scheme != null)
             h ^= this.scheme.hashCode() ^ 0xA303EFA3;
@@ -46,15 +51,27 @@ public class HostSource implements SourceExpression, AncestorSource {
         return h;
     }
 
-    @Override public boolean matchesUri(@Nonnull Origin unused, @Nonnull URI uri) {
-        if (this.scheme == null && this.port == Constants.WILDCARD_PORT && this.host.equals("*"))
-            return true;
-        boolean schemeMatches = this.scheme == null ?
-            uri.scheme.equalsIgnoreCase("http") || uri.scheme.equalsIgnoreCase("https") :
-            this.scheme.equalsIgnoreCase(uri.scheme);
-        boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
-            uri.host.endsWith(this.host.substring(2)) :
-            this.host.equalsIgnoreCase(uri.host));
+    public boolean isWildcard() {
+        return this.host.equals("*") && this.scheme == null && this.port == Constants.EMPTY_PORT;
+    }
+
+    @Override public boolean matchesUri(@Nonnull Origin origin, @Nonnull URI uri) {
+        if (this.isWildcard()) {
+            return !uri.scheme.equals("blob") && !uri.scheme.equals("data") && !uri.scheme.equals("filesystem");
+        }
+        boolean schemeMatches;
+        if (this.scheme == null) {
+            schemeMatches =
+                origin.scheme.equalsIgnoreCase("http")
+                    ? uri.scheme.equalsIgnoreCase("http") || uri.scheme.equalsIgnoreCase("https")
+                    : uri.scheme.equalsIgnoreCase(origin.scheme);
+        } else {
+            schemeMatches = this.scheme.equalsIgnoreCase(uri.scheme);
+        }
+        boolean hostMatches = this.host.equals("*") ||
+            (this.host.startsWith("*.")
+                ? uri.host.endsWith(this.host.substring(1))
+                : this.host.equalsIgnoreCase(uri.host));
         boolean uriUsesDefaultPort = uri.port == Constants.EMPTY_PORT
             || Origin.defaultPortForProtocol(uri.scheme) == uri.port;
         boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT

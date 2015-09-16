@@ -1,6 +1,5 @@
 package com.shapesecurity.csp.data;
 
-import com.shapesecurity.csp.Constants;
 import com.shapesecurity.csp.directiveValues.HashSource.HashAlgorithm;
 import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.*;
@@ -32,11 +31,11 @@ public class Policy implements Show {
     }
 
     public void intersect(@Nonnull Policy other) {
-        this.mergeUsingStrategy(other, this::intersectDirective);
+        this.mergeUsingStrategy(other, this::intersectDirectivePrivate);
     }
 
     public void union(@Nonnull Policy other) {
-        this.mergeUsingStrategy(other, this::unionDirective);
+        this.mergeUsingStrategy(other, this::unionDirectivePrivate);
     }
 
     private void mergeUsingStrategy(@Nonnull Policy other,
@@ -59,17 +58,13 @@ public class Policy implements Show {
     }
 
     private void resolveSelf() {
-        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
-            .entrySet()) {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();
             if (directive instanceof SourceListDirective) {
-                SourceListDirective sourceListDirective = (SourceListDirective) directive;
-                this.directives.put(entry.getKey(), sourceListDirective.bind(
-                    dv -> dv == KeywordSource.Self ?
-                        Collections.singleton(
-                            new HostSource(this.origin.scheme, this.origin.host, this.origin.port,
-                                null)) :
-                        null));
+                this.directives.put(
+                    entry.getKey(),
+                    ((SourceListDirective) directive).resolveSelf(this.origin)
+                );
             }
         }
     }
@@ -88,28 +83,28 @@ public class Policy implements Show {
         }
 
         if (!this.directives.containsKey(ScriptSrcDirective.class)) {
-            this.unionDirective(new ScriptSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new ScriptSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(StyleSrcDirective.class)) {
-            this.unionDirective(new StyleSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new StyleSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(ImgSrcDirective.class)) {
-            this.unionDirective(new ImgSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new ImgSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(ChildSrcDirective.class)) {
-            this.unionDirective(new ChildSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new ChildSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(ConnectSrcDirective.class)) {
-            this.unionDirective(new ConnectSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new ConnectSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(FontSrcDirective.class)) {
-            this.unionDirective(new FontSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new FontSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(MediaSrcDirective.class)) {
-            this.unionDirective(new MediaSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new MediaSrcDirective(defaultSources));
         }
         if (!this.directives.containsKey(ObjectSrcDirective.class)) {
-            this.unionDirective(new ObjectSrcDirective(defaultSources));
+            this.unionDirectivePrivate(new ObjectSrcDirective(defaultSources));
         }
     }
 
@@ -212,8 +207,32 @@ public class Policy implements Show {
         }
     }
 
+    public void unionDirective(@Nonnull Directive<? extends DirectiveValue> directive) {
+        this.resolveSelf();
+        if (directive instanceof SourceListDirective) {
+            directive = ((SourceListDirective) directive).resolveSelf(this.origin);
+        }
+        if(!(directive instanceof DefaultSrcDirective)) {
+            this.expandDefaultSrc();
+        }
+        this.unionDirectivePrivate(directive);
+        this.optimise();
+    }
+
+    public void intersectDirective(@Nonnull Directive<? extends DirectiveValue> directive) {
+        this.resolveSelf();
+        if (directive instanceof SourceListDirective) {
+            directive = ((SourceListDirective) directive).resolveSelf(this.origin);
+        }
+        if(!(directive instanceof DefaultSrcDirective)) {
+            this.expandDefaultSrc();
+        }
+        this.intersectDirectivePrivate(directive);
+        this.optimise();
+    }
+
     // union a directive if it does not exist; used for policy manipulation and composition
-    private <V extends DirectiveValue, T extends Directive<V>> void unionDirective(
+    private <V extends DirectiveValue, T extends Directive<V>> void unionDirectivePrivate(
         @Nonnull T directive) {
         @SuppressWarnings("unchecked") T oldDirective =
             (T) this.directives.get(directive.getClass());
@@ -224,7 +243,7 @@ public class Policy implements Show {
         }
     }
 
-    private <V extends DirectiveValue, T extends Directive<V>> void intersectDirective(
+    private <V extends DirectiveValue, T extends Directive<V>> void intersectDirectivePrivate(
         @Nonnull T directive) {
         @SuppressWarnings("unchecked") T oldDirective =
             (T) this.directives.get(directive.getClass());

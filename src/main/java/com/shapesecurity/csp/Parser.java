@@ -399,8 +399,7 @@ public class Parser {
         }
         if (uriList.isEmpty()) {
             if (!this.hasNext()) {
-                throw this
-                    .createUnexpectedEOF("report-uri must contain at least one uri-reference");
+                throw this.createUnexpectedEOF("report-uri must contain at least one uri-reference");
             }
             throw this.createError("report-uri must contain at least one uri-reference");
         }

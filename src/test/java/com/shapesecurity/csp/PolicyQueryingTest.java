@@ -3,6 +3,7 @@ package com.shapesecurity.csp;
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.Base64Value;
+import com.shapesecurity.csp.data.GUID;
 import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.data.URI;
 import com.shapesecurity.csp.directiveValues.HashSource;
@@ -71,7 +72,7 @@ public class PolicyQueryingTest extends CSPTest {
 
         p = Parser.parse("default-src *:*", "http://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("http://abc.am")));
-        assertTrue("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
     }
 
@@ -165,6 +166,109 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("http://good.com/")));
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("https://good.com/")));
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://aaa.good.com/")));
+    }
+
+    @Test
+    public void testWildcards() throws ParseException, TokeniserException {
+        Policy p;
+
+        p = Parser.parse("script-src *", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+
+        p = Parser.parse("script-src http://*", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src *:80", "http://example.com");
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src *:80", "https://example.com");
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src *:80", "ftp://example.com");
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("img-src ftp://*", "http://example.com");
+        assertFalse(p.allowsImgFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsImgFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com:80")));
+        assertFalse(p.allowsImgFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsImgFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src *:*", "http://example.com");
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src http://*:*", "http://example.com");
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("style-src ftp://*:*", "http://example.com");
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+
+        p = Parser.parse("img-src */path", "http://example.com");
+        assertFalse(p.allowsImgFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("https://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("http://example.com:81")));
+        assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com")));
+        assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsImgFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsImgFromSource(new GUID("data:")));
+
+        p = Parser.parse("script-src *.example.com", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com/c/d")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://www.example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://com")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
     }
 
 }

@@ -169,6 +169,56 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
+    public void testPaths() throws ParseException, TokeniserException {
+        Policy p;
+
+        p = Parser.parse("script-src example.com/a", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+
+        p = Parser.parse("script-src example.com/a/", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+
+        p = Parser.parse("script-src example.com/a/b", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+
+        p = Parser.parse("script-src example.com/a/b/", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+
+        p = Parser.parse("script-src example.com/a/b/c", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+    }
+
+    @Test
     public void testWildcards() throws ParseException, TokeniserException {
         Policy p;
 

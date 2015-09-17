@@ -6,7 +6,7 @@ import com.shapesecurity.csp.directives.DirectiveValue;
 import javax.annotation.Nonnull;
 import java.util.regex.Matcher;
 
-public class URI extends Origin implements DirectiveValue {
+public class URI extends SchemeHostPortTriple implements DirectiveValue {
     @Nonnull public final String path;
 
 
@@ -15,7 +15,7 @@ public class URI extends Origin implements DirectiveValue {
         this.path = path;
     }
 
-    public URI(@Nonnull Origin origin) {
+    public URI(@Nonnull SchemeHostPortTriple origin) {
         super(origin.scheme, origin.host, origin.port);
         this.path = "";
     }
@@ -23,17 +23,17 @@ public class URI extends Origin implements DirectiveValue {
     @Nonnull public static URI parse(@Nonnull String uri) throws IllegalArgumentException {
         Matcher matcher = Constants.hostSourcePattern.matcher(uri);
         if (!matcher.find()) {
-            throw new IllegalArgumentException("Invalid URI: " + uri);
+            throw new IllegalArgumentException("Invalid URI");
         }
         String scheme = matcher.group("scheme");
         if (scheme == null) {
-            throw new IllegalArgumentException("Invalid URI (missing scheme): " + uri);
+            throw new IllegalArgumentException("Invalid URI (missing scheme)");
         }
         scheme = scheme.substring(0, scheme.length() - 3);
         String portString = matcher.group("port");
         int port;
         if (portString == null) {
-            port = Origin.defaultPortForProtocol(scheme);
+            port = SchemeHostPortTriple.defaultPortForProtocol(scheme);
         } else {
             port = portString.equals(":*") ?
                 Constants.WILDCARD_PORT :
@@ -52,7 +52,11 @@ public class URI extends Origin implements DirectiveValue {
         if (!matcher.find()) {
             return URI.parse(uri);
         }
-        return new URI(origin.scheme, origin.host, origin.port, matcher.group("path"));
+        if (!(origin instanceof SchemeHostPortTriple)) {
+            throw new IllegalArgumentException("Cannot use relative URI with GUID origin");
+        }
+        SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
+        return new URI(shpOrigin.scheme, shpOrigin.host, shpOrigin.port, matcher.group("path"));
     }
 
     @Override public boolean equals(Object other) {

@@ -18,6 +18,10 @@ public class SchemeSource implements SourceExpression, AncestorSource {
         return this.value.matches(uri.scheme);
     }
 
+    public boolean matchesProtectedScheme() {
+        return this.value.equals("data") || this.value.equals("blob") || this.value.equals("filesystem");
+    }
+
     @Override public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof SchemeSource))
             return false;

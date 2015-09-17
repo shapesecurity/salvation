@@ -121,6 +121,7 @@ public class ParserTest extends CSPTest {
         assertEquals("directive-name, 3*<space>", "base-uri", parseAndShow("base-uri   "));
         assertEquals("directive-name, scheme-part", "base-uri https:", parseAndShow("base-uri https:"));
         assertEquals("directive-name, 2*scheme-part", "base-uri file: javascript:", parseAndShow("base-uri file: javascript: "));
+        assertEquals("directive-name, eliminated scheme-part", "base-uri *", parseAndShow("base-uri * https:"));
         assertEquals("directive-name, host-part *", "base-uri *", parseAndShow("base-uri *"));
         assertEquals("directive-name, host-part *.", "base-uri *.a", parseAndShow("base-uri *.a"));
 

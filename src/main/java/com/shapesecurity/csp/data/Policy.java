@@ -132,9 +132,12 @@ public class Policy implements Show {
                     .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
                     .findAny();
                 if (star.isPresent()) {
-                    // * remove all other host sources in source list that contains *
                     Set<SourceExpression> newSources =
-                        sourceListDirective.values().filter(x -> !(x instanceof HostSource))
+                        sourceListDirective.values()
+                            // * remove all other host sources in a source list that contains *
+                            .filter(x -> !(x instanceof HostSource))
+                            // * remove schemes sources other than data:, blob:, and filesystem: in source list that contains *
+                            .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x).matchesProtectedScheme())
                             .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
                     this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));

@@ -8,7 +8,7 @@
     <artifactId>salvation</artifactId>
     <version>0.0.4</version>
     <packaging>jar</packaging>
-    <name>csp-parser</name>
+    <name>salvation</name>
 
 
     <dependencies>

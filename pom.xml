@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.shapesecurity</groupId>
-    <artifactId>csp-parser</artifactId>
+    <artifactId>salvation</artifactId>
     <version>0.0.4</version>
     <packaging>jar</packaging>
     <name>csp-parser</name>

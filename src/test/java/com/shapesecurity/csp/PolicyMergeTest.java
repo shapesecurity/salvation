@@ -4,10 +4,7 @@ import com.shapesecurity.csp.data.Policy;
 import com.shapesecurity.csp.Parser.ParseException;
 import com.shapesecurity.csp.Tokeniser.TokeniserException;
 import com.shapesecurity.csp.data.URI;
-import com.shapesecurity.csp.directiveValues.HashSource;
-import com.shapesecurity.csp.directiveValues.HostSource;
-import com.shapesecurity.csp.directiveValues.None;
-import com.shapesecurity.csp.directiveValues.SourceExpression;
+import com.shapesecurity.csp.directiveValues.*;
 import com.shapesecurity.csp.directives.DefaultSrcDirective;
 import com.shapesecurity.csp.directives.ScriptSrcDirective;
 import com.shapesecurity.csp.directives.StyleSrcDirective;
@@ -283,6 +280,17 @@ public class PolicyMergeTest extends CSPTest {
         DefaultSrcDirective d3 = new DefaultSrcDirective(set);
         p.unionDirective(d3);
         assertEquals("script-src a; report-uri http://example.com/z", p.show());
+
+        set.clear();
+        p = Parser.parse("", "http://example.com");
+        set.add(new NonceSource("Q-ecAIccSGatv6lJrCBVARPr"));
+
+        ScriptSrcDirective scriptSrcDirective = new ScriptSrcDirective(set);
+        StyleSrcDirective styleSrcDirective = new StyleSrcDirective(set);
+
+        p.unionDirective(scriptSrcDirective);
+        p.unionDirective(styleSrcDirective);
+        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *", p.show());
     }
 
     @Test
@@ -314,6 +322,17 @@ public class PolicyMergeTest extends CSPTest {
         DefaultSrcDirective d3 = new DefaultSrcDirective(set);
         p.intersectDirective(d3);
         assertEquals("default-src 'self'; script-src a; report-uri http://example.com/z", p.show());
+
+        set.clear();
+        p = Parser.parse("", "http://example.com");
+        set.add(new NonceSource("Q-ecAIccSGatv6lJrCBVARPr"));
+
+        ScriptSrcDirective scriptSrcDirective = new ScriptSrcDirective(set);
+        StyleSrcDirective styleSrcDirective = new StyleSrcDirective(set);
+
+        p.intersectDirective(scriptSrcDirective);
+        p.intersectDirective(styleSrcDirective);
+        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'", p.show());
     }
 
 }

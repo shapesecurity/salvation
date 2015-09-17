@@ -5,6 +5,7 @@ target
 .editorconfig
 node_modules
 demo/dist
+build
 npm-debug.log
 key.pem
 cert.pem

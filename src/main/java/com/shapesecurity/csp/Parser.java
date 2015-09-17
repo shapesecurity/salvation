@@ -313,7 +313,7 @@ public class Parser {
                             if (portString == null) {
                                 port = scheme == null ?
                                     Constants.EMPTY_PORT :
-                                    Origin.defaultPortForProtocol(scheme);
+                                    SchemeHostPortTriple.defaultPortForProtocol(scheme);
                             } else {
                                 port = portString.equals(":*") ?
                                     Constants.WILDCARD_PORT :
@@ -361,7 +361,7 @@ public class Parser {
                 if (portString == null) {
                     port = scheme == null ?
                         Constants.EMPTY_PORT :
-                        Origin.defaultPortForProtocol(scheme);
+                        SchemeHostPortTriple.defaultPortForProtocol(scheme);
                 } else {
                     port = portString.equals(":*") ?
                         Constants.WILDCARD_PORT :

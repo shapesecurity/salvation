@@ -141,8 +141,11 @@ public class Policy implements Show {
                 } else {
                     this.directives.put(entry.getKey(), sourceListDirective.bind(dv -> {
                         // * replace host-sources that are equivalent to origin with 'self' keyword-source
-                        if (dv instanceof HostSource && ((HostSource) dv)
-                            .matchesOnlyOrigin(this.origin)) {
+                        if (
+                            dv instanceof HostSource &&
+                            this.origin instanceof SchemeHostPortTriple &&
+                            ((HostSource) dv).matchesOnlyOrigin((SchemeHostPortTriple) this.origin)
+                        ) {
                             return Collections.singleton(KeywordSource.Self);
                         }
                         // * replace 'none' with empty
@@ -334,13 +337,22 @@ public class Policy implements Show {
 
 
     // 7.4.1
-    private boolean defaultsAllowSource(@Nonnull URI s) {
+    private boolean defaultsAllowSource(@Nonnull URI source) {
         DefaultSrcDirective defaultSrcDirective =
             this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return true;
         }
-        return defaultSrcDirective.matchesUri(this.origin, s);
+        return defaultSrcDirective.matchesSource(this.origin, source);
+    }
+
+    private boolean defaultsAllowSource(@Nonnull GUID source) {
+        DefaultSrcDirective defaultSrcDirective =
+            this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.matchesSource(this.origin, source);
     }
 
     private boolean defaultsAllowUnsafeInline() {
@@ -353,28 +365,70 @@ public class Policy implements Show {
     }
 
 
-    public boolean allowsImgFromSource(@Nonnull URI uri) {
+    public boolean allowsImgFromSource(@Nonnull URI source) {
         ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
         if (imgSrcDirective == null) {
-            return this.defaultsAllowSource(uri);
+            return this.defaultsAllowSource(source);
         }
-        return imgSrcDirective.matchesUri(this.origin, uri);
+        return imgSrcDirective.matchesSource(this.origin, source);
     }
 
-    public boolean allowsScriptFromSource(@Nonnull URI uri) {
+    public boolean allowsImgFromSource(@Nonnull GUID source) {
+        ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
+        if (imgSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return imgSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsScriptFromSource(@Nonnull URI source) {
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
-            return this.defaultsAllowSource(uri);
+            return this.defaultsAllowSource(source);
         }
-        return scriptSrcDirective.matchesUri(this.origin, uri);
+        return scriptSrcDirective.matchesSource(this.origin, source);
     }
 
-    public boolean allowsStyleFromSource(@Nonnull URI uri) {
+    public boolean allowsScriptFromSource(@Nonnull GUID source) {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return scriptSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsStyleFromSource(@Nonnull URI source) {
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
-            return this.defaultsAllowSource(uri);
+            return this.defaultsAllowSource(source);
         }
-        return styleSrcDirective.matchesUri(this.origin, uri);
+        return styleSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsStyleFromSource(@Nonnull GUID source) {
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return styleSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsConnectTo(@Nonnull URI source) {
+        ConnectSrcDirective connectSrcDirective =
+            this.getDirectiveByType(ConnectSrcDirective.class);
+        if (connectSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return connectSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsConnectTo(@Nonnull GUID source) {
+        ConnectSrcDirective connectSrcDirective =
+            this.getDirectiveByType(ConnectSrcDirective.class);
+        if (connectSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return connectSrcDirective.matchesSource(this.origin, source);
     }
 
     public boolean allowsStyleWithHash(@Nonnull HashAlgorithm algorithm,
@@ -451,15 +505,5 @@ public class Policy implements Show {
 
     public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
         return this.allowsStyleWithNonce(nonce.value);
-    }
-
-    public boolean allowsConnectTo(@Nonnull URI uri) {
-        ConnectSrcDirective connectSrcDirective =
-            this.getDirectiveByType(ConnectSrcDirective.class);
-        if (connectSrcDirective == null) {
-            return this.defaultsAllowSource(uri);
-        }
-        return connectSrcDirective.matchesUri(this.origin, uri);
-
     }
 }

@@ -119,6 +119,16 @@ public class PolicyMergeTest extends CSPTest {
         p1.intersect(p2);
         assertEquals("script-src b c; default-src", p1.show());
 
+        p1 = parse("default-src *; script-src *; style-src *:80");
+        p2 = parse("default-src 'self'; script-src a");
+        p1.intersect(p2);
+        assertEquals("style-src; default-src 'self'; script-src a", p1.show());
+
+        p1 = parse("default-src 'self'; script-src a");
+        p2 = parse("default-src *; script-src *; style-src *:80");
+        p1.intersect(p2);
+        assertEquals("default-src 'self'; script-src a; style-src", p1.show());
+
         p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));
         p2 = parse("script-src b; report-uri /x");
         try {

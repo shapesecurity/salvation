@@ -161,12 +161,11 @@ public class LocationTest extends CSPTest {
     @Test public void testErrorTextWithLocation() throws ParseException, TokeniserException {
         try {
             ParserWithLocation.parse("plugin-types", "https://origin");
+            fail();
         } catch (ParseException e) {
             assertEquals("1:1: media-type-list must contain at least one media-type",
                 e.getMessage());
-            return;
         }
-        fail();
     }
 
     @Test public void testWarningTextWithLocation() throws ParseException, TokeniserException {
@@ -179,5 +178,17 @@ public class LocationTest extends CSPTest {
             warning.show());
         assertEquals("Warning: 'unsafe-redirect' has been removed from CSP as of version 2.0", warning.toString());
     }
+
+    @Test public void testPotentialTyposWarnings() throws ParseException, TokeniserException {
+        ArrayList<Warning> warnings = new ArrayList<>();
+        ParserWithLocation
+            .parse("script-src unsafe-redirect self none unsafe-inline unsafe-eval", URI.parse("https://origin"), warnings);
+        assertEquals(5, warnings.size());
+        Warning warning = warnings.get(0);
+        assertEquals("1:12: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'",
+            warning.show());
+        assertEquals("Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'", warning.toString());
+    }
+
 
 }

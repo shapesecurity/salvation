@@ -262,6 +262,12 @@ public class Parser {
                 case "'unsafe-redirect'":
                     this.warn("'unsafe-redirect' has been removed from CSP as of version 2.0");
                     return KeywordSource.UnsafeRedirect;
+                case "self":
+                case "unsafe-inline":
+                case "unsafe-eval":
+                case "unsafe-redirect":
+                case "none":
+                    this.warn("This host name is unusual, and likely meant to be a keyword that is missing the required quotes: \'" + token.value.toLowerCase() + "\'");
                 default:
                     if (token.value.startsWith("'nonce-")) {
                         String nonce = token.value.substring(7, token.value.length() - 1);

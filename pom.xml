@@ -8,7 +8,10 @@
     <artifactId>salvation</artifactId>
     <version>0.0.5</version>
     <packaging>jar</packaging>
+
     <name>salvation</name>
+    <description>Parse Content Security Policy headers, warn about policy errors, safely manipulate, render, and optimise policies</description>
+    <url>http://cspvalidator.org</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

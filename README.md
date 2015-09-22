@@ -38,6 +38,17 @@ scriptSourceValues.add(new None());
 p.addDirective(new ScriptSrcDirective(scriptSourceValues));
 ```
 
+### Manipulate Policies
+
+Policies can be merged using intersection or union strategy
+
+```java
+Policy p = Parser.parse("script-src a; default-src b", "http://example.com");
+Policy q = Parser.parse("script-src b;", "http://example.com");
+p.intersect(q);
+p.union(q);
+```
+
 ### Query a Policy
 
 ```java

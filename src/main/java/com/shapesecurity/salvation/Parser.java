@@ -202,6 +202,7 @@ public class Parser {
                 return new StyleSrcDirective(this.parseSourceList());
             case Referrer:
             case UpgradeInsecureRequests:
+            case BlockAllMixedContent:
                 throw this.createError(
                     "The " + token.value + " directive is not in the CSP specification yet.");
             case Allow:

@@ -40,6 +40,7 @@ public class DirectiveNameToken extends Token {
 
         Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
         UpgradeInsecureRequests, // in draft at http://www.w3.org/TR/2015/WD-upgrade-insecure-requests-20150424/#delivery as of 2015-08-27
+        BlockAllMixedContent, // W3C Candidate Recommendation at http://www.w3.org/TR/mixed-content/#strict-opt-in as of 2015-09-22
 
         Allow, // never included in an official CSP specification
         Options; // never included in an official CSP specification
@@ -89,6 +90,8 @@ public class DirectiveNameToken extends Token {
                     return Referrer;
                 case "upgrade-insecure-requests":
                     return UpgradeInsecureRequests;
+                case "block-all-mixed-content":
+                    return BlockAllMixedContent;
             }
             return null;
         }

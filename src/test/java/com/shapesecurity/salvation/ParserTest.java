@@ -461,6 +461,13 @@ public class ParserTest extends CSPTest {
             assertEquals("The upgrade-insecure-requests directive is not in the CSP specification yet.", e2.getMessage());
         }
 
+        try {
+            parse("block-all-mixed-content");
+            fail();
+        } catch (ParseException e3) {
+            assertEquals("The block-all-mixed-content directive is not in the CSP specification yet.", e3.getMessage());
+        }
+
     }
 
     @Test

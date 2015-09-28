@@ -166,6 +166,8 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("connect is allowed", p.allowsConnectTo(URI.parse("http://good.com/")));
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("https://good.com/")));
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://aaa.good.com/")));
+        assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("wss://abc.com/")));
+        assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://abc.com/")));
     }
 
     @Test

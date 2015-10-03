@@ -121,11 +121,13 @@ public class ParserTest extends CSPTest {
         assertEquals("directive-name, 3*<space>", "base-uri", parseAndShow("base-uri   "));
         assertEquals("directive-name, scheme-part", "base-uri https:", parseAndShow("base-uri https:"));
         assertEquals("directive-name, 2*scheme-part", "base-uri file: javascript:", parseAndShow("base-uri file: javascript: "));
-        assertEquals("directive-name, eliminated scheme-part", "base-uri *", parseAndShow("base-uri * https:"));
+        assertEquals("directive-name, eliminated scheme-part", "base-uri *", parseAndShow(
+            "base-uri * https:"));
         assertEquals("directive-name, host-part *", "base-uri *", parseAndShow("base-uri *"));
         assertEquals("directive-name, host-part *.", "base-uri *.a", parseAndShow("base-uri *.a"));
 
-        assertEquals("represent origin host-source as 'self' keyword-source", "default-src 'self'", parse("default-src http://example.com").show());
+        assertEquals("represent origin host-source as 'self' keyword-source", "default-src 'self'",
+            parse("default-src http://example.com").show());
 
         failsToParse("connect-src 'none' scheme:");
         failsToParse("connect-src scheme: 'none'");
@@ -138,7 +140,14 @@ public class ParserTest extends CSPTest {
         failsToParse("base-uri *:ee");
         assertEquals("directive-name, path-part", "base-uri */abc", parseAndShow("base-uri */abc"));
         failsToParse("base-uri *\n");
-        assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert", parseAndShow("base-uri https://a.com:888/ert"));
+        assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
+            parseAndShow("base-uri https://a.com:888/ert"));
+
+        // GH-79 should pass
+        assertEquals("directive-name, host-source *:*", "script-src *:*", parseAndShow("script-src *:*"));
+        assertEquals("directive-name, host-source a:*", "script-src a:*", parseAndShow("script-src a:*"));
+        assertEquals("directive-name, host-source http://a:*", "script-src http://a:*", parseAndShow("script-src http://a:*"));
+
     }
 
     @Test
@@ -508,7 +517,8 @@ public class ParserTest extends CSPTest {
         assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0", warnings.get(0).show());
 
         warnings = new ArrayList<>();
-        pl = ParserWithLocation.parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), warnings);
+        pl = ParserWithLocation.parseMulti("script-src a, frame-src b",
+            URI.parse("https://origin.com"), warnings);
         assertEquals(2, pl.size());
         assertEquals("script-src a", pl.get(0).show());
         assertEquals("frame-src b", pl.get(1).show());
@@ -525,7 +535,8 @@ public class ParserTest extends CSPTest {
         }
 
         try {
-            ParserWithLocation.parse("script-src a, script-src b", "https://origin.com", new ArrayList<>());
+            ParserWithLocation.parse("script-src a, script-src b", "https://origin.com",
+                new ArrayList<>());
             fail();
         } catch (ParseException e1) {
             assertEquals(0, pl.size());
@@ -551,7 +562,8 @@ public class ParserTest extends CSPTest {
 
         try {
             pl.clear();
-            pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"));
+            pl = ParserWithLocation.parseMulti("allow 'none', referrer",
+                URI.parse("https://origin.com"));
             fail();
         } catch (ParseException e1) {
             assertEquals(0, pl.size());

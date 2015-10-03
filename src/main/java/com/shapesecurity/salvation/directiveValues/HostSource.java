@@ -110,8 +110,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 
     @Nonnull @Override public String show() {
         boolean isDefaultPort = this.port == Constants.EMPTY_PORT ||
-            this.scheme != null && this.port == SchemeHostPortTriple.defaultPortForProtocol(this.scheme) ||
-            this.scheme == null && this.port == Constants.WILDCARD_PORT;
+            this.scheme != null && this.port == SchemeHostPortTriple.defaultPortForProtocol(this.scheme);
         return (this.scheme == null ? "" : this.scheme + "://") +
             this.host +
             (isDefaultPort ? "" : ":" + (this.port == Constants.WILDCARD_PORT ? "*" : this.port)) +

@@ -266,6 +266,7 @@ public class Policy implements Show {
         if (directive == null) {
             this.directives.put(d.getClass(), d);
             this.expandDefaultSrc();
+            this.resolveSelf();
             this.optimise();
         }
     }

@@ -148,6 +148,11 @@ public class ParserTest extends CSPTest {
         assertEquals("directive-name, host-source a:*", "script-src a:*", parseAndShow("script-src a:*"));
         assertEquals("directive-name, host-source http://a:*", "script-src http://a:*", parseAndShow("script-src http://a:*"));
 
+        // GH-81 should pass
+        assertEquals("optimisation", "", parseAndShow("script-src example.com *"));
+        assertEquals("optimisation", "", parseAndShow("script-src 'self' *"));
+
+
     }
 
     @Test

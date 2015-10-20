@@ -69,11 +69,32 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(
+            URI.parse("https://www.def.am:555")));
+
 
         p = Parser.parse("default-src *:*", "http://abc.com");
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("http://abc.am")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+
+        p = Parser.parse("default-src 'none'; frame-src http:;", URI.parse("https://abc.com"));
+        assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsFrameFromSource(URI.parse("http://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
+
+        p = Parser.parse("child-src http:;", URI.parse("https://abc.com"));
+        assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsFrameFromSource(URI.parse("http://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
+
+        p = Parser.parse("frame-src https:; child-src http:;", URI.parse("https://abc.com"));
+        assertTrue("resource is allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("http://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
     }
 
     @Test
@@ -110,11 +131,15 @@ public class PolicyQueryingTest extends CSPTest {
         Policy p;
 
         assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
-        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
-        assertFalse("plugin is not allowed", parse("default-src 'none'").allowsPlugin(new MediaType("z", "b")));
+        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(
+            new MediaType("a", "b")));
+        assertFalse("plugin is not allowed", parse("default-src 'none'").allowsPlugin(
+            new MediaType("z", "b")));
         assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));
-        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "d")));
-        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("", "b")));
+        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(
+            new MediaType("a", "d")));
+        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(
+            new MediaType("", "b")));
     }
 
     @Test
@@ -123,21 +148,25 @@ public class PolicyQueryingTest extends CSPTest {
 
         p = parse("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
         assertTrue("script hash is allowed",
-            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("script hash is not allowed",
             p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
         p = parse("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
         assertTrue("style hash is allowed",
-            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed",
             p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
         assertFalse("script hash is not allowed",
-            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed",
-            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
     }
 
     @Test
@@ -150,11 +179,14 @@ public class PolicyQueryingTest extends CSPTest {
 
         p = parse("style-src 'nonce-0gQAAA=='");
         assertTrue("style nonce is allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("cGl6ZGE=")));
+        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(
+            new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
-        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(
+            new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(
+            new Base64Value("0gQAAA==")));
     }
 
     @Test

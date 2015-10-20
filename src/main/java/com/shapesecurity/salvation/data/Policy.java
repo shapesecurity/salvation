@@ -510,4 +510,20 @@ public class Policy implements Show {
     public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
         return this.allowsStyleWithNonce(nonce.value);
     }
+
+    public boolean allowsChildFromSource(@Nonnull URI source) {
+        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+        if (childSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return childSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsFrameFromSource(@Nonnull URI source) {
+        FrameSrcDirective frameSrcDirective = this.getDirectiveByType(FrameSrcDirective.class);
+        if (frameSrcDirective == null) {
+            return this.allowsChildFromSource(source);
+        }
+        return frameSrcDirective.matchesSource(this.origin, source);
+    }
 }

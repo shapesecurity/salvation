@@ -149,6 +149,7 @@ public class ParserTest extends CSPTest {
 
         assertEquals("optimisation", "", parseAndShow("script-src example.com *"));
         assertEquals("optimisation", "", parseAndShow("script-src 'self' *"));
+        assertEquals("optimisation", "script-src 'unsafe-inline'; style-src 'unsafe-inline'", parseAndShow("script-src 'unsafe-inline'; style-src 'unsafe-inline';"));
 
 
     }

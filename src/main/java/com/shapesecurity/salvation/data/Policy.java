@@ -511,6 +511,7 @@ public class Policy implements Show {
         return this.allowsStyleWithNonce(nonce.value);
     }
 
+
     public boolean allowsChildFromSource(@Nonnull URI source) {
         ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
         if (childSrcDirective == null) {
@@ -525,5 +526,13 @@ public class Policy implements Show {
             return this.allowsChildFromSource(source);
         }
         return frameSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsFrameAncestor(@Nonnull URI source) {
+        FrameAncestorsDirective frameAncestorsDirective = this.getDirectiveByType(FrameAncestorsDirective.class);
+        if (frameAncestorsDirective == null) {
+            return true;
+        }
+        return frameAncestorsDirective.matchesSource(this.origin, source);
     }
 }

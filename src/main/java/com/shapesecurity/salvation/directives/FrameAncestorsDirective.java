@@ -1,6 +1,9 @@
 package com.shapesecurity.salvation.directives;
 
+import com.shapesecurity.salvation.data.Origin;
+import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.AncestorSource;
+import com.shapesecurity.salvation.interfaces.MatchesSource;
 
 import javax.annotation.Nonnull;
 import java.util.Set;

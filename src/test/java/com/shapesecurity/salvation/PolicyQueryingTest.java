@@ -203,6 +203,49 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
+    public void testAllowsFrameAncestor() throws ParseException, TokeniserException {
+        Policy p;
+
+        p = Parser.parse("", "https://abc.com");
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("https://abc.com")));
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+
+        p = Parser.parse("frame-ancestors 'none'", "https://abc.com");
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+
+        p = Parser.parse("frame-ancestors 'self'", "https://abc.com");
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertTrue("frame ancestor is allowed",
+            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+
+        p = Parser.parse("frame-ancestors https:", "https://abc.com");
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("http://cde.com")));
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("http://abc.com")));
+        assertTrue("frame ancestor is allowed",
+            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+
+        p = Parser.parse("frame-ancestors http://example.com https:", "https://abc.com");
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("http://cde.com")));
+        assertFalse("frame ancestor is not allowed",
+            p.allowsFrameAncestor(URI.parse("http://abc.com")));
+        assertTrue("frame ancestor is allowed",
+            p.allowsFrameAncestor(URI.parse("https://example.com")));
+        assertTrue("frame ancestor is allowed",
+            p.allowsFrameAncestor(URI.parse("http://example.com")));
+    }
+
+    @Test
     public void testPaths() throws ParseException, TokeniserException {
         Policy p;
 

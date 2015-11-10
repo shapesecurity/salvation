@@ -14,7 +14,7 @@ public class Tokeniser {
     private static final Pattern directiveSeparator = Pattern.compile(";");
     private static final Pattern policySeparator = Pattern.compile(",");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
-    private static final Pattern directiveValuePattern = Pattern.compile("[^;,\0- \\x7F]+");
+    private static final Pattern directiveValuePattern = Pattern.compile("[!-+--:<-~]+");
     @Nonnull protected final ArrayList<Token> tokens;
     @Nonnull protected final String sourceText;
     protected final int length;
@@ -98,7 +98,9 @@ public class Tokeniser {
                 continue;
             while (this.hasNext()) {
                 if (!this.eatDirectiveValue()) {
-                    throw this.createError("expecting directive-value but found " + this.next());
+                    String token = this.next();
+                    int cp = token.codePointAt(0);
+                    throw this.createError(String.format("expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded", cp, new String(new int[]{cp}, 0, 1)));
                 }
                 if (this.eatSeparator())
                     break;

@@ -1,10 +1,8 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.data.Location;
 import com.shapesecurity.salvation.tokens.*;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -14,7 +12,8 @@ public class Tokeniser {
     private static final Pattern directiveSeparator = Pattern.compile(";");
     private static final Pattern policySeparator = Pattern.compile(",");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
-    private static final Pattern directiveValuePattern = Pattern.compile("[!-+--:<-~]+");
+    private static final Pattern directiveValuePattern = Pattern.compile("[ \\t!-+--:<-~]+");
+    private static final Pattern notSeparator = Pattern.compile("[^;,]");
     @Nonnull protected final ArrayList<Token> tokens;
     @Nonnull protected final String sourceText;
     protected final int length;
@@ -27,16 +26,12 @@ public class Tokeniser {
         this.eatWhitespace();
     }
 
-    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) {
         return new Tokeniser(sourceText).tokenise();
     }
 
     private static boolean isWhitespace(char ch) {
         return ch == ' ' || ch == '\t';
-    }
-
-    @Nonnull protected TokeniserException createError(@Nonnull String message) {
-        return new TokeniserException(message);
     }
 
     protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
@@ -65,6 +60,10 @@ public class Tokeniser {
         return this.eat(DirectiveValueToken::new, Tokeniser.directiveValuePattern);
     }
 
+    private boolean eatUntilSeparator() {
+        return this.eat(UnknownToken::new, Tokeniser.notSeparator);
+    }
+
     private void eatWhitespace() {
         while (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
             ++this.index;
@@ -87,41 +86,25 @@ public class Tokeniser {
         return this.sourceText.substring(this.index, i);
     }
 
-    @Nonnull protected Token[] tokenise() throws TokeniserException {
+    @Nonnull protected Token[] tokenise() {
         while (this.hasNext()) {
             if (this.eatSeparator())
                 continue;
             if (!this.eatDirectiveName()) {
-                throw this.createError("expecting directive-name but found " + this.next());
+                // throw this.createError("expecting directive-name but found " + this.next());
+                this.eatUntilSeparator();
+                continue;
             }
             if (this.eatSeparator())
                 continue;
-            while (this.hasNext()) {
-                if (!this.eatDirectiveValue()) {
-                    String token = this.next();
-                    int cp = token.codePointAt(0);
-                    throw this.createError(String.format("expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded", cp, new String(new int[]{cp}, 0, 1)));
-                }
-                if (this.eatSeparator())
-                    break;
+            if (!this.eatDirectiveValue()) {
+                // String token = this.next();
+                // int cp = token.codePointAt(0);
+                // throw this.createError(String.format("expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded", cp, new String(new int[]{cp}, 0, 1)));
+                this.eatUntilSeparator();
             }
         }
         Token[] tokensArray = new Token[this.tokens.size()];
         return this.tokens.toArray(tokensArray);
-    }
-
-    public static class TokeniserException extends Exception {
-        @Nullable public Location location;
-
-        public TokeniserException(@Nonnull String message) {
-            super(message);
-        }
-
-        @Nonnull @Override public String getMessage() {
-            if (location == null) {
-                return super.getMessage();
-            }
-            return location.show() + ": " + super.getMessage();
-        }
     }
 }

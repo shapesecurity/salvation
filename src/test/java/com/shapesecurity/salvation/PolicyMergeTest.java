@@ -1,10 +1,10 @@
 package com.shapesecurity.salvation;
 
 import com.shapesecurity.salvation.data.Policy;
-import com.shapesecurity.salvation.Parser.ParseException;
-import com.shapesecurity.salvation.Tokeniser.TokeniserException;
 import com.shapesecurity.salvation.data.URI;
-import com.shapesecurity.salvation.directiveValues.*;
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.NonceSource;
+import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import com.shapesecurity.salvation.directives.DefaultSrcDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
@@ -14,11 +14,12 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class PolicyMergeTest extends CSPTest {
 
-    @Test public void testUnion() throws ParseException, TokeniserException {
+    @Test public void testUnion() {
         Policy p1, p2;
 
         p1 = Parser.parse("default-src aaa", "https://origin1.com");
@@ -32,7 +33,7 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b", p1.show());
     }
 
-    @Test public void testUnionDefaultSrc() throws ParseException, TokeniserException {
+    @Test public void testUnionDefaultSrc() {
         Policy p1, p2;
 
         p1 = parse("default-src a b");
@@ -76,7 +77,7 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("default-src b a; script-src a", p1.show());
     }
 
-    @Test public void testIntersect() throws ParseException, TokeniserException {
+    @Test public void testIntersect() {
         Policy  p1, p2;
 
         p1 = parse("default-src a; script-src b");
@@ -171,7 +172,7 @@ public class PolicyMergeTest extends CSPTest {
         }
     }
 
-    @Test public void testNone() throws ParseException, TokeniserException {
+    @Test public void testNone() {
         Policy p1, p2;
 
         // union
@@ -219,7 +220,7 @@ public class PolicyMergeTest extends CSPTest {
     }
 
     @Test
-    public void testUnionReportUri() throws ParseException, TokeniserException {
+    public void testUnionReportUri() {
         Policy p1, p2;
 
         try {
@@ -262,7 +263,7 @@ public class PolicyMergeTest extends CSPTest {
     }
 
     @Test
-    public void testUnionDirective() throws ParseException, TokeniserException {
+    public void testUnionDirective() {
         Policy p;
         Set<SourceExpression> set = new LinkedHashSet<>();
 
@@ -304,7 +305,7 @@ public class PolicyMergeTest extends CSPTest {
     }
 
     @Test
-    public void testIntersectDirective() throws ParseException, TokeniserException {
+    public void testIntersectDirective() {
         Policy p;
         Set<SourceExpression> set = new LinkedHashSet<>();
 

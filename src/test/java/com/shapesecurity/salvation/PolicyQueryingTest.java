@@ -1,7 +1,5 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.Parser.ParseException;
-import com.shapesecurity.salvation.Tokeniser.TokeniserException;
 import com.shapesecurity.salvation.data.Base64Value;
 import com.shapesecurity.salvation.data.GUID;
 import com.shapesecurity.salvation.data.Policy;
@@ -17,7 +15,7 @@ public class PolicyQueryingTest extends CSPTest {
 
     @Test
     @SuppressWarnings("ConstantConditions")
-    public void testGetDirectiveByType() throws ParseException, TokeniserException {
+    public void testGetDirectiveByType() {
         assertEquals("child-src", parse("child-src").getDirectiveByType(ChildSrcDirective.class).show());
         assertEquals("connect-src", parse("connect-src") .getDirectiveByType(ConnectSrcDirective.class).show());
         assertEquals("default-src", parse("default-src").getDirectiveByType(DefaultSrcDirective.class).show());
@@ -30,7 +28,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testDirectiveContains() throws ParseException, TokeniserException {
+    public void testDirectiveContains() {
         Policy p = parse("script-src a b c");
         Policy q = parse("script-src a");
         Policy r = parse("script-src m");
@@ -53,7 +51,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsFromSource() throws ParseException, TokeniserException {
+    public void testAllowsFromSource() {
         Policy p;
 
         p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", URI.parse("https://abc.com"));
@@ -98,7 +96,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsUnsafeInline() throws ParseException, TokeniserException {
+    public void testAllowsUnsafeInline() {
         Policy p;
 
         p = Parser.parse("script-src https: 'self' http://a", URI.parse("https://abc.com"));
@@ -127,7 +125,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsPlugin() throws ParseException, TokeniserException {
+    public void testAllowsPlugin() {
         Policy p;
 
         assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
@@ -143,7 +141,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsHash() throws ParseException, TokeniserException {
+    public void testAllowsHash() {
         Policy p;
 
         p = parse("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
@@ -170,7 +168,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsNonce() throws ParseException, TokeniserException {
+    public void testAllowsNonce() {
         Policy p;
 
         p = parse("script-src 'nonce-0gQAAA=='");
@@ -190,7 +188,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsConnect() throws ParseException, TokeniserException {
+    public void testAllowsConnect() {
         Policy p;
 
         p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
@@ -203,7 +201,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testAllowsFrameAncestor() throws ParseException, TokeniserException {
+    public void testAllowsFrameAncestor() {
         Policy p;
 
         p = Parser.parse("", "https://abc.com");
@@ -246,7 +244,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testPaths() throws ParseException, TokeniserException {
+    public void testPaths() {
         Policy p;
 
         p = Parser.parse("script-src example.com/a", "http://example.com");
@@ -296,7 +294,7 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test
-    public void testWildcards() throws ParseException, TokeniserException {
+    public void testWildcards() {
         Policy p;
 
         p = Parser.parse("script-src *", "http://example.com");

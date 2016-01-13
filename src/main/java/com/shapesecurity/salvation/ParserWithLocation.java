@@ -14,63 +14,55 @@ public class ParserWithLocation extends Parser {
 
     // invariant: tokens will have non-null locations
     private ParserWithLocation(@Nonnull String sourceText, @Nonnull Token[] tokens,
-        @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
+        @Nonnull Origin origin, @Nullable Collection<Notice> warningsOut) {
         super(tokens, origin, warningsOut);
         EOF = new Location(1, sourceText.length() + 1, sourceText.length());
     }
 
-    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin)
-        throws ParseException, Tokeniser.TokeniserException {
+    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             origin, null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
+        @Nonnull Collection<Notice> warningsOut) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             origin, warningsOut).parsePolicyAndAssertEOF();
     }
 
-    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin)
-        throws ParseException, Tokeniser.TokeniserException {
+    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             URI.parse(origin), null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
+        @Nonnull Collection<Notice> warningsOut) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin)
-        throws ParseException, Tokeniser.TokeniserException {
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             origin, null).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin)
-        throws ParseException, Tokeniser.TokeniserException {
+    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             URI.parse(origin), null).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull
     public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
+        @Nonnull Collection<Notice> warningsOut) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             origin, warningsOut).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull
     public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
+        @Nonnull Collection<Notice> warningsOut) {
         return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
             URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
     }
@@ -97,24 +89,26 @@ public class ParserWithLocation extends Parser {
         return currentToken.endLocation;
     }
 
-    @Override @Nonnull protected ParseException createUnexpectedEOF(@Nonnull String message) {
-        ParseException e = super.createError(message);
+    @Override @Nonnull
+    protected DirectiveValueParseException createUnexpectedEOF(@Nonnull String message) {
+        DirectiveValueParseException e = super.createError(message);
         e.startLocation = EOF;
         e.endLocation = EOF;
         return e;
     }
 
-    @Override @Nonnull protected ParseException createError(@Nonnull String message) {
-        ParseException e = super.createError(message);
+    @Override @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
+        DirectiveValueParseException e = super.createError(message);
         e.startLocation = this.getStartLocation();
         e.endLocation = this.getEndLocation();
         return e;
     }
 
-    @Override @Nonnull protected Warning createWarning(@Nonnull String message) {
-        Warning warning = super.createWarning(message);
-        warning.startLocation = this.getStartLocation();
-        warning.endLocation = this.getEndLocation();
-        return warning;
+    @Override @Nonnull
+    protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
+        Notice notice = super.createNotice(type, message);
+        notice.startLocation = this.getStartLocation();
+        notice.endLocation = this.getEndLocation();
+        return notice;
     }
 }

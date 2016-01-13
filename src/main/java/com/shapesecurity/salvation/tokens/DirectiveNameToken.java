@@ -10,9 +10,6 @@ public class DirectiveNameToken extends Token {
     public DirectiveNameToken(@Nonnull String value) {
         super(value);
         DirectiveNameSubtype subtype = DirectiveNameSubtype.fromString(value);
-        if (subtype == null) {
-            throw new IllegalArgumentException("Unrecognised directive name: " + value);
-        }
         this.subtype = subtype;
     }
 
@@ -43,10 +40,12 @@ public class DirectiveNameToken extends Token {
         BlockAllMixedContent, // W3C Candidate Recommendation at http://www.w3.org/TR/mixed-content/#strict-opt-in as of 2015-09-22
 
         Allow, // never included in an official CSP specification
-        Options; // never included in an official CSP specification
+        Options, // never included in an official CSP specification
+
+        Unrecognised;
 
 
-        @Nullable static DirectiveNameSubtype fromString(@Nonnull String directiveName) {
+        @Nonnull static DirectiveNameSubtype fromString(@Nonnull String directiveName) {
             switch (directiveName.toLowerCase()) {
                 case "base-uri":
                     return BaseUri;
@@ -93,7 +92,7 @@ public class DirectiveNameToken extends Token {
                 case "block-all-mixed-content":
                     return BlockAllMixedContent;
             }
-            return null;
+            return Unrecognised;
         }
     }
 }

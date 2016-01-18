@@ -160,14 +160,12 @@ public class LocationTest extends CSPTest {
 
     @Test public void testPotentialTyposWarnings() {
         ArrayList<Notice> notices = new ArrayList<>();
-        ParserWithLocation
-            .parse("script-src unsafe-redirect self none unsafe-inline unsafe-eval", URI.parse("https://origin"),
-                notices);
+        ParserWithLocation.parse("script-src unsafe-redirect self none unsafe-inline unsafe-eval", URI.parse("https://origin"), notices);
         assertEquals(5, notices.size());
         Notice notice = notices.get(0);
         assertEquals("1:12: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'",
             notice.show());
-        assertEquals("Notice: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'", notice
+        assertEquals("Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'", notice
             .toString());
     }
 }

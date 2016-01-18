@@ -399,37 +399,37 @@ public class ParserTest extends CSPTest {
             parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
     }
 
-    @Test
-    public void testTokeniserErrors() {
-        try {
-            parse("script-src abц"); // non-ASCII char in source-expression
-            fail();
-        } catch (TokeniserException e1) {
-            assertEquals("expecting directive-value but found U+0446 (ц). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
-        }
-
-        try {
-            parse("script-src 𝌆"); // non-ASCII char in source-expression
-            fail();
-        } catch (TokeniserException e1) {
-            assertEquals("expecting directive-value but found U+1D306 (𝌆). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
-        }
-
-
-        try {
-            parse("script-src http://abc.com/ш"); // non-ASCII char in source-expression
-            fail();
-        } catch (TokeniserException e1) {
-            assertEquals("expecting directive-value but found U+0448 (ш). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
-        }
-
-        try {
-            parse("plugin-types х/п"); // non-ASCII char in source-expression
-            fail();
-        } catch (TokeniserException e1) {
-            assertEquals("expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
-        }
-    }
+//    @Test
+//    public void testTokeniserErrors() {
+//        try {
+//            parse("script-src abц"); // non-ASCII char in source-expression
+//            fail();
+//        } catch (TokeniserException e1) {
+//            assertEquals("expecting directive-value but found U+0446 (ц). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
+//        }
+//
+//        try {
+//            parse("script-src 𝌆"); // non-ASCII char in source-expression
+//            fail();
+//        } catch (TokeniserException e1) {
+//            assertEquals("expecting directive-value but found U+1D306 (𝌆). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
+//        }
+//
+//
+//        try {
+//            parse("script-src http://abc.com/ш"); // non-ASCII char in source-expression
+//            fail();
+//        } catch (TokeniserException e1) {
+//            assertEquals("expecting directive-value but found U+0448 (ш). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
+//        }
+//
+//        try {
+//            parse("plugin-types х/п"); // non-ASCII char in source-expression
+//            fail();
+//        } catch (TokeniserException e1) {
+//            assertEquals("expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded", e1.getMessage());
+//        }
+//    }
 
 
     @Test

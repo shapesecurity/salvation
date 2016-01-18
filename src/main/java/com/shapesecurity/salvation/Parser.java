@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class Parser {
 
-    private static final Pattern WS = Pattern.compile(";");
+    private static final Pattern WSP = Pattern.compile("[ \t]");
 
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
@@ -77,7 +77,7 @@ public class Parser {
     @Nonnull private static String trimRHSWS(@Nonnull String s) {
         int i;
         for (i = s.length(); i > 0; --i) {
-            int c = s.codePointAt(i);
+            int c = s.codePointAt(i - 1);
             if (c != ' ' && c != '\t')
                 break;
         }
@@ -248,7 +248,7 @@ public class Parser {
         }
         boolean parseException = false;
         String dv = trimRHSWS(this.advance().value);
-        for (String v : WS.split(dv)) {
+        for (String v : WSP.split(dv)) {
             try {
                 mediaTypes.add(this.parseMediaType(v));
             } catch (DirectiveValueParseException e) {
@@ -284,7 +284,7 @@ public class Parser {
                 sourceExpressions.add(None.INSTANCE);
                 return sourceExpressions;
             }
-            for (String v : WS.split(dv)) {
+            for (String v : WSP.split(dv)) {
                 try {
                     sourceExpressions.add(this.parseSourceExpression(v));
                 } catch (DirectiveValueParseException e) {
@@ -403,7 +403,7 @@ public class Parser {
                 ancestorSources.add(None.INSTANCE);
                 return ancestorSources;
             }
-            for (String v : WS.split(dv)) {
+            for (String v : WSP.split(dv)) {
                 try {
                     ancestorSources.add(this.parseAncestorSource(v));
                 } catch (DirectiveValueParseException e) {
@@ -455,7 +455,7 @@ public class Parser {
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
             String dv = trimRHSWS(this.advance().value);
-            for (String v : WS.split(dv)) {
+            for (String v : WSP.split(dv)) {
                 try {
                     sandboxTokens.add(this.parseSandboxToken(v));
                 } catch (DirectiveValueParseException e) {
@@ -484,7 +484,7 @@ public class Parser {
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
             String dv = trimRHSWS(this.advance().value);
-            for (String v : WS.split(dv)) {
+            for (String v : WSP.split(dv)) {
                 try {
                     uriList.add(this.parseUri(v));
                 } catch (DirectiveValueParseException e) {
@@ -528,7 +528,7 @@ public class Parser {
     }
 
 
-    private static class DirectiveValueParseException extends Exception {
+    protected static class DirectiveValueParseException extends Exception {
         @Nullable Location startLocation;
         @Nullable Location endLocation;
 

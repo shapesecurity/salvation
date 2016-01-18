@@ -392,9 +392,17 @@ public class Parser {
 
     @Nonnull private SandboxValue parseSandboxToken() throws ParseException {
         Token token = this.advance();
-        Matcher matcher = Constants.sandboxTokenPattern.matcher(token.value);
+        Matcher matcher = Constants.sandboxEnumeratedTokenPattern.matcher(token.value);
         if (matcher.find()) {
             return new SandboxValue(token.value);
+        } else {
+            this.warn("sandbox should contain only allow-forms, allow-modals, "
+                + "allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, "
+                + "allow-same-origin, allow-scripts, or allow-top-navigation");
+            matcher = Constants.sandboxTokenPattern.matcher(token.value);
+            if (matcher.find()) {
+                return new SandboxValue(token.value);
+            }
         }
         throw this.createError("expecting sandbox-token but found " + token.value);
     }

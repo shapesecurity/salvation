@@ -6,6 +6,10 @@ import java.util.regex.Pattern;
     public static final String schemePart = "[a-zA-Z][a-zA-Z0-9+\\-.]*";
     public static final Pattern sandboxTokenPattern =
         Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
+    public static final Pattern sandboxEnumeratedTokenPattern =
+        Pattern.compile("^(?:allow-forms|allow-modals|allow-pointer-lock"
+            + "|allow-popups|allow-popups-to-escape-sandbox|allow-same-origin"
+            + "|allow-scripts|allow-top-navigation)$");
     public static final Pattern mediaTypePattern =
         Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
     // port-part constants

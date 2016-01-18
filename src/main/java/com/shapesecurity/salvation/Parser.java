@@ -168,6 +168,9 @@ public class Parser {
         switch (token.subtype) {
             case BaseUri:
                 return new BaseUriDirective(this.parseSourceList());
+            case BlockAllMixedContent:
+                this.checkValueForEmptyDirective("block-all-mixed-content");
+                return new BlockAllMixedContentDirective();
             case ChildSrc:
                 return new ChildSrcDirective(this.parseSourceList());
             case ConnectSrc:
@@ -180,18 +183,18 @@ public class Parser {
                 return new FormActionDirective(this.parseSourceList());
             case FrameAncestors:
                 return new FrameAncestorsDirective(this.parseAncestorSourceList());
-            case FrameSrc:
-                this.warn(
-                    "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
-                return new FrameSrcDirective(this.parseSourceList());
             case ImgSrc:
                 return new ImgSrcDirective(this.parseSourceList());
+            case ManifestSrc:
+                return new ManifestSrcDirective(this.parseSourceList());
             case MediaSrc:
                 return new MediaSrcDirective(this.parseSourceList());
             case ObjectSrc:
                 return new ObjectSrcDirective(this.parseSourceList());
             case PluginTypes:
                 return new PluginTypesDirective(this.parseMediaTypeList());
+            case Referrer:
+                return new ReferrerDirective(this.parseReferrerTokenList());
             case ReportUri:
                 return new ReportUriDirective(this.parseUriList());
             case Sandbox:
@@ -200,14 +203,16 @@ public class Parser {
                 return new ScriptSrcDirective(this.parseSourceList());
             case StyleSrc:
                 return new StyleSrcDirective(this.parseSourceList());
-            case Referrer:
             case UpgradeInsecureRequests:
-            case BlockAllMixedContent:
-                throw this.createError(
-                    "The " + token.value + " directive is not in the CSP specification yet.");
+                this.checkValueForEmptyDirective("upgrade-insecure-requests");
+                return new UpgradeInsecureRequestsDirective();
             case Allow:
                 throw this.createError(
                     "The allow directive has been replaced with default-src and is not in the CSP specification.");
+            case FrameSrc:
+                this.warn(
+                    "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                return new FrameSrcDirective(this.parseSourceList());
             case Options:
                 throw this.createError(
                     "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
@@ -382,6 +387,29 @@ public class Parser {
         throw this.createError("expecting ancestor-source but found " + token.value);
     }
 
+    @Nonnull private Set<ReferrerValue> parseReferrerTokenList() throws ParseException {
+        Set<ReferrerValue> referrerTokens = new LinkedHashSet<>();
+        while (this.hasNext(DirectiveValueToken.class)) {
+            referrerTokens.add(this.parseReferrerToken());
+        }
+        if (referrerTokens.isEmpty()) {
+            if (!this.hasNext()) {
+                throw this.createUnexpectedEOF("referrer must contain at least one referrer-token");
+            }
+            throw this.createError("referrer must contain at least one referrer-token");
+        }
+        return referrerTokens;
+    }
+
+    @Nonnull private ReferrerValue parseReferrerToken() throws ParseException {
+        Token token = this.advance();
+        Matcher matcher = Constants.referrerTokenPattern.matcher(token.value);
+        if (matcher.find()) {
+            return new ReferrerValue(token.value);
+        }
+        throw this.createError("expecting referrer-token but found " + token.value);
+    }
+
     @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws ParseException {
         Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
         while (this.hasNext(DirectiveValueToken.class)) {
@@ -420,6 +448,13 @@ public class Parser {
         } catch (IllegalArgumentException ignored) {
         }
         throw this.createError("expecting uri-reference but found " + token.value);
+    }
+
+    private void checkValueForEmptyDirective(String directiveName)
+        throws ParseException {
+        if (this.hasNext(DirectiveValueToken.class)) {
+            throw this.createError(directiveName + " must not contain any value");
+        }
     }
 
     public static class ParseException extends Exception {

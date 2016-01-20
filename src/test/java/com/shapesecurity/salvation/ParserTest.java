@@ -399,6 +399,21 @@ public class ParserTest extends CSPTest {
             parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
     }
 
+    @Test
+    public void testUnknownTokens() {
+        ArrayList notices = new ArrayList();
+        Policy p = parseWithNotices("img-src √", notices);
+        assertTrue(true); // TODO: actually make some assertions
+
+        notices.clear();
+        p = parseWithNotices("img-src √; img-src a", notices);
+        assertTrue(true); // TODO: actually make some assertions
+
+        notices.clear();
+        p = parseWithNotices("√ a b c; img-src a", notices);
+        assertTrue(true); // TODO: actually make some assertions
+    }
+
 //    @Test
 //    public void testTokeniserErrors() {
 //        try {

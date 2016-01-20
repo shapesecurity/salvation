@@ -76,12 +76,12 @@ public class Parser {
 
     @Nonnull private static String trimRHSWS(@Nonnull String s) {
         int i;
-        for (i = s.length(); i > 0; --i) {
-            int c = s.codePointAt(i - 1);
+        for (i = s.length() - 1; i >= 0; --i) {
+            int c = s.codePointAt(i);
             if (c != ' ' && c != '\t')
                 break;
         }
-        return s.substring(0, i);
+        return s.substring(0, i + 1);
     }
 
     @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
@@ -178,90 +178,121 @@ public class Parser {
         return policies;
     }
 
+    private static final DirectiveParseException MISSING_DIRECTIVE_NAME = new DirectiveParseException("Missing directive-name");
+    private static final DirectiveParseException INVALID_DIRECTIVE_NAME = new DirectiveParseException("Invalid directive-name");
+    private static final DirectiveParseException INVALID_DIRECTIVE_VALUE = new DirectiveParseException("Invalid directive-value");
+    private static final DirectiveParseException INVALID_MEDIA_TYPE_LIST = new DirectiveParseException("Invalid media-type-list");
+    private static final DirectiveParseException INVALID_SOURCE_LIST = new DirectiveParseException("Invalid source-list");
+    private static final DirectiveParseException INVALID_ANCESTOR_SOURCE_LIST = new DirectiveParseException("Invalid ancestor-source-list");
+    private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST = new DirectiveParseException("Invalid sandbox-token list");
+    private static final DirectiveParseException INVALID_URI_REFERENCE_LIST = new DirectiveParseException("Invalid uri-reference list");
+
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
-            this.error("Expecting directive-name but found " + this.advance().value);
-            throw new DirectiveParseException("Missing directive-name");
+            this.error("Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
+            throw MISSING_DIRECTIVE_NAME;
         }
+        Directive result;
+        boolean parseException = false;
         DirectiveNameToken token = (DirectiveNameToken) this.advance();
         switch (token.subtype) {
             case BaseUri:
-                return new BaseUriDirective(this.parseSourceList());
+                result = new BaseUriDirective(this.parseSourceList());
+                break;
             case ChildSrc:
-                return new ChildSrcDirective(this.parseSourceList());
+                result = new ChildSrcDirective(this.parseSourceList());
+                break;
             case ConnectSrc:
-                return new ConnectSrcDirective(this.parseSourceList());
+                result = new ConnectSrcDirective(this.parseSourceList());
+                break;
             case DefaultSrc:
-                return new DefaultSrcDirective(this.parseSourceList());
+                result = new DefaultSrcDirective(this.parseSourceList());
+                break;
             case FontSrc:
-                return new FontSrcDirective(this.parseSourceList());
+                result = new FontSrcDirective(this.parseSourceList());
+                break;
             case FormAction:
-                return new FormActionDirective(this.parseSourceList());
+                result = new FormActionDirective(this.parseSourceList());
+                break;
             case FrameAncestors:
-                return new FrameAncestorsDirective(this.parseAncestorSourceList());
+                result = new FrameAncestorsDirective(this.parseAncestorSourceList());
+                break;
             case FrameSrc:
-                this.warn(
-                    "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
-                return new FrameSrcDirective(this.parseSourceList());
+                this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                result = new FrameSrcDirective(this.parseSourceList());
+                break;
             case ImgSrc:
-                return new ImgSrcDirective(this.parseSourceList());
+                result = new ImgSrcDirective(this.parseSourceList());
+                break;
             case MediaSrc:
-                return new MediaSrcDirective(this.parseSourceList());
+                result = new MediaSrcDirective(this.parseSourceList());
+                break;
             case ObjectSrc:
-                return new ObjectSrcDirective(this.parseSourceList());
+                result = new ObjectSrcDirective(this.parseSourceList());
+                break;
             case PluginTypes:
-                return new PluginTypesDirective(this.parseMediaTypeList());
+                result = new PluginTypesDirective(this.parseMediaTypeList());
+                break;
             case ReportUri:
-                return new ReportUriDirective(this.parseUriList());
+                result = new ReportUriDirective(this.parseUriList());
+                break;
             case Sandbox:
-                return new SandboxDirective(this.parseSandboxTokenList());
+                result = new SandboxDirective(this.parseSandboxTokenList());
+                break;
             case ScriptSrc:
-                return new ScriptSrcDirective(this.parseSourceList());
+                result = new ScriptSrcDirective(this.parseSourceList());
+                break;
             case StyleSrc:
-                return new StyleSrcDirective(this.parseSourceList());
+                result = new StyleSrcDirective(this.parseSourceList());
+                break;
             case Referrer:
             case UpgradeInsecureRequests:
             case BlockAllMixedContent:
-                this.error(
-                    "The " + token.value + " directive is not in the CSP specification yet.");
-                throw new DirectiveParseException("Invalid directive-name");
+                this.error("The " + token.value + " directive is not in the CSP specification yet.");
+                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                throw INVALID_DIRECTIVE_NAME;
             case Allow:
-                this.error(
-                    "The allow directive has been replaced with default-src and is not in the CSP specification.");
-                throw new DirectiveParseException("Invalid directive-name");
+                this.error("The allow directive has been replaced with default-src and is not in the CSP specification.");
+                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                throw INVALID_DIRECTIVE_NAME;
             case Options:
-                this.error(
-                    "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
-                throw new DirectiveParseException("Invalid directive-name");
+                this.error("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
+                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                throw INVALID_DIRECTIVE_NAME;
             case Unrecognised:
-                // falls through
+            default:
+                this.error("Unrecognised directive-name: " + token.value);
+                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                throw INVALID_DIRECTIVE_NAME;
         }
-        this.error("Unrecognised directive-name: " + token.value);
-        throw new DirectiveParseException("Invalid directive-name");
+        if (this.hasNext(UnknownToken.class)) {
+            int cp = this.advance().value.codePointAt(0);
+            this.error(String.format("Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded", cp, new String(new int[]{cp}, 0, 1)));
+            throw INVALID_DIRECTIVE_VALUE;
+        }
+        return result;
     }
 
     @Nonnull private Set<MediaType> parseMediaTypeList() throws DirectiveParseException {
         Set<MediaType> mediaTypes = new LinkedHashSet<>();
-        if (!this.hasNext(DirectiveValueToken.class)) {
-            this.error("media-type-list must contain at least one media-type");
-            throw new DirectiveParseException("Invalid media-type-list");
-        }
-        boolean parseException = false;
-        String dv = trimRHSWS(this.advance().value);
-        for (String v : WSP.split(dv)) {
-            try {
-                mediaTypes.add(this.parseMediaType(v));
-            } catch (DirectiveValueParseException e) {
-                parseException = true;
-                this.error(e.getMessage());
+        if (this.hasNext(DirectiveValueToken.class)) {
+            boolean parseException = false;
+            String dv = trimRHSWS(this.advance().value);
+            for (String v : WSP.split(dv)) {
+                try {
+                    mediaTypes.add(this.parseMediaType(v));
+                } catch (DirectiveValueParseException e) {
+                    parseException = true;
+                    this.error(e.getMessage());
+                }
             }
-        }
-        if (parseException) {
-            throw new DirectiveParseException("Invalid media-type-list");
+            if (parseException) {
+                throw INVALID_MEDIA_TYPE_LIST;
+            }
         }
         if (mediaTypes.isEmpty()) {
             this.error("media-type-list must contain at least one media-type");
-            throw new DirectiveParseException("Invalid media-type-list");
+            throw INVALID_MEDIA_TYPE_LIST;
         }
         return mediaTypes;
     }
@@ -293,7 +324,7 @@ public class Parser {
                 }
             }
             if (parseException) {
-                throw new DirectiveParseException("Invalid source-list");
+                throw INVALID_SOURCE_LIST;
             }
         }
         return sourceExpressions;
@@ -412,7 +443,7 @@ public class Parser {
                 }
             }
             if (parseException) {
-                throw new DirectiveParseException("Invalid ancestor-source-list");
+                throw INVALID_ANCESTOR_SOURCE_LIST;
             }
         }
         return ancestorSources;
@@ -464,7 +495,7 @@ public class Parser {
                 }
             }
             if (parseException) {
-                throw new DirectiveParseException("Invalid sandbox-token list");
+                throw INVALID_SANDBOX_TOKEN_LIST;
             }
         }
         return sandboxTokens;
@@ -493,11 +524,12 @@ public class Parser {
                 }
             }
             if (parseException) {
-                throw new DirectiveParseException("Invalid uri-reference list");
+                throw INVALID_URI_REFERENCE_LIST;
             }
         }
         if (uriList.isEmpty()) {
-            throw new DirectiveParseException("report-uri must contain at least one uri-reference");
+            this.error("report-uri must contain at least one uri-reference");
+            throw INVALID_URI_REFERENCE_LIST;
         }
         return uriList;
     }

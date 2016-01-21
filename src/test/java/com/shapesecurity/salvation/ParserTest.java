@@ -170,7 +170,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("base-uri *\n", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        // TODO: fix this assertEquals("", notices.get(0).message);
+        assertEquals("Expecting directive-value but found U+000A (\n). Non-ASCII and non-printable characters must be percent-encoded", notices.get(0).message);
 
         assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
             parseAndShow("base-uri https://a.com:888/ert"));

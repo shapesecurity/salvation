@@ -118,10 +118,6 @@ public class Parser {
         return this.hasNext() && c.isAssignableFrom(this.tokens[this.index].getClass());
     }
 
-    private Token peek() {
-        return this.tokens[this.index];
-    }
-
     private boolean eat(@Nonnull Class<? extends Token> c) {
         if (this.hasNext(c)) {
             this.advance();
@@ -141,6 +137,8 @@ public class Parser {
     @Nonnull protected Policy parsePolicy() {
         Policy policy = new Policy(this.origin);
         while (this.hasNext()) {
+            if (this.hasNext(PolicySeparatorToken.class))
+                break;
             if (this.eat(DirectiveSeparatorToken.class))
                 continue;
             try {
@@ -373,7 +371,7 @@ public class Parser {
                             break;
                         default:
                             throw this.createError(
-                                "unrecognised hash algorithm " + sourceExpression.substring(1, 7));
+                                "Unrecognised hash algorithm " + sourceExpression.substring(1, 7));
                     }
                     String value = sourceExpression.substring(8, sourceExpression.length() - 1);
                     // convert url-safe base64 to RFC4648 base64
@@ -451,6 +449,9 @@ public class Parser {
 
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull String ancestorSource)
         throws DirectiveValueParseException {
+        if (ancestorSource.equalsIgnoreCase("'none'")) {
+            throw this.createError("'none' must not be combined with any other source-expression");
+        }
         if (ancestorSource.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
         }

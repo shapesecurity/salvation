@@ -2,7 +2,6 @@ package com.shapesecurity.salvation;
 
 import com.shapesecurity.salvation.data.Notice;
 import com.shapesecurity.salvation.data.URI;
-import com.shapesecurity.salvation.tokens.Token;
 import org.junit.Test;
 
 import java.util.ArrayList;

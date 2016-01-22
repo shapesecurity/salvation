@@ -375,10 +375,17 @@ public class ParserTest extends CSPTest {
         assertEquals(0, notices.size());
 
         notices.clear();
-        p = parseWithNotices("sandbox allow-forms allow-forms", notices);
+        p = parseWithNotices("sandbox allow-forms allow-forms       ", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals("sandbox allow-forms", p.show());
         assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("sandbox allow-forms allow_forms", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals("sandbox allow-forms allow_forms", p.show());
+        assertEquals(1, notices.size());
+        assertEquals("The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("sandbox a!*\n", notices);

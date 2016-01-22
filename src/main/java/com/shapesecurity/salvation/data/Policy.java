@@ -58,13 +58,12 @@ public class Policy implements Show {
     }
 
     private void resolveSelf() {
-        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives
+            .entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();
             if (directive instanceof SourceListDirective) {
-                this.directives.put(
-                    entry.getKey(),
-                    ((SourceListDirective) directive).resolveSelf(this.origin)
-                );
+                this.directives.put(entry.getKey(),
+                    ((SourceListDirective) directive).resolveSelf(this.origin));
             }
         }
     }
@@ -132,23 +131,22 @@ public class Policy implements Show {
                     .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
                     .findAny();
                 if (star.isPresent()) {
-                    Set<SourceExpression> newSources =
-                        sourceListDirective.values()
-                            // * remove all other host sources in a source list that contains *
-                            .filter(x -> !(x instanceof HostSource))
-                            // * remove schemes sources other than data:, blob:, and filesystem: in source list that contains *
-                            .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x).matchesProtectedScheme())
-                            .collect(Collectors.toCollection(LinkedHashSet::new));
+                    Set<SourceExpression> newSources = sourceListDirective.values()
+                        // * remove all other host sources in a source list that contains *
+                        .filter(x -> !(x instanceof HostSource))
+                        // * remove schemes sources other than data:, blob:, and filesystem: in source list that contains *
+                        .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x)
+                            .matchesProtectedScheme())
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
                     this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));
                 } else {
                     this.directives.put(entry.getKey(), sourceListDirective.bind(dv -> {
                         // * replace host-sources that are equivalent to origin with 'self' keyword-source
-                        if (
-                            dv instanceof HostSource &&
+                        if (dv instanceof HostSource &&
                             this.origin instanceof SchemeHostPortTriple &&
-                            ((HostSource) dv).matchesOnlyOrigin((SchemeHostPortTriple) this.origin)
-                        ) {
+                            ((HostSource) dv)
+                                .matchesOnlyOrigin((SchemeHostPortTriple) this.origin)) {
                             return Collections.singleton(KeywordSource.Self);
                         }
                         // * replace 'none' with empty
@@ -218,7 +216,7 @@ public class Policy implements Show {
         if (directive instanceof SourceListDirective) {
             directive = ((SourceListDirective) directive).resolveSelf(this.origin);
         }
-        if(!(directive instanceof DefaultSrcDirective)) {
+        if (!(directive instanceof DefaultSrcDirective)) {
             this.expandDefaultSrc();
         }
         this.unionDirectivePrivate(directive);
@@ -230,7 +228,7 @@ public class Policy implements Show {
         if (directive instanceof SourceListDirective) {
             directive = ((SourceListDirective) directive).resolveSelf(this.origin);
         }
-        if(!(directive instanceof DefaultSrcDirective)) {
+        if (!(directive instanceof DefaultSrcDirective)) {
             this.expandDefaultSrc();
         }
         this.intersectDirectivePrivate(directive);
@@ -529,7 +527,8 @@ public class Policy implements Show {
     }
 
     public boolean allowsFrameAncestor(@Nonnull URI source) {
-        FrameAncestorsDirective frameAncestorsDirective = this.getDirectiveByType(FrameAncestorsDirective.class);
+        FrameAncestorsDirective frameAncestorsDirective =
+            this.getDirectiveByType(FrameAncestorsDirective.class);
         if (frameAncestorsDirective == null) {
             return true;
         }

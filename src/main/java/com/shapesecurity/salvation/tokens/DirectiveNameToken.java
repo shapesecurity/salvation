@@ -2,7 +2,6 @@ package com.shapesecurity.salvation.tokens;
 
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 public class DirectiveNameToken extends Token {
     @Nonnull public final DirectiveNameSubtype subtype;

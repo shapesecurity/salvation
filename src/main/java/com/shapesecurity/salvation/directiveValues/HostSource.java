@@ -12,11 +12,12 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 public class HostSource implements SourceExpression, AncestorSource, MatchesSource {
+    public static final HostSource WILDCARD = new HostSource(null, "*", Constants.EMPTY_PORT, null);
+    private static final int WILDCARD_HASHCODE = 0x9F4E3EEA;
     @Nullable private final String scheme;
     @Nonnull private final String host;
     private final int port;
     @Nullable private final String path;
-
     public HostSource(@Nullable String scheme, @Nonnull String host, int port,
         @Nullable String path) {
         this.scheme = scheme;
@@ -24,9 +25,6 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         this.port = port;
         this.path = path;
     }
-
-    private static final int WILDCARD_HASHCODE = 0x9F4E3EEA;
-    public static final HostSource WILDCARD = new HostSource(null, "*", Constants.EMPTY_PORT, null);
 
     @Override public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof HostSource))
@@ -52,7 +50,8 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
     }
 
     public boolean isWildcard() {
-        return this.host.equals("*") && this.scheme == null && this.port == Constants.EMPTY_PORT && this.path == null;
+        return this.host.equals("*") && this.scheme == null && this.port == Constants.EMPTY_PORT
+            && this.path == null;
     }
 
     @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source) {
@@ -65,17 +64,16 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         }
         boolean schemeMatches;
         if (this.scheme == null) {
-            schemeMatches =
-                source.scheme.equalsIgnoreCase("http")
-                    ? shpOrigin.scheme.equalsIgnoreCase("http") || shpOrigin.scheme.equalsIgnoreCase("https")
-                    : source.scheme.equalsIgnoreCase(shpOrigin.scheme);
+            schemeMatches = source.scheme.equalsIgnoreCase("http") ?
+                shpOrigin.scheme.equalsIgnoreCase("http") || shpOrigin.scheme
+                    .equalsIgnoreCase("https") :
+                source.scheme.equalsIgnoreCase(shpOrigin.scheme);
         } else {
             schemeMatches = this.scheme.equalsIgnoreCase(source.scheme);
         }
-        boolean hostMatches = this.host.equals("*") ||
-            (this.host.startsWith("*.")
-                ? source.host.endsWith(this.host.substring(1))
-                : this.host.equalsIgnoreCase(source.host));
+        boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
+            source.host.endsWith(this.host.substring(1)) :
+            this.host.equalsIgnoreCase(source.host));
         boolean uriUsesDefaultPort = source.port == Constants.EMPTY_PORT
             || SchemeHostPortTriple.defaultPortForProtocol(source.scheme) == source.port;
         boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT
@@ -83,15 +81,16 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         boolean portMatches =
             this.port == Constants.WILDCARD_PORT || (this.port == Constants.EMPTY_PORT ?
                 uriUsesDefaultPort :
-                (source.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == source.port));
+                (source.port == Constants.EMPTY_PORT ?
+                    thisUsesDefaultPort :
+                    this.port == source.port));
         boolean pathMatches = this.path == null || (this.path.endsWith("/") ?
             source.path.toLowerCase().startsWith(this.path.toLowerCase()) :
             this.path.equalsIgnoreCase(source.path));
         return schemeMatches && hostMatches && portMatches && pathMatches;
     }
 
-    @Override
-    public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
         return false;
     }
 
@@ -109,8 +108,9 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
     }
 
     @Nonnull @Override public String show() {
-        boolean isDefaultPort = this.port == Constants.EMPTY_PORT ||
-            this.scheme != null && this.port == SchemeHostPortTriple.defaultPortForProtocol(this.scheme);
+        boolean isDefaultPort = this.port == Constants.EMPTY_PORT
+            || this.scheme != null && this.port == SchemeHostPortTriple
+            .defaultPortForProtocol(this.scheme);
         return (this.scheme == null ? "" : this.scheme + "://") +
             this.host +
             (isDefaultPort ? "" : ":" + (this.port == Constants.WILDCARD_PORT ? "*" : this.port)) +

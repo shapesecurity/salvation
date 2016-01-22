@@ -45,7 +45,8 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
             if (dv == KeywordSource.Self) {
                 if (origin instanceof SchemeHostPortTriple) {
                     SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
-                    return Collections.singleton(new HostSource(shpOrigin.scheme, shpOrigin.host, shpOrigin.port, null));
+                    return Collections.singleton(
+                        new HostSource(shpOrigin.scheme, shpOrigin.host, shpOrigin.port, null));
                 } else if (origin instanceof GUID) {
                     return Collections.EMPTY_SET;
                 }

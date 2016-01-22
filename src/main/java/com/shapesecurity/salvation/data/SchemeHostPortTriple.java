@@ -6,8 +6,7 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public class SchemeHostPortTriple extends Origin {
-    @Nonnull
-    public final String scheme;
+    @Nonnull public final String scheme;
     @Nonnull public final String host;
     public final int port;
 

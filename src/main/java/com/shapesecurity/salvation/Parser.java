@@ -14,7 +14,26 @@ import java.util.regex.Pattern;
 public class Parser {
 
     private static final Pattern WSP = Pattern.compile("[ \t]+");
-
+    private static final DirectiveParseException MISSING_DIRECTIVE_NAME =
+        new DirectiveParseException("Missing directive-name");
+    private static final DirectiveParseException INVALID_DIRECTIVE_NAME =
+        new DirectiveParseException("Invalid directive-name");
+    private static final DirectiveParseException INVALID_DIRECTIVE_VALUE =
+        new DirectiveParseException("Invalid directive-value");
+    private static final DirectiveParseException INVALID_MEDIA_TYPE_LIST =
+        new DirectiveParseException("Invalid media-type-list");
+    private static final DirectiveParseException INVALID_SOURCE_LIST =
+        new DirectiveParseException("Invalid source-list");
+    private static final DirectiveParseException INVALID_ANCESTOR_SOURCE_LIST =
+        new DirectiveParseException("Invalid ancestor-source-list");
+    private static final DirectiveParseException INVALID_REFERRER_TOKEN_LIST =
+        new DirectiveParseException("Invalid referrer-token list");
+    private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST =
+        new DirectiveParseException("Invalid sandbox-token list");
+    private static final DirectiveParseException INVALID_URI_REFERENCE_LIST =
+        new DirectiveParseException("Invalid uri-reference list");
+    private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST =
+        new DirectiveParseException("Non-empty directive-value list");
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
     protected int index = 0;
@@ -176,20 +195,10 @@ public class Parser {
         return policies;
     }
 
-    private static final DirectiveParseException MISSING_DIRECTIVE_NAME = new DirectiveParseException("Missing directive-name");
-    private static final DirectiveParseException INVALID_DIRECTIVE_NAME = new DirectiveParseException("Invalid directive-name");
-    private static final DirectiveParseException INVALID_DIRECTIVE_VALUE = new DirectiveParseException("Invalid directive-value");
-    private static final DirectiveParseException INVALID_MEDIA_TYPE_LIST = new DirectiveParseException("Invalid media-type-list");
-    private static final DirectiveParseException INVALID_SOURCE_LIST = new DirectiveParseException("Invalid source-list");
-    private static final DirectiveParseException INVALID_ANCESTOR_SOURCE_LIST = new DirectiveParseException("Invalid ancestor-source-list");
-    private static final DirectiveParseException INVALID_REFERRER_TOKEN_LIST = new DirectiveParseException("Invalid referrer-token list");
-    private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST = new DirectiveParseException("Invalid sandbox-token list");
-    private static final DirectiveParseException INVALID_URI_REFERENCE_LIST = new DirectiveParseException("Invalid uri-reference list");
-    private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST = new DirectiveParseException("Non-empty directive-value list");
-
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
-            this.error("Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
+            this.error(
+                "Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;
@@ -224,7 +233,7 @@ public class Parser {
                 result = new ImgSrcDirective(this.parseSourceList());
                 break;
             case ManifestSrc:
-                result =  new ManifestSrcDirective(this.parseSourceList());
+                result = new ManifestSrcDirective(this.parseSourceList());
                 break;
             case MediaSrc:
                 result = new MediaSrcDirective(this.parseSourceList());
@@ -255,26 +264,34 @@ public class Parser {
                 result = new UpgradeInsecureRequestsDirective();
                 break;
             case Allow:
-                this.error("The allow directive has been replaced with default-src and is not in the CSP specification.");
-                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                this.error(
+                    "The allow directive has been replaced with default-src and is not in the CSP specification.");
+                if (this.hasNext(DirectiveValueToken.class))
+                    this.advance();
                 throw INVALID_DIRECTIVE_NAME;
             case FrameSrc:
-                this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                this.warn(
+                    "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
                 result = new FrameSrcDirective(this.parseSourceList());
                 break;
             case Options:
-                this.error("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
-                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                this.error(
+                    "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
+                if (this.hasNext(DirectiveValueToken.class))
+                    this.advance();
                 throw INVALID_DIRECTIVE_NAME;
             case Unrecognised:
             default:
                 this.error("Unrecognised directive-name: " + token.value);
-                if (this.hasNext(DirectiveValueToken.class)) this.advance();
+                if (this.hasNext(DirectiveValueToken.class))
+                    this.advance();
                 throw INVALID_DIRECTIVE_NAME;
         }
         if (this.hasNext(UnknownToken.class)) {
             int cp = this.advance().value.codePointAt(0);
-            this.error(String.format("Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded", cp, new String(new int[]{cp}, 0, 1)));
+            this.error(String.format(
+                "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded",
+                cp, new String(new int[] {cp}, 0, 1)));
             throw INVALID_DIRECTIVE_VALUE;
         }
         return result;
@@ -467,7 +484,8 @@ public class Parser {
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull String ancestorSource)
         throws DirectiveValueParseException {
         if (ancestorSource.equalsIgnoreCase("'none'")) {
-            throw this.createError("The 'none' keyword must not be combined with any other source-expression");
+            throw this.createError(
+                "The 'none' keyword must not be combined with any other source-expression");
         }
         if (ancestorSource.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
@@ -526,11 +544,11 @@ public class Parser {
 
     @Nonnull private ReferrerValue parseReferrerToken(@Nonnull String referrerToken)
         throws DirectiveValueParseException {
-            Matcher matcher = Constants.referrerTokenPattern.matcher(referrerToken);
-            if (matcher.find()) {
-                return new ReferrerValue(referrerToken);
-            }
-            throw this.createError("Expecting referrer-token but found " + referrerToken);
+        Matcher matcher = Constants.referrerTokenPattern.matcher(referrerToken);
+        if (matcher.find()) {
+            return new ReferrerValue(referrerToken);
+        }
+        throw this.createError("Expecting referrer-token but found " + referrerToken);
     }
 
     @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws DirectiveParseException {

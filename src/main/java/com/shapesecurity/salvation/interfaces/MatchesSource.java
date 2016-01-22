@@ -8,5 +8,6 @@ import javax.annotation.Nonnull;
 
 public interface MatchesSource {
     boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source);
+
     boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source);
 }

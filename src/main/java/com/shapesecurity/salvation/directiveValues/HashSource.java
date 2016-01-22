@@ -20,15 +20,18 @@ public class HashSource implements SourceExpression, MatchesHash {
         switch (this.algorithm) {
             case SHA256:
                 if (this.value.size() != 32)
-                    throw new IllegalArgumentException("Invalid SHA-256 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException(
+                        "Invalid SHA-256 value (wrong length): " + this.value.size());
                 break;
             case SHA384:
                 if (this.value.size() != 48)
-                    throw new IllegalArgumentException("Invalid SHA-384 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException(
+                        "Invalid SHA-384 value (wrong length): " + this.value.size());
                 break;
             case SHA512:
                 if (this.value.size() != 64)
-                    throw new IllegalArgumentException("Invalid SHA-512 value (wrong length): " + this.value.size());
+                    throw new IllegalArgumentException(
+                        "Invalid SHA-512 value (wrong length): " + this.value.size());
                 break;
             default:
                 throw new RuntimeException("Not reached.");

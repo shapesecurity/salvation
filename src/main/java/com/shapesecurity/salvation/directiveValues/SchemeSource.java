@@ -20,13 +20,13 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
         return this.value.matches(source.scheme);
     }
 
-    @Override
-    public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
         return source.value.startsWith(this.value + ":");
     }
 
     public boolean matchesProtectedScheme() {
-        return this.value.equals("data") || this.value.equals("blob") || this.value.equals("filesystem");
+        return this.value.equals("data") || this.value.equals("blob") || this.value
+            .equals("filesystem");
     }
 
     @Override public boolean equals(@Nullable Object other) {

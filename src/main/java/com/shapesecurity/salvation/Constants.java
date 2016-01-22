@@ -9,6 +9,10 @@ import java.util.regex.Pattern;
             + "|origin-when-cross-origin|unsafe-url)$", Pattern.CASE_INSENSITIVE);
     public static final Pattern sandboxTokenPattern =
         Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
+    public static final Pattern sandboxEnumeratedTokenPattern = Pattern.compile(
+        "^allow-(?:forms|modals|pointer-lock"
+            + "|popups|popups-to-escape-sandbox|same-origin"
+            + "|scripts|top-navigation)$");
     public static final Pattern mediaTypePattern =
         Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
     // port-part constants

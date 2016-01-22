@@ -142,7 +142,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.size());
         Notice notice = notices.get(0);
         assertNotNull(notice);
-        assertEquals("1:1: media-type-list must contain at least one media-type", notice.show());
+        assertEquals("1:1: The media-type-list must contain at least one media-type", notice.show());
     }
 
     @Test public void testWarningTextWithLocation() {

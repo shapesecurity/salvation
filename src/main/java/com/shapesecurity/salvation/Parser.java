@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class Parser {
 
-    private static final Pattern WSP = Pattern.compile("[ \t]");
+    private static final Pattern WSP = Pattern.compile("[ \t]+");
 
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
@@ -467,7 +467,7 @@ public class Parser {
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull String ancestorSource)
         throws DirectiveValueParseException {
         if (ancestorSource.equalsIgnoreCase("'none'")) {
-            throw this.createError("The 'none' keyword-source must not be combined with any other source-expression");
+            throw this.createError("The 'none' keyword must not be combined with any other source-expression");
         }
         if (ancestorSource.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
@@ -507,10 +507,6 @@ public class Parser {
             String dv = trimRHSWS(this.advance().value);
             for (String v : WSP.split(dv)) {
                 try {
-                    if (!referrerTokens.isEmpty()) {
-                        this.error("The referrer directive must contain only one referrer-token");
-                        throw INVALID_REFERRER_TOKEN_LIST;
-                    }
                     referrerTokens.add(this.parseReferrerToken(v));
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
@@ -521,8 +517,8 @@ public class Parser {
                 throw INVALID_REFERRER_TOKEN_LIST;
             }
         }
-        if (referrerTokens.isEmpty()) {
-            this.error("The referrer directive must contain at least one referrer-token");
+        if (referrerTokens.size() != 1) {
+            this.error("The referrer directive must contain exactly one referrer-token");
             throw INVALID_REFERRER_TOKEN_LIST;
         }
         return referrerTokens;
@@ -535,7 +531,6 @@ public class Parser {
                 return new ReferrerValue(referrerToken);
             }
             throw this.createError("Expecting referrer-token but found " + referrerToken);
-
     }
 
     @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws DirectiveParseException {
@@ -560,10 +555,19 @@ public class Parser {
 
     @Nonnull private SandboxValue parseSandboxToken(@Nonnull String sandboxToken)
         throws DirectiveValueParseException {
-        Matcher matcher = Constants.sandboxTokenPattern.matcher(sandboxToken);
+        Matcher matcher = Constants.sandboxEnumeratedTokenPattern.matcher(sandboxToken);
         if (matcher.find()) {
             return new SandboxValue(sandboxToken);
+        } else {
+            this.warn("The sandbox directive should contain only allow-forms, allow-modals, "
+                + "allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, "
+                + "allow-same-origin, allow-scripts, or allow-top-navigation");
+            matcher = Constants.sandboxTokenPattern.matcher(sandboxToken);
+            if (matcher.find()) {
+                return new SandboxValue(sandboxToken);
+            }
         }
+
         throw this.createError("Expecting sandbox-token but found " + sandboxToken);
     }
 

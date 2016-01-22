@@ -182,8 +182,10 @@ public class Parser {
     private static final DirectiveParseException INVALID_MEDIA_TYPE_LIST = new DirectiveParseException("Invalid media-type-list");
     private static final DirectiveParseException INVALID_SOURCE_LIST = new DirectiveParseException("Invalid source-list");
     private static final DirectiveParseException INVALID_ANCESTOR_SOURCE_LIST = new DirectiveParseException("Invalid ancestor-source-list");
+    private static final DirectiveParseException INVALID_REFERRER_TOKEN_LIST = new DirectiveParseException("Invalid referrer-token list");
     private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST = new DirectiveParseException("Invalid sandbox-token list");
     private static final DirectiveParseException INVALID_URI_REFERENCE_LIST = new DirectiveParseException("Invalid uri-reference list");
+    private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST = new DirectiveParseException("Non-empty directive-value list");
 
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
@@ -191,11 +193,14 @@ public class Parser {
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;
-        boolean parseException = false;
         DirectiveNameToken token = (DirectiveNameToken) this.advance();
         switch (token.subtype) {
             case BaseUri:
                 result = new BaseUriDirective(this.parseSourceList());
+                break;
+            case BlockAllMixedContent:
+                this.enforceMissingDirectiveValue(token.value);
+                result = new BlockAllMixedContentDirective();
                 break;
             case ChildSrc:
                 result = new ChildSrcDirective(this.parseSourceList());
@@ -215,12 +220,11 @@ public class Parser {
             case FrameAncestors:
                 result = new FrameAncestorsDirective(this.parseAncestorSourceList());
                 break;
-            case FrameSrc:
-                this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
-                result = new FrameSrcDirective(this.parseSourceList());
-                break;
             case ImgSrc:
                 result = new ImgSrcDirective(this.parseSourceList());
+                break;
+            case ManifestSrc:
+                result =  new ManifestSrcDirective(this.parseSourceList());
                 break;
             case MediaSrc:
                 result = new MediaSrcDirective(this.parseSourceList());
@@ -230,6 +234,9 @@ public class Parser {
                 break;
             case PluginTypes:
                 result = new PluginTypesDirective(this.parseMediaTypeList());
+                break;
+            case Referrer:
+                result = new ReferrerDirective(this.parseReferrerTokenList());
                 break;
             case ReportUri:
                 result = new ReportUriDirective(this.parseUriList());
@@ -243,16 +250,18 @@ public class Parser {
             case StyleSrc:
                 result = new StyleSrcDirective(this.parseSourceList());
                 break;
-            case Referrer:
             case UpgradeInsecureRequests:
-            case BlockAllMixedContent:
-                this.error("The " + token.value + " directive is not in the CSP specification yet.");
-                if (this.hasNext(DirectiveValueToken.class)) this.advance();
-                throw INVALID_DIRECTIVE_NAME;
+                this.enforceMissingDirectiveValue(token.value);
+                result = new UpgradeInsecureRequestsDirective();
+                break;
             case Allow:
                 this.error("The allow directive has been replaced with default-src and is not in the CSP specification.");
                 if (this.hasNext(DirectiveValueToken.class)) this.advance();
                 throw INVALID_DIRECTIVE_NAME;
+            case FrameSrc:
+                this.warn("The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                result = new FrameSrcDirective(this.parseSourceList());
+                break;
             case Options:
                 this.error("The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
                 if (this.hasNext(DirectiveValueToken.class)) this.advance();
@@ -269,6 +278,14 @@ public class Parser {
             throw INVALID_DIRECTIVE_VALUE;
         }
         return result;
+    }
+
+    private void enforceMissingDirectiveValue(@Nonnull String tokenValue)
+        throws DirectiveParseException {
+        if (this.eat(DirectiveValueToken.class)) {
+            this.error("The " + tokenValue + " directive must not contain any value");
+            throw NON_EMPTY_VALUE_TOKEN_LIST;
+        }
     }
 
     @Nonnull private Set<MediaType> parseMediaTypeList() throws DirectiveParseException {
@@ -289,7 +306,7 @@ public class Parser {
             }
         }
         if (mediaTypes.isEmpty()) {
-            this.error("media-type-list must contain at least one media-type");
+            this.error("The media-type-list must contain at least one media-type");
             throw INVALID_MEDIA_TYPE_LIST;
         }
         return mediaTypes;
@@ -450,7 +467,7 @@ public class Parser {
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull String ancestorSource)
         throws DirectiveValueParseException {
         if (ancestorSource.equalsIgnoreCase("'none'")) {
-            throw this.createError("'none' must not be combined with any other source-expression");
+            throw this.createError("The 'none' keyword-source must not be combined with any other source-expression");
         }
         if (ancestorSource.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
@@ -480,6 +497,45 @@ public class Parser {
             }
         }
         throw this.createError("Expecting ancestor-source but found " + ancestorSource);
+    }
+
+    @Nonnull private Set<ReferrerValue> parseReferrerTokenList() throws DirectiveParseException {
+
+        Set<ReferrerValue> referrerTokens = new LinkedHashSet<>();
+        if (this.hasNext(DirectiveValueToken.class)) {
+            boolean parseException = false;
+            String dv = trimRHSWS(this.advance().value);
+            for (String v : WSP.split(dv)) {
+                try {
+                    if (!referrerTokens.isEmpty()) {
+                        this.error("The referrer directive must contain only one referrer-token");
+                        throw INVALID_REFERRER_TOKEN_LIST;
+                    }
+                    referrerTokens.add(this.parseReferrerToken(v));
+                } catch (DirectiveValueParseException e) {
+                    parseException = true;
+                    this.error(e.getMessage());
+                }
+            }
+            if (parseException) {
+                throw INVALID_REFERRER_TOKEN_LIST;
+            }
+        }
+        if (referrerTokens.isEmpty()) {
+            this.error("The referrer directive must contain at least one referrer-token");
+            throw INVALID_REFERRER_TOKEN_LIST;
+        }
+        return referrerTokens;
+    }
+
+    @Nonnull private ReferrerValue parseReferrerToken(@Nonnull String referrerToken)
+        throws DirectiveValueParseException {
+            Matcher matcher = Constants.referrerTokenPattern.matcher(referrerToken);
+            if (matcher.find()) {
+                return new ReferrerValue(referrerToken);
+            }
+            throw this.createError("Expecting referrer-token but found " + referrerToken);
+
     }
 
     @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws DirectiveParseException {
@@ -529,7 +585,7 @@ public class Parser {
             }
         }
         if (uriList.isEmpty()) {
-            this.error("report-uri must contain at least one uri-reference");
+            this.error("The report-uri directive must contain at least one uri-reference");
             throw INVALID_URI_REFERENCE_LIST;
         }
         return uriList;
@@ -542,7 +598,6 @@ public class Parser {
             throw this.createError("Expecting uri-reference but found " + uri);
         }
     }
-
 
     private static class DirectiveParseException extends Exception {
         @Nullable Location startLocation;

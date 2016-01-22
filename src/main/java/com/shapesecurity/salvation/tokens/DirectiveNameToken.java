@@ -19,6 +19,7 @@ public class DirectiveNameToken extends Token {
 
     public enum DirectiveNameSubtype {
         BaseUri,
+        BlockAllMixedContent, // W3C Candidate Recommendation at http://www.w3.org/TR/mixed-content/#strict-opt-in as of 2015-09-22
         ChildSrc,
         ConnectSrc,
         DefaultSrc,
@@ -27,17 +28,17 @@ public class DirectiveNameToken extends Token {
         FrameAncestors,
         FrameSrc,
         ImgSrc,
+        ManifestSrc, // CSP3; in draft at http://w3c.github.io/webappsec-csp/#directive-manifest-src as of 2014-10-26
         MediaSrc,
         ObjectSrc,
         PluginTypes,
+        Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
         ReportUri,
         Sandbox,
         ScriptSrc,
         StyleSrc,
 
-        Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
-        UpgradeInsecureRequests, // in draft at http://www.w3.org/TR/2015/WD-upgrade-insecure-requests-20150424/#delivery as of 2015-08-27
-        BlockAllMixedContent, // W3C Candidate Recommendation at http://www.w3.org/TR/mixed-content/#strict-opt-in as of 2015-09-22
+        UpgradeInsecureRequests, // W3C Candidate Recommendation at https://www.w3.org/TR/upgrade-insecure-requests/#delivery as of 2015-10-08
 
         Allow, // never included in an official CSP specification
         Options, // never included in an official CSP specification
@@ -49,6 +50,8 @@ public class DirectiveNameToken extends Token {
             switch (directiveName.toLowerCase()) {
                 case "base-uri":
                     return BaseUri;
+                case "block-all-mixed-content":
+                    return BlockAllMixedContent;
                 case "child-src":
                     return ChildSrc;
                 case "connect-src":
@@ -61,16 +64,18 @@ public class DirectiveNameToken extends Token {
                     return FormAction;
                 case "frame-ancestors":
                     return FrameAncestors;
-                case "frame-src":
-                    return FrameSrc;
                 case "img-src":
                     return ImgSrc;
+                case "manifest-src":
+                    return ManifestSrc;
                 case "media-src":
                     return MediaSrc;
                 case "object-src":
                     return ObjectSrc;
                 case "plugin-types":
                     return PluginTypes;
+                case "referrer":
+                    return Referrer;
                 case "report-uri":
                     return ReportUri;
                 case "sandbox":
@@ -79,18 +84,16 @@ public class DirectiveNameToken extends Token {
                     return ScriptSrc;
                 case "style-src":
                     return StyleSrc;
-
-                // deprecated or proposed directives
-                case "allow":
-                    return Allow;
-                case "options":
-                    return Options;
-                case "referrer":
-                    return Referrer;
                 case "upgrade-insecure-requests":
                     return UpgradeInsecureRequests;
-                case "block-all-mixed-content":
-                    return BlockAllMixedContent;
+
+                // deprecated directives
+                case "allow":
+                    return Allow;
+                case "frame-src":
+                    return FrameSrc;
+                case "options":
+                    return Options;
             }
             return Unrecognised;
         }

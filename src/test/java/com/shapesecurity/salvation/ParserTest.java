@@ -574,23 +574,53 @@ public class ParserTest extends CSPTest {
     }
 
     @Test
-    public void testFutureDirectives() {
+    public void testNewDirectives() {
+        Policy p;
         ArrayList<Notice> notices = new ArrayList<>();
-        parseWithNotices("referrer no-referrer", notices);
-        assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("The referrer directive is not in the CSP specification yet.", notices.get(0).message);
+        p = parseWithNotices("referrer no-referrer", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("referrer", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("The referrer directive must contain at least one referrer-token", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("referrer aaa", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("Expecting referrer-token but found aaa", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("referrer no-referrer unsafe-url", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("The referrer directive must contain only one referrer-token", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("upgrade-insecure-requests", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("upgrade-insecure-requests a", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("The upgrade-insecure-requests directive must not contain any value", notices.get(0).message);
 
 
         notices.clear();
-        parseWithNotices("upgrade-insecure-requests", notices);
-        assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("The upgrade-insecure-requests directive is not in the CSP specification yet.", notices.get(0).message);
-
+        p = parseWithNotices("block-all-mixed-content", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
 
         notices.clear();
-        parseWithNotices("block-all-mixed-content", notices);
-        assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("The block-all-mixed-content directive is not in the CSP specification yet.", notices.get(0).message);
+        p = parseWithNotices("block-all-mixed-content a a", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("The block-all-mixed-content directive must not contain any value", notices.get(0).message);
     }
 
     @Test
@@ -673,7 +703,7 @@ public class ParserTest extends CSPTest {
         assertEquals(2, pl.size());
         assertEquals(2, notices.size());
         assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.", notices.get(0).show());
-        assertEquals("1:15: The referrer directive is not in the CSP specification yet.", notices.get(1).show());
+        assertEquals("1:15: referrer must contain at least one referrer-token", notices.get(1).show());
 
         notices.clear();
         p = parseWithNotices("script-src *, ", notices);

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 public class Parser {
 
     private static final Pattern WSP = Pattern.compile("[ \t]+");
+    private static final Pattern NotWSP = Pattern.compile("[^ \t]+");
     private static final DirectiveParseException MISSING_DIRECTIVE_NAME =
         new DirectiveParseException("Missing directive-name");
     private static final DirectiveParseException INVALID_DIRECTIVE_NAME =
@@ -22,8 +23,12 @@ public class Parser {
         new DirectiveParseException("Invalid directive-value");
     private static final DirectiveParseException INVALID_MEDIA_TYPE_LIST =
         new DirectiveParseException("Invalid media-type-list");
+    private static final DirectiveValueParseException INVALID_MEDIA_TYPE =
+        new DirectiveValueParseException("Invalid media-type");
     private static final DirectiveParseException INVALID_SOURCE_LIST =
         new DirectiveParseException("Invalid source-list");
+    private static final DirectiveValueParseException INVALID_SOURCE_EXPR =
+        new DirectiveValueParseException("Invalid source-expression");
     private static final DirectiveParseException INVALID_ANCESTOR_SOURCE_LIST =
         new DirectiveParseException("Invalid ancestor-source-list");
     private static final DirectiveParseException INVALID_REFERRER_TOKEN_LIST =
@@ -85,7 +90,7 @@ public class Parser {
         int i;
         for (i = s.length() - 1; i >= 0; --i) {
             int c = s.codePointAt(i);
-            if (c != ' ' && c != '\t')
+            if (WSP.matcher(new String(new int[]{c}, 0, 1)).find())
                 break;
         }
         return s.substring(0, i + 1);
@@ -95,26 +100,46 @@ public class Parser {
         return new Notice(type, message);
     }
 
+    @Nonnull protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
+        return new Notice(type, message);
+    }
+
     private void warn(@Nonnull String message) {
+        this.warn(this.getCurrentToken(), message);
+    }
+
+    private void warn(@Nullable Token token, @Nonnull String message) {
         if (this.noticesOut != null) {
-            this.noticesOut.add(this.createNotice(Notice.Type.WARNING, message));
+            this.noticesOut.add(this.createNotice(token, Notice.Type.WARNING, message));
         }
     }
 
-    @Nonnull private Token advance() {
-        return this.tokens[this.index++];
+    private void error(@Nonnull String message) {
+        this.error(this.getCurrentToken(), message);
     }
 
-    private void error(@Nonnull String message) {
+    private void error(@Nullable Token token, @Nonnull String message) {
         if (this.noticesOut != null) {
-            this.noticesOut.add(this.createNotice(Notice.Type.ERROR, message));
+            this.noticesOut.add(this.createNotice(token, Notice.Type.ERROR, message));
         }
     }
 
     private void info(@Nonnull String message) {
+        this.info(this.getCurrentToken(), message);
+    }
+
+    private void info(@Nullable Token token, @Nonnull String message) {
         if (this.noticesOut != null) {
-            this.noticesOut.add(this.createNotice(Notice.Type.INFO, message));
+            this.noticesOut.add(this.createNotice(token, Notice.Type.INFO, message));
         }
+    }
+
+    @Nullable protected Token getCurrentToken() {
+        return this.index <= this.tokens.length && this.index > 0 ? this.tokens[this.index - 1] : null;
+    }
+
+    @Nonnull private Token advance() {
+        return this.tokens[this.index++];
     }
 
     protected boolean hasNext() {
@@ -133,11 +158,11 @@ public class Parser {
         return false;
     }
 
-    @Nonnull protected DirectiveValueParseException createUnexpectedEOF(@Nonnull String message) {
-        return this.createError(message);
+    @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
+        return new DirectiveValueParseException(message);
     }
 
-    @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
+    @Nonnull protected DirectiveValueParseException createError(@Nonnull Token token, @Nonnull String message) {
         return new DirectiveValueParseException(message);
     }
 
@@ -295,13 +320,12 @@ public class Parser {
         Set<MediaType> mediaTypes = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
-            String dv = trimRHSWS(this.advance().value);
-            for (String v : WSP.split(dv)) {
+            Token dv = this.advance();
+            for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    mediaTypes.add(this.parseMediaType(v));
+                    mediaTypes.add(this.parseMediaType(subdv));
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
-                    this.error(e.getMessage());
                 }
             }
             if (parseException) {
@@ -315,29 +339,29 @@ public class Parser {
         return mediaTypes;
     }
 
-    @Nonnull private MediaType parseMediaType(@Nonnull String mediaType) throws DirectiveValueParseException {
-        Matcher matcher = Constants.mediaTypePattern.matcher(mediaType);
+    @Nonnull private MediaType parseMediaType(@Nonnull SubDirectiveValueToken token) throws DirectiveValueParseException {
+        Matcher matcher = Constants.mediaTypePattern.matcher(token.value);
         if (matcher.find()) {
             return new MediaType(matcher.group("type"), matcher.group("subtype"));
         }
-        throw this.createError("Expecting media-type but found " + mediaType);
+        this.error(token, "Expecting media-type but found " + token.value);
+        throw INVALID_MEDIA_TYPE;
     }
 
     @Nonnull private Set<SourceExpression> parseSourceList() throws DirectiveParseException {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
-            String dv = trimRHSWS(this.advance().value);
-            if (dv.equalsIgnoreCase("'none'")) {
+            Token dv = this.advance();
+            if (trimRHSWS(dv.value).equalsIgnoreCase("'none'")) {
                 sourceExpressions.add(None.INSTANCE);
                 return sourceExpressions;
             }
-            for (String v : WSP.split(dv)) {
+            for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    sourceExpressions.add(this.parseSourceExpression(v));
+                    sourceExpressions.add(this.parseSourceExpression(subdv));
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
-                    this.error(e.getMessage());
                 }
             }
             if (parseException) {
@@ -347,11 +371,34 @@ public class Parser {
         return sourceExpressions;
     }
 
-    @Nonnull private SourceExpression parseSourceExpression(@Nonnull String sourceExpression)
+    @Nonnull
+    private List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
+        List<SubDirectiveValueToken> tokens = new ArrayList<>();
+        @Nullable Location startLocation = token.startLocation;
+        if (startLocation == null) {
+            for (String s : WSP.split(token.value)) {
+                tokens.add(new SubDirectiveValueToken(s));
+            }
+        } else {
+            Matcher m = NotWSP.matcher(token.value);
+            int offset = 0;
+            while (m.find(offset)) {
+                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
+                dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(), startLocation.offset + m.start());
+                dv.endLocation = new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
+                offset = m.end();
+                tokens.add(dv);
+            }
+        }
+        return tokens;
+    }
+
+    @Nonnull private SourceExpression parseSourceExpression(@Nonnull SubDirectiveValueToken token)
         throws DirectiveValueParseException {
-        switch (sourceExpression.toLowerCase()) {
+        switch (token.value.toLowerCase()) {
             case "'none'":
-                throw this.createError("'none' must not be combined with any other source-expression");
+                this.error(token, "'none' must not be combined with any other source-expression");
+                throw INVALID_SOURCE_EXPR;
             case "'self'":
                 return KeywordSource.Self;
             case "'unsafe-inline'":
@@ -359,25 +406,25 @@ public class Parser {
             case "'unsafe-eval'":
                 return KeywordSource.UnsafeEval;
             case "'unsafe-redirect'":
-                this.warn("'unsafe-redirect' has been removed from CSP as of version 2.0");
+                this.warn(token, "'unsafe-redirect' has been removed from CSP as of version 2.0");
                 return KeywordSource.UnsafeRedirect;
             case "self":
             case "unsafe-inline":
             case "unsafe-eval":
             case "unsafe-redirect":
             case "none":
-                this.warn(
+                this.warn(token,
                     "This host name is unusual, and likely meant to be a keyword that is missing the required quotes: \'"
-                        + sourceExpression.toLowerCase() + "\'");
+                        + token.value.toLowerCase() + "\'");
             default:
-                if (sourceExpression.startsWith("'nonce-")) {
-                    String nonce = sourceExpression.substring(7, sourceExpression.length() - 1);
+                if (token.value.startsWith("'nonce-")) {
+                    String nonce = token.value.substring(7, token.value.length() - 1);
                     NonceSource nonceSource = new NonceSource(nonce);
                     nonceSource.validationErrors().forEach(this::warn);
                     return nonceSource;
-                } else if (sourceExpression.toLowerCase().startsWith("'sha")) {
+                } else if (token.value.toLowerCase().startsWith("'sha")) {
                     HashSource.HashAlgorithm algorithm;
-                    switch (sourceExpression.substring(4, 7)) {
+                    switch (token.value.substring(4, 7)) {
                         case "256":
                             algorithm = HashSource.HashAlgorithm.SHA256;
                             break;
@@ -388,33 +435,36 @@ public class Parser {
                             algorithm = HashSource.HashAlgorithm.SHA512;
                             break;
                         default:
-                            throw this.createError("Unrecognised hash algorithm " + sourceExpression.substring(1, 7));
+                            this.error(token, "Unrecognised hash algorithm " + token.value.substring(1, 7));
+                            throw INVALID_SOURCE_EXPR;
                     }
-                    String value = sourceExpression.substring(8, sourceExpression.length() - 1);
+                    String value = token.value.substring(8, token.value.length() - 1);
                     // convert url-safe base64 to RFC4648 base64
                     String safeValue = value.replace('-', '+').replace('_', '/');
                     Base64Value base64Value;
                     try {
                         base64Value = new Base64Value(safeValue);
                     } catch (IllegalArgumentException e) {
-                        throw this.createError(e.getMessage());
+                        this.error(token, e.getMessage());
+                        throw INVALID_SOURCE_EXPR;
                     }
                     // warn if value is not RFC4648
                     if (value.contains("-") || value.contains("_")) {
-                        this.warn(
+                        this.warn(token,
                             "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
                     }
                     HashSource hashSource = new HashSource(algorithm, base64Value);
                     try {
                         hashSource.validationErrors();
                     } catch (IllegalArgumentException e) {
-                        throw this.createError(e.getMessage());
+                        this.error(token, e.getMessage());
+                        throw INVALID_SOURCE_EXPR;
                     }
                     return hashSource;
-                } else if (sourceExpression.matches("^" + Constants.schemePart + ":$")) {
-                    return new SchemeSource(sourceExpression.substring(0, sourceExpression.length() - 1));
+                } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
+                    return new SchemeSource(token.value.substring(0, token.value.length() - 1));
                 } else {
-                    Matcher matcher = Constants.hostSourcePattern.matcher(sourceExpression);
+                    Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
                     if (matcher.find()) {
                         String scheme = matcher.group("scheme");
                         if (scheme != null)
@@ -436,7 +486,8 @@ public class Parser {
                     }
                 }
         }
-        throw this.createError("Expecting source-expression but found " + sourceExpression);
+        this.error(token, "Expecting source-expression but found " + token.value);
+        throw INVALID_SOURCE_EXPR;
     }
 
     @Nonnull private Set<AncestorSource> parseAncestorSourceList() throws DirectiveParseException {
@@ -598,6 +649,16 @@ public class Parser {
         }
     }
 
+    private class SubDirectiveValueToken extends Token {
+        protected SubDirectiveValueToken(@Nonnull String value) {
+            super(value);
+        }
+
+        @Nonnull @Override public String toJSON() {
+            return super.toJSON("SubDirectiveValue");
+        }
+    }
+
     private static class DirectiveParseException extends Exception {
         @Nullable Location startLocation;
         @Nullable Location endLocation;
@@ -613,7 +674,6 @@ public class Parser {
             return startLocation.show() + ": " + super.getMessage();
         }
     }
-
 
     protected static class DirectiveValueParseException extends Exception {
         @Nullable Location startLocation;

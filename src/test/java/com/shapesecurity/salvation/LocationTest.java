@@ -10,19 +10,19 @@ import static org.junit.Assert.*;
 
 public class LocationTest extends CSPTest {
 
-//    @Test
-//    public void testParseExceptionLocation() {
-//        ArrayList<Notice> notices = new ArrayList<>();
-//        ParserWithLocation.parse("script-src aaa 'none' bbb", "https://origin", notices);
-//        assertNotNull(notices.get(0).startLocation);
-//        assertEquals(1, notices.get(0).startLocation.line);
-//        assertEquals(16, notices.get(0).startLocation.column);
-//        assertEquals(15, notices.get(0).startLocation.offset);
-//        assertNotNull(notices.get(0).endLocation);
-//        assertEquals(1, notices.get(0).endLocation.line, 1);
-//        assertEquals(22, notices.get(0).endLocation.column);
-//        assertEquals(21, notices.get(0).endLocation.offset);
-//    }
+    @Test
+    public void testParseExceptionLocation() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        ParserWithLocation.parse("script-src aaa 'none' bbb", "https://origin", notices);
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(16, notices.get(0).startLocation.column);
+        assertEquals(15, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line, 1);
+        assertEquals(22, notices.get(0).endLocation.column);
+        assertEquals(21, notices.get(0).endLocation.offset);
+    }
 
 //    @Test public void testParseExceptionLocationReportUriEOF() {
 //        ArrayList<Notice> notices = new ArrayList<>();
@@ -48,6 +48,25 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(13, notices.get(0).endLocation.column);
         assertEquals(12, notices.get(0).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("plugin-types aa bb", "https://origin", notices);
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(14, notices.get(0).startLocation.column);
+        assertEquals(13, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(16, notices.get(0).endLocation.column);
+        assertEquals(15, notices.get(0).endLocation.offset);
+        assertNotNull(notices.get(1).startLocation);
+        assertEquals(1, notices.get(1).startLocation.line);
+        assertEquals(17, notices.get(1).startLocation.column);
+        assertEquals(16, notices.get(1).startLocation.offset);
+        assertNotNull(notices.get(1).endLocation);
+        assertEquals(1, notices.get(1).endLocation.line);
+        assertEquals(19, notices.get(1).endLocation.column);
+        assertEquals(18, notices.get(1).endLocation.offset);
     }
 
     @Test public void testParseExceptionLocationEmptyMediaTypeList() {

@@ -63,44 +63,47 @@ public class ParserWithLocation extends Parser {
             warningsOut).parsePolicyListAndAssertEOF();
     }
 
-    @Nullable private Token getCurrentToken() {
-        return this.index <= this.tokens.length && this.index > 0 ? this.tokens[this.index - 1] : null;
-    }
-
-    @Nonnull private Location getStartLocation() {
-        Token currentToken = this.getCurrentToken();
-        if (currentToken == null || currentToken.startLocation == null) {
+    @Nonnull private Location getStartLocation(@Nullable Token token) {
+        if (token == null || token.startLocation == null) {
             return new Location(1, 1, 0);
         }
-        return currentToken.startLocation;
+        return token.startLocation;
     }
 
-    @Nonnull private Location getEndLocation() {
-        Token currentToken = this.getCurrentToken();
-        if (currentToken == null || currentToken.endLocation == null) {
+    @Nonnull private Location getEndLocation(@Nullable Token token) {
+        if (token == null || token.endLocation == null) {
             return EOF;
         }
-        return currentToken.endLocation;
-    }
-
-    @Override @Nonnull protected DirectiveValueParseException createUnexpectedEOF(@Nonnull String message) {
-        DirectiveValueParseException e = super.createError(message);
-        e.startLocation = EOF;
-        e.endLocation = EOF;
-        return e;
+        return token.endLocation;
     }
 
     @Override @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
         DirectiveValueParseException e = super.createError(message);
-        e.startLocation = this.getStartLocation();
-        e.endLocation = this.getEndLocation();
+        Token currentToken = this.getCurrentToken();
+        e.startLocation = this.getStartLocation(currentToken);
+        e.endLocation = this.getEndLocation(currentToken);
+        return e;
+    }
+
+    @Override @Nonnull protected DirectiveValueParseException createError(@Nonnull Token token, @Nonnull String message) {
+        DirectiveValueParseException e = super.createError(message);
+        e.startLocation = this.getStartLocation(token);
+        e.endLocation = this.getEndLocation(token);
         return e;
     }
 
     @Override @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
         Notice notice = super.createNotice(type, message);
-        notice.startLocation = this.getStartLocation();
-        notice.endLocation = this.getEndLocation();
+        Token currentToken = this.getCurrentToken();
+        notice.startLocation = this.getStartLocation(currentToken);
+        notice.endLocation = this.getEndLocation(currentToken);
+        return notice;
+    }
+
+    @Override @Nonnull protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
+        Notice notice = super.createNotice(type, message);
+        notice.startLocation = this.getStartLocation(token);
+        notice.endLocation = this.getEndLocation(token);
         return notice;
     }
 }

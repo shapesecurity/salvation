@@ -55,8 +55,7 @@ public class SchemeHostPortTriple extends Origin {
     }
 
     @Nonnull @Override public String show() {
-        boolean isDefaultPort =
-            this.port == Constants.EMPTY_PORT || defaultPortForProtocol(this.scheme) == this.port;
+        boolean isDefaultPort = this.port == Constants.EMPTY_PORT || defaultPortForProtocol(this.scheme) == this.port;
         return this.scheme + "://" +
             this.host +
             (isDefaultPort ? "" : ":" + this.port);

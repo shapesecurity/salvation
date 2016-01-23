@@ -17,8 +17,8 @@ public abstract class Token {
     }
 
     @Nonnull protected String toJSON(@Nonnull String type) {
-        return "{ \"type\": \"" + type + "\", \"value\": \"" + this.value.replace("\\", "\\\\")
-            .replace("\"", "\\\"") + "\" }";
+        return "{ \"type\": \"" + type + "\", \"value\": \"" + this.value.replace("\\", "\\\\").replace("\"", "\\\"")
+            + "\" }";
     }
 
     @Nonnull public abstract String toJSON();

@@ -12,8 +12,7 @@ public class KeywordSource implements SourceExpression, AncestorSource, MatchesS
     @Nonnull public static final KeywordSource Self = new KeywordSource("self");
     @Nonnull public static final KeywordSource UnsafeInline = new KeywordSource("unsafe-inline");
     @Nonnull public static final KeywordSource UnsafeEval = new KeywordSource("unsafe-eval");
-    @Nonnull public static final KeywordSource UnsafeRedirect =
-        new KeywordSource("unsafe-redirect");
+    @Nonnull public static final KeywordSource UnsafeRedirect = new KeywordSource("unsafe-redirect");
     @Nonnull private final String value;
 
     private KeywordSource(@Nonnull String value) {

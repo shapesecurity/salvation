@@ -39,8 +39,7 @@ public class Parser {
     protected int index = 0;
     @Nullable protected Collection<Notice> noticesOut;
 
-    protected Parser(@Nonnull Token[] tokens, @Nonnull Origin origin,
-        @Nullable Collection<Notice> noticesOut) {
+    protected Parser(@Nonnull Token[] tokens, @Nonnull Origin origin, @Nullable Collection<Notice> noticesOut) {
         this.origin = origin;
         this.tokens = tokens;
         this.noticesOut = noticesOut;
@@ -51,46 +50,35 @@ public class Parser {
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null)
-            .parsePolicyAndAssertEOF();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin,
         @Nonnull Collection<Notice> warningsOut) {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut)
-            .parsePolicyAndAssertEOF();
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin,
         @Nonnull Collection<Notice> warningsOut) {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut)
-            .parsePolicyAndAssertEOF();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, null)
-            .parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) {
+        return new Parser(Tokeniser.tokenise(sourceText), origin, null).parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null)
-            .parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) {
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), null).parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin,
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin,
         @Nonnull Collection<Notice> warningsOut) {
-        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut)
-            .parsePolicyListAndAssertEOF();
+        return new Parser(Tokeniser.tokenise(sourceText), origin, warningsOut).parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin,
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin,
         @Nonnull Collection<Notice> warningsOut) {
-        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut)
-            .parsePolicyListAndAssertEOF();
+        return new Parser(Tokeniser.tokenise(sourceText), URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
     }
 
     @Nonnull private static String trimRHSWS(@Nonnull String s) {
@@ -197,8 +185,7 @@ public class Parser {
 
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
-            this.error(
-                "Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
+            this.error("Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;
@@ -297,8 +284,7 @@ public class Parser {
         return result;
     }
 
-    private void enforceMissingDirectiveValue(@Nonnull String tokenValue)
-        throws DirectiveParseException {
+    private void enforceMissingDirectiveValue(@Nonnull String tokenValue) throws DirectiveParseException {
         if (this.eat(DirectiveValueToken.class)) {
             this.error("The " + tokenValue + " directive must not contain any value");
             throw NON_EMPTY_VALUE_TOKEN_LIST;
@@ -329,8 +315,7 @@ public class Parser {
         return mediaTypes;
     }
 
-    @Nonnull private MediaType parseMediaType(@Nonnull String mediaType)
-        throws DirectiveValueParseException {
+    @Nonnull private MediaType parseMediaType(@Nonnull String mediaType) throws DirectiveValueParseException {
         Matcher matcher = Constants.mediaTypePattern.matcher(mediaType);
         if (matcher.find()) {
             return new MediaType(matcher.group("type"), matcher.group("subtype"));
@@ -366,8 +351,7 @@ public class Parser {
         throws DirectiveValueParseException {
         switch (sourceExpression.toLowerCase()) {
             case "'none'":
-                throw this
-                    .createError("'none' must not be combined with any other source-expression");
+                throw this.createError("'none' must not be combined with any other source-expression");
             case "'self'":
                 return KeywordSource.Self;
             case "'unsafe-inline'":
@@ -404,8 +388,7 @@ public class Parser {
                             algorithm = HashSource.HashAlgorithm.SHA512;
                             break;
                         default:
-                            throw this.createError(
-                                "Unrecognised hash algorithm " + sourceExpression.substring(1, 7));
+                            throw this.createError("Unrecognised hash algorithm " + sourceExpression.substring(1, 7));
                     }
                     String value = sourceExpression.substring(8, sourceExpression.length() - 1);
                     // convert url-safe base64 to RFC4648 base64
@@ -429,8 +412,7 @@ public class Parser {
                     }
                     return hashSource;
                 } else if (sourceExpression.matches("^" + Constants.schemePart + ":$")) {
-                    return new SchemeSource(
-                        sourceExpression.substring(0, sourceExpression.length() - 1));
+                    return new SchemeSource(sourceExpression.substring(0, sourceExpression.length() - 1));
                 } else {
                     Matcher matcher = Constants.hostSourcePattern.matcher(sourceExpression);
                     if (matcher.find()) {
@@ -484,8 +466,7 @@ public class Parser {
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull String ancestorSource)
         throws DirectiveValueParseException {
         if (ancestorSource.equalsIgnoreCase("'none'")) {
-            throw this.createError(
-                "The 'none' keyword must not be combined with any other source-expression");
+            throw this.createError("The 'none' keyword must not be combined with any other source-expression");
         }
         if (ancestorSource.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
@@ -501,13 +482,10 @@ public class Parser {
                 String portString = matcher.group("port");
                 int port;
                 if (portString == null) {
-                    port = scheme == null ?
-                        Constants.EMPTY_PORT :
-                        SchemeHostPortTriple.defaultPortForProtocol(scheme);
+                    port = scheme == null ? Constants.EMPTY_PORT : SchemeHostPortTriple.defaultPortForProtocol(scheme);
                 } else {
-                    port = portString.equals(":*") ?
-                        Constants.WILDCARD_PORT :
-                        Integer.parseInt(portString.substring(1));
+                    port =
+                        portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
                 }
                 String host = matcher.group("host");
                 String path = matcher.group("path");
@@ -571,8 +549,7 @@ public class Parser {
         return sandboxTokens;
     }
 
-    @Nonnull private SandboxValue parseSandboxToken(@Nonnull String sandboxToken)
-        throws DirectiveValueParseException {
+    @Nonnull private SandboxValue parseSandboxToken(@Nonnull String sandboxToken) throws DirectiveValueParseException {
         Matcher matcher = Constants.sandboxEnumeratedTokenPattern.matcher(sandboxToken);
         if (matcher.find()) {
             return new SandboxValue(sandboxToken);

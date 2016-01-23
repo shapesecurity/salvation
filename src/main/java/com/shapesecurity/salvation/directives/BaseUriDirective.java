@@ -12,8 +12,7 @@ public class BaseUriDirective extends SourceListDirective {
         super(BaseUriDirective.NAME, sourceExpressions);
     }
 
-    @Nonnull @Override
-    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new BaseUriDirective(newValues);
     }
 }

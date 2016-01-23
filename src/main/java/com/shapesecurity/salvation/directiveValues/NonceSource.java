@@ -32,8 +32,7 @@ public class NonceSource implements SourceExpression, MatchesNonce {
             return errors;
         }
         if (base64Value.size() < 16) {
-            errors.add(
-                "CSP specification recommends nonce-value to be at least 128 bits long (before encoding)");
+            errors.add("CSP specification recommends nonce-value to be at least 128 bits long (before encoding)");
         }
         return errors;
     }

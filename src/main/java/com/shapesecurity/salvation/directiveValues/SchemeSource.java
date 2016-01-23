@@ -25,8 +25,7 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
     }
 
     public boolean matchesProtectedScheme() {
-        return this.value.equals("data") || this.value.equals("blob") || this.value
-            .equals("filesystem");
+        return this.value.equals("data") || this.value.equals("blob") || this.value.equals("filesystem");
     }
 
     @Override public boolean equals(@Nullable Object other) {

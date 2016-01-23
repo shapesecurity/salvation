@@ -23,9 +23,8 @@ public class Base64Value implements Show {
         byte[] chars = value.getBytes(StandardCharsets.US_ASCII);
 
         if (chars.length % 4 != 0) {
-            throw new IllegalArgumentException(
-                "Invalid base64-value (should be multiple of 4 bytes: " + chars.length
-                    + "). Consider using RFC4648 compliant base64 encoding implementation");
+            throw new IllegalArgumentException("Invalid base64-value (should be multiple of 4 bytes: " + chars.length
+                + "). Consider using RFC4648 compliant base64 encoding implementation");
         }
 
         int i;
@@ -50,8 +49,7 @@ public class Base64Value implements Show {
         }
 
         if (chars.length < 4) {
-            throw new IllegalArgumentException(
-                "Invalid base64-value (too short: " + chars.length + ")");
+            throw new IllegalArgumentException("Invalid base64-value (too short: " + chars.length + ")");
         }
     }
 
@@ -71,8 +69,7 @@ public class Base64Value implements Show {
     }
 
     @Override public boolean equals(@Nullable Object other) {
-        return !(other == null || !(other instanceof Base64Value)) && this.value
-            .equals(((Base64Value) other).value);
+        return !(other == null || !(other instanceof Base64Value)) && this.value.equals(((Base64Value) other).value);
     }
 
     @Override public int hashCode() {

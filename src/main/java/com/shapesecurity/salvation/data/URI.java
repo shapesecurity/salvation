@@ -35,9 +35,7 @@ public class URI extends SchemeHostPortTriple implements DirectiveValue {
         if (portString == null) {
             port = SchemeHostPortTriple.defaultPortForProtocol(scheme);
         } else {
-            port = portString.equals(":*") ?
-                Constants.WILDCARD_PORT :
-                Integer.parseInt(portString.substring(1));
+            port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
         }
         String host = matcher.group("host");
         String path = matcher.group("path");

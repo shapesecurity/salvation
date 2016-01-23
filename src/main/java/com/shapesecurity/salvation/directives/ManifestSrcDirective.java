@@ -12,8 +12,7 @@ public class ManifestSrcDirective extends SourceListDirective {
         super(ManifestSrcDirective.name, sourceExpressions);
     }
 
-    @Nonnull @Override
-    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new ManifestSrcDirective(newValues);
     }
 }

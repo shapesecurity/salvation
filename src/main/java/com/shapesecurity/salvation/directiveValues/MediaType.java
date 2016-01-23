@@ -22,8 +22,7 @@ public class MediaType implements DirectiveValue, MatchesMediaType {
     }
 
     public boolean matchesMediaType(@Nonnull MediaType mediaType) {
-        return this.type.equalsIgnoreCase(mediaType.type) && this.subtype
-            .equalsIgnoreCase(mediaType.subtype);
+        return this.type.equalsIgnoreCase(mediaType.type) && this.subtype.equalsIgnoreCase(mediaType.subtype);
     }
 
     @Override public int hashCode() {

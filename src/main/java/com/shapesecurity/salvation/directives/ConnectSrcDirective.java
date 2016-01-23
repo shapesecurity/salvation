@@ -12,8 +12,7 @@ public final class ConnectSrcDirective extends SourceListDirective {
         super(ConnectSrcDirective.NAME, sourceExpressions);
     }
 
-    @Nonnull @Override
-    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new ConnectSrcDirective(newValues);
     }
 }

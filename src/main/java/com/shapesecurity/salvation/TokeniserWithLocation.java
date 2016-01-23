@@ -20,8 +20,7 @@ public class TokeniserWithLocation extends Tokeniser {
         return new Location(1, this.index + 1, this.index);
     }
 
-    @Override
-    protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
+    @Override protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
         Location startLocation = this.getLocation();
         return super.eat(tokenText -> {
             Location endLocation = this.getLocation();

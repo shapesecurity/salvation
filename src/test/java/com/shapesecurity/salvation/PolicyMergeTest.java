@@ -28,9 +28,12 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("default-src aaa https://origin2.com", p1.show());
 
         p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a", "https://origin1.com");
-        p2 = Parser.parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
+        p2 = Parser
+            .parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
         p1.union(p2);
-        assertEquals("connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b", p1.show());
+        assertEquals(
+            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b",
+            p1.show());
     }
 
     @Test public void testUnionDefaultSrc() {
@@ -78,7 +81,7 @@ public class PolicyMergeTest extends CSPTest {
     }
 
     @Test public void testIntersect() {
-        Policy  p1, p2;
+        Policy p1, p2;
 
         p1 = parse("default-src a; script-src b");
         p2 = parse("default-src c; img-src d");
@@ -219,8 +222,7 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("script-src", p1.show());
     }
 
-    @Test
-    public void testUnionReportUri() {
+    @Test public void testUnionReportUri() {
         Policy p1, p2;
 
         try {
@@ -229,8 +231,7 @@ public class PolicyMergeTest extends CSPTest {
             p1.union(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-uri directive.",
-                e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
         }
 
         p1 = parse("default-src a b ");
@@ -239,8 +240,7 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("default-src a b; script-src a b x; style-src a b y", p1.show());
     }
 
-    @Test
-    public void testCannotMergeDifferentDirectives() {
+    @Test public void testCannotMergeDifferentDirectives() {
         HostSource h = new HostSource(null, "a", Constants.EMPTY_PORT, null);
         StyleSrcDirective d1 = new StyleSrcDirective(Collections.singleton(h));
         ScriptSrcDirective d2 = new ScriptSrcDirective(Collections.singleton(h));
@@ -262,8 +262,7 @@ public class PolicyMergeTest extends CSPTest {
         }
     }
 
-    @Test
-    public void testUnionDirective() {
+    @Test public void testUnionDirective() {
         Policy p;
         Set<SourceExpression> set = new LinkedHashSet<>();
 
@@ -280,9 +279,7 @@ public class PolicyMergeTest extends CSPTest {
         set.add(new HostSource("http", "abc.com", 80, "/"));
         DefaultSrcDirective d2 = new DefaultSrcDirective(set);
         p.unionDirective(d2);
-        assertEquals(
-            "default-src 'self' http://abc.com/; script-src a; report-uri http://example.com/z",
-            p.show());
+        assertEquals("default-src 'self' http://abc.com/; script-src a; report-uri http://example.com/z", p.show());
 
         set.clear();
         p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
@@ -301,11 +298,11 @@ public class PolicyMergeTest extends CSPTest {
 
         p.unionDirective(scriptSrcDirective);
         p.unionDirective(styleSrcDirective);
-        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *", p.show());
+        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *",
+            p.show());
     }
 
-    @Test
-    public void testIntersectDirective() {
+    @Test public void testIntersectDirective() {
         Policy p;
         Set<SourceExpression> set = new LinkedHashSet<>();
 
@@ -313,18 +310,14 @@ public class PolicyMergeTest extends CSPTest {
         set.add(new HostSource("http", "abc.com", 80, "/"));
         StyleSrcDirective d1 = new StyleSrcDirective(set);
         p.intersectDirective(d1);
-        assertEquals(
-            "default-src 'self'; script-src a; report-uri http://example.com/z; style-src",
-            p.show());
+        assertEquals("default-src 'self'; script-src a; report-uri http://example.com/z; style-src", p.show());
 
         set.clear();
         p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
         set.add(new HostSource("http", "abc.com", 80, "/"));
         DefaultSrcDirective d2 = new DefaultSrcDirective(set);
         p.intersectDirective(d2);
-        assertEquals(
-            "default-src; script-src a; report-uri http://example.com/z",
-            p.show());
+        assertEquals("default-src; script-src a; report-uri http://example.com/z", p.show());
 
         set.clear();
         p = Parser.parse("default-src 'self'; script-src a; report-uri /z", "http://example.com");
@@ -343,7 +336,8 @@ public class PolicyMergeTest extends CSPTest {
 
         p.intersectDirective(scriptSrcDirective);
         p.intersectDirective(styleSrcDirective);
-        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'", p.show());
+        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'",
+            p.show());
     }
 
 }

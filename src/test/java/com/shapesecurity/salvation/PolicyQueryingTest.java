@@ -13,11 +13,9 @@ import static org.junit.Assert.*;
 
 public class PolicyQueryingTest extends CSPTest {
 
-    @Test
-    @SuppressWarnings("ConstantConditions")
-    public void testGetDirectiveByType() {
+    @Test @SuppressWarnings("ConstantConditions") public void testGetDirectiveByType() {
         assertEquals("child-src", parse("child-src").getDirectiveByType(ChildSrcDirective.class).show());
-        assertEquals("connect-src", parse("connect-src") .getDirectiveByType(ConnectSrcDirective.class).show());
+        assertEquals("connect-src", parse("connect-src").getDirectiveByType(ConnectSrcDirective.class).show());
         assertEquals("default-src", parse("default-src").getDirectiveByType(DefaultSrcDirective.class).show());
         assertEquals("font-src", parse("font-src").getDirectiveByType(FontSrcDirective.class).show());
         assertEquals("img-src", parse("img-src").getDirectiveByType(ImgSrcDirective.class).show());
@@ -27,8 +25,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertEquals("style-src", parse("style-src").getDirectiveByType(StyleSrcDirective.class).show());
     }
 
-    @Test
-    public void testDirectiveContains() {
+    @Test public void testDirectiveContains() {
         Policy p = parse("script-src a b c");
         Policy q = parse("script-src a");
         Policy r = parse("script-src m");
@@ -50,11 +47,12 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("directive doesn't contain", d1.contains(value));
     }
 
-    @Test
-    public void testAllowsFromSource() {
+    @Test public void testAllowsFromSource() {
         Policy p;
 
-        p = Parser.parse("default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am", URI.parse("https://abc.com"));
+        p = Parser.parse(
+            "default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am",
+            URI.parse("https://abc.com"));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://abc.am")));
@@ -68,8 +66,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
-        assertFalse("resource is not allowed", p.allowsChildFromSource(
-            URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("https://www.def.am:555")));
 
 
         p = Parser.parse("default-src *:*", "http://abc.com");
@@ -95,8 +92,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("resource is allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
     }
 
-    @Test
-    public void testAllowsUnsafeInline() {
+    @Test public void testAllowsUnsafeInline() {
         Policy p;
 
         p = Parser.parse("script-src https: 'self' http://a", URI.parse("https://abc.com"));
@@ -116,59 +112,50 @@ public class PolicyQueryingTest extends CSPTest {
         p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
         assertTrue("inline script is allowed", p.allowsUnsafeInlineScript());
         assertTrue("inline style is allowed", p.allowsUnsafeInlineStyle());
-        assertTrue("script hash is allowed", p.allowsScriptWithHash(
-            HashSource.HashAlgorithm.SHA512,
-            new Base64Value("vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertTrue("style hash is allowed",
             p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
     }
 
-    @Test
-    public void testAllowsPlugin() {
+    @Test public void testAllowsPlugin() {
         Policy p;
 
         assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
-        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(
-            new MediaType("a", "b")));
-        assertFalse("plugin is not allowed", parse("default-src 'none'").allowsPlugin(
-            new MediaType("z", "b")));
+        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
+        assertFalse("plugin is not allowed", parse("default-src 'none'").allowsPlugin(new MediaType("z", "b")));
         assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));
-        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(
-            new MediaType("a", "d")));
-        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(
-            new MediaType("", "b")));
+        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "d")));
+        assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("", "b")));
     }
 
-    @Test
-    public void testAllowsHash() {
+    @Test public void testAllowsHash() {
         Policy p;
 
-        p = parse("script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-        assertTrue("script hash is allowed",
-            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
-                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        p = parse(
+            "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("script hash is not allowed",
             p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
-        p = parse("style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-        assertTrue("style hash is allowed",
-            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
-                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        p = parse(
+            "style-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertTrue("style hash is allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed",
             p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
-        assertFalse("script hash is not allowed",
-            p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+        assertFalse("script hash is not allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512,
+            new Base64Value(
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse("style hash is not allowed",
-            p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
-                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("style hash is not allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
     }
 
-    @Test
-    public void testAllowsNonce() {
+    @Test public void testAllowsNonce() {
         Policy p;
 
         p = parse("script-src 'nonce-0gQAAA=='");
@@ -177,18 +164,14 @@ public class PolicyQueryingTest extends CSPTest {
 
         p = parse("style-src 'nonce-0gQAAA=='");
         assertTrue("style nonce is allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(
-            new Base64Value("cGl6ZGE=")));
+        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
-        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(
-            new Base64Value("0gQAAA==")));
-        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(
-            new Base64Value("0gQAAA==")));
+        assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
+        assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
     }
 
-    @Test
-    public void testAllowsConnect() {
+    @Test public void testAllowsConnect() {
         Policy p;
 
         p = Parser.parse("default-src *:* 'unsafe-inline'; connect-src 'self' http://good.com/", "https://abc.com");
@@ -200,8 +183,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("connect is not allowed", p.allowsConnectTo(URI.parse("http://abc.com/")));
     }
 
-    @Test
-    public void testAllowsFrameAncestor() {
+    @Test public void testAllowsFrameAncestor() {
         Policy p;
 
         p = Parser.parse("", "https://abc.com");
@@ -209,42 +191,28 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
 
         p = Parser.parse("frame-ancestors 'none'", "https://abc.com");
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("https://abc.com")));
 
         p = Parser.parse("frame-ancestors 'self'", "https://abc.com");
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
-        assertTrue("frame ancestor is allowed",
-            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("https://abc.com")));
 
         p = Parser.parse("frame-ancestors https:", "https://abc.com");
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("http://cde.com")));
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("http://abc.com")));
-        assertTrue("frame ancestor is allowed",
-            p.allowsFrameAncestor(URI.parse("https://abc.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("http://cde.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("http://abc.com")));
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("https://abc.com")));
 
         p = Parser.parse("frame-ancestors http://example.com https:", "https://abc.com");
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("http://cde.com")));
-        assertFalse("frame ancestor is not allowed",
-            p.allowsFrameAncestor(URI.parse("http://abc.com")));
-        assertTrue("frame ancestor is allowed",
-            p.allowsFrameAncestor(URI.parse("https://example.com")));
-        assertTrue("frame ancestor is allowed",
-            p.allowsFrameAncestor(URI.parse("http://example.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("ftp://cde.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("http://cde.com")));
+        assertFalse("frame ancestor is not allowed", p.allowsFrameAncestor(URI.parse("http://abc.com")));
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("https://example.com")));
+        assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("http://example.com")));
     }
 
-    @Test
-    public void testPaths() {
+    @Test public void testPaths() {
         Policy p;
 
         p = Parser.parse("script-src example.com/a", "http://example.com");
@@ -293,8 +261,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
     }
 
-    @Test
-    public void testWildcards() {
+    @Test public void testWildcards() {
         Policy p;
 
         p = Parser.parse("script-src *", "http://example.com");

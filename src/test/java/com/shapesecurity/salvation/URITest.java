@@ -3,12 +3,12 @@ package com.shapesecurity.salvation;
 import com.shapesecurity.salvation.data.URI;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class URITest extends CSPTest {
 
-    @Test
-    public void testURIandOrigins() {
+    @Test public void testURIandOrigins() {
         URI u1 = URI.parse("http://a/123");
         URI u2 = URI.parse("http://a:80/");
         u1 = URI.parseWithOrigin(URI.parse("https://www"), "/34");

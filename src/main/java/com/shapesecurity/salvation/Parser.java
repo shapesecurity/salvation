@@ -97,9 +97,9 @@ public class Parser {
         for (i = s.length() - 1; i >= 0; --i) {
             int c = s.codePointAt(i);
             if (WSP.matcher(new String(new int[]{c}, 0, 1)).find())
-                break;
+                return s.substring(0, i + 1);
         }
-        return s.substring(0, i + 1);
+        return s;
     }
 
     @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {

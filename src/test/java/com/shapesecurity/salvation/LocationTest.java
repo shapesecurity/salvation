@@ -2,6 +2,7 @@ package com.shapesecurity.salvation;
 
 import com.shapesecurity.salvation.data.Notice;
 import com.shapesecurity.salvation.data.URI;
+import com.shapesecurity.salvation.tokens.Token;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ public class LocationTest extends CSPTest {
 
     @Test public void testParseExceptionLocation() {
         ArrayList<Notice> notices = new ArrayList<>();
+        // TODO: fix
         ParserWithLocation.parse("script-src aaa 'none' bbb ггг", "https://origin", notices);
         assertNotNull(notices.get(0).startLocation);
         assertEquals(1, notices.get(0).startLocation.line);
@@ -32,18 +34,18 @@ public class LocationTest extends CSPTest {
         assertEquals(29, notices.get(1).endLocation.offset);
     }
 
-    //    @Test public void testParseExceptionLocationReportUriEOF() {
-    //        ArrayList<Notice> notices = new ArrayList<>();
-    //        ParserWithLocation.parse("report-uri", "https://origin", notices);
-    //        assertNotNull(notices.get(0).startLocation);
-    //        assertEquals(1, notices.get(0).startLocation.line);
-    //        assertEquals(11, notices.get(0).startLocation.column);
-    //        assertEquals(10, notices.get(0).startLocation.offset);
-    //        assertNotNull(notices.get(0).endLocation);
-    //        assertEquals(1, notices.get(0).endLocation.line);
-    //        assertEquals(11, notices.get(0).endLocation.column);
-    //        assertEquals(10, notices.get(0).endLocation.offset);
-    //    }
+        @Test public void testParseExceptionLocationReportUriEOF() {
+            ArrayList<Notice> notices = new ArrayList<>();
+            ParserWithLocation.parse("report-uri", "https://origin", notices);
+            assertNotNull(notices.get(0).startLocation);
+            assertEquals(1, notices.get(0).startLocation.line);
+            assertEquals(1, notices.get(0).startLocation.column);
+            assertEquals(0, notices.get(0).startLocation.offset);
+            assertNotNull(notices.get(0).endLocation);
+            assertEquals(1, notices.get(0).endLocation.line);
+            assertEquals(11, notices.get(0).endLocation.column);
+            assertEquals(10, notices.get(0).endLocation.offset);
+        }
 
     @Test public void testParseExceptionLocationEmptyMediaTypeListEOF() {
         ArrayList<Notice> notices = new ArrayList<>();
@@ -117,46 +119,26 @@ public class LocationTest extends CSPTest {
         assertEquals(16, notices.get(0).endLocation.offset);
     }
 
-    //    @Test public void testTokeniserExceptionLocation() {
-    //        try {
-    //            TokeniserWithLocation.tokenise("   @@@   ");
-    //        } catch (TokeniserException e) {
-    //            assertNotNull(e.location);
-    //            assertEquals(1, e.location.line);
-    //            assertEquals(4, e.location.column);
-    //            assertEquals(3, e.location.offset);
-    //            assertEquals("1:4: expecting directive-name but found @@@", e.getMessage());
-    //        }
-    //    }
-
-    //    @Test public void testTokenLocation() throws TokeniserException {
-    //        Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
-    //        assertEquals(3, tokens.length);
-    //        assertNotNull(tokens[0].startLocation);
-    //        assertEquals(1, tokens[0].startLocation.line);
-    //        assertEquals(1, tokens[0].startLocation.column);
-    //        assertEquals(0, tokens[0].startLocation.offset);
-    //        assertNotNull(tokens[0].endLocation);
-    //        assertEquals(1, tokens[0].endLocation.line);
-    //        assertEquals(11, tokens[0].endLocation.column);
-    //        assertEquals(10, tokens[0].endLocation.offset);
-    //        assertNotNull(tokens[1].startLocation);
-    //        assertEquals(1, tokens[1].startLocation.line);
-    //        assertEquals(12, tokens[1].startLocation.column);
-    //        assertEquals(11, tokens[1].startLocation.offset);
-    //        assertNotNull(tokens[1].endLocation);
-    //        assertEquals(1, tokens[1].endLocation.line);
-    //        assertEquals(15, tokens[1].endLocation.column);
-    //        assertEquals(14, tokens[1].endLocation.offset);
-    //        assertNotNull(tokens[2].startLocation);
-    //        assertEquals(1, tokens[2].startLocation.line);
-    //        assertEquals(16, tokens[2].startLocation.column);
-    //        assertEquals(15, tokens[2].startLocation.offset);
-    //        assertNotNull(tokens[2].endLocation);
-    //        assertEquals(1, tokens[2].endLocation.line);
-    //        assertEquals(19, tokens[2].endLocation.column);
-    //        assertEquals(18, tokens[2].endLocation.offset);
-    //    }
+        @Test public void testTokenLocation() {
+            Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
+            assertEquals(2, tokens.length);
+            assertNotNull(tokens[0].startLocation);
+            assertEquals(1, tokens[0].startLocation.line);
+            assertEquals(1, tokens[0].startLocation.column);
+            assertEquals(0, tokens[0].startLocation.offset);
+            assertNotNull(tokens[0].endLocation);
+            assertEquals(1, tokens[0].endLocation.line);
+            assertEquals(11, tokens[0].endLocation.column);
+            assertEquals(10, tokens[0].endLocation.offset);
+            assertNotNull(tokens[1].startLocation);
+            assertEquals(1, tokens[1].startLocation.line);
+            assertEquals(12, tokens[1].startLocation.column);
+            assertEquals(11, tokens[1].startLocation.offset);
+            assertNotNull(tokens[1].endLocation);
+            assertEquals(1, tokens[1].endLocation.line);
+            assertEquals(19, tokens[1].endLocation.column);
+            assertEquals(18, tokens[1].endLocation.offset);
+        }
 
     @Test public void testWarningLocationFrameSrc() {
         ArrayList<Notice> notices = new ArrayList<>();
@@ -175,6 +157,7 @@ public class LocationTest extends CSPTest {
     }
 
     @Test public void testWarningLocationFrameAncestor() {
+        // TODO: fix
         ArrayList<Notice> notices = new ArrayList<>();
         ParserWithLocation.parse("frame-ancestors aaa bbb 'none'     ггг", "https://origin", notices);
         assertEquals(2, notices.size());

@@ -13,7 +13,7 @@ public class Tokeniser {
     private static final Pattern policySeparator = Pattern.compile(",");
     private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
     private static final Pattern directiveValuePattern = Pattern.compile("[ \\t!-+--:<-~]+");
-    private static final Pattern notSeparator = Pattern.compile("[^;,]*");
+    private static final Pattern notSeparator = Pattern.compile("[^;,]+");
     @Nonnull protected final ArrayList<Token> tokens;
     @Nonnull protected final String sourceText;
     protected final int length;
@@ -96,9 +96,8 @@ public class Tokeniser {
             }
             if (this.eatSeparator())
                 continue;
-            if (!this.eatDirectiveValue()) {
-                this.eatUntilSeparator();
-            }
+            this.eatDirectiveValue();
+            this.eatUntilSeparator();
         }
         Token[] tokensArray = new Token[this.tokens.size()];
         return this.tokens.toArray(tokensArray);

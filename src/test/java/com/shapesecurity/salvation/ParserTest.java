@@ -548,7 +548,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
         assertEquals("The media-type-list must contain at least one media-type", notices.get(0).message);
-        assertEquals("Expecting directive-name but found х/п", notices.get(1).message);
+        assertEquals("Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
 
     }
 
@@ -605,25 +605,25 @@ public class ParserTest extends CSPTest {
         ArrayList<Notice> notices = new ArrayList<>();
         p = parseWithNotices("referrer      no-referrer   ", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(0, notices.size());
+        assertEquals(1, notices.size());
 
         notices.clear();
         p = parseWithNotices("referrer", notices);
         assertEquals(0, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer aaa", notices);
         assertEquals(0, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("Expecting referrer-token but found aaa", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("Expecting referrer-token but found aaa", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer no-referrer unsafe-url", notices);
         assertEquals(0, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("upgrade-insecure-requests", notices);
@@ -640,13 +640,13 @@ public class ParserTest extends CSPTest {
         notices.clear();
         p = parseWithNotices("block-all-mixed-content", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(0, notices.size());
+        assertEquals(1, notices.size());
 
         notices.clear();
         p = parseWithNotices("block-all-mixed-content a a", notices);
         assertEquals(0, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("The block-all-mixed-content directive must not contain any value", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("The block-all-mixed-content directive must not contain any value", notices.get(1).message);
     }
 
     @Test public void testParseMulti() {
@@ -729,10 +729,10 @@ public class ParserTest extends CSPTest {
         pl.clear();
         pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"), notices);
         assertEquals(2, pl.size());
-        assertEquals(2, notices.size());
+        assertEquals(3, notices.size());
         assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
             notices.get(0).show());
-        assertEquals("1:15: The referrer directive must contain exactly one referrer-token", notices.get(1).show());
+        assertEquals("1:15: The referrer directive must contain exactly one referrer-token", notices.get(2).show());
 
         notices.clear();
         p = parseWithNotices("script-src *, ", notices);

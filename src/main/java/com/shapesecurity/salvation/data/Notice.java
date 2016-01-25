@@ -4,6 +4,9 @@ import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class Notice implements Show {
 
@@ -21,6 +24,31 @@ public class Notice implements Show {
     @Override public String toString() {
         return type.getValue() + ": " + message;
     }
+
+    @Nonnull
+    public static ArrayList<Notice> getAllErrors(@Nullable ArrayList<Notice> notices) {
+        if (notices == null) {
+            return new ArrayList<>();
+        }
+        return notices.stream().filter(notice -> notice.type == Type.ERROR).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Nonnull
+    public static ArrayList<Notice> getAllWarnings(@Nullable ArrayList<Notice> notices) {
+        if (notices == null) {
+            return new ArrayList<>();
+        }
+        return notices.stream().filter(notice -> notice.type == Type.WARNING).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Nonnull
+    public static ArrayList<Notice> getAllInfos(@Nullable ArrayList<Notice> notices) {
+        if (notices == null) {
+            return new ArrayList<>();
+        }
+        return notices.stream().filter(notice -> notice.type == Type.INFO).collect(Collectors.toCollection(ArrayList::new));
+    }
+
 
     @Nonnull @Override public String show() {
         if (startLocation == null) {

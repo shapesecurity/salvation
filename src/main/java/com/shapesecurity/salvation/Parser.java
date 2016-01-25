@@ -221,96 +221,105 @@ public class Parser {
         }
         Directive result;
         DirectiveNameToken token = (DirectiveNameToken) this.advance();
-        switch (token.subtype) {
-            case BaseUri:
-                result = new BaseUriDirective(this.parseSourceList());
-                break;
-            case BlockAllMixedContent:
-                this.enforceMissingDirectiveValue(token.value);
-                result = new BlockAllMixedContentDirective();
-                break;
-            case ChildSrc:
-                result = new ChildSrcDirective(this.parseSourceList());
-                break;
-            case ConnectSrc:
-                result = new ConnectSrcDirective(this.parseSourceList());
-                break;
-            case DefaultSrc:
-                result = new DefaultSrcDirective(this.parseSourceList());
-                break;
-            case FontSrc:
-                result = new FontSrcDirective(this.parseSourceList());
-                break;
-            case FormAction:
-                result = new FormActionDirective(this.parseSourceList());
-                break;
-            case FrameAncestors:
-                result = new FrameAncestorsDirective(this.parseAncestorSourceList());
-                break;
-            case ImgSrc:
-                result = new ImgSrcDirective(this.parseSourceList());
-                break;
-            case ManifestSrc:
-                result = new ManifestSrcDirective(this.parseSourceList());
-                break;
-            case MediaSrc:
-                result = new MediaSrcDirective(this.parseSourceList());
-                break;
-            case ObjectSrc:
-                result = new ObjectSrcDirective(this.parseSourceList());
-                break;
-            case PluginTypes:
-                result = new PluginTypesDirective(this.parseMediaTypeList());
-                break;
-            case Referrer:
-                result = new ReferrerDirective(this.parseReferrerTokenList());
-                break;
-            case ReportUri:
-                result = new ReportUriDirective(this.parseUriList());
-                break;
-            case Sandbox:
-                result = new SandboxDirective(this.parseSandboxTokenList());
-                break;
-            case ScriptSrc:
-                result = new ScriptSrcDirective(this.parseSourceList());
-                break;
-            case StyleSrc:
-                result = new StyleSrcDirective(this.parseSourceList());
-                break;
-            case UpgradeInsecureRequests:
-                this.enforceMissingDirectiveValue(token.value);
-                result = new UpgradeInsecureRequestsDirective();
-                break;
-            case Allow:
-                this.error(
-                    "The allow directive has been replaced with default-src and is not in the CSP specification.");
-                if (this.hasNext(DirectiveValueToken.class))
-                    this.advance();
-                throw INVALID_DIRECTIVE_NAME;
-            case FrameSrc:
-                this.warn(
-                    "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
-                result = new FrameSrcDirective(this.parseSourceList());
-                break;
-            case Options:
-                this.error(
-                    "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
-                if (this.hasNext(DirectiveValueToken.class))
-                    this.advance();
-                throw INVALID_DIRECTIVE_NAME;
-            case Unrecognised:
-            default:
-                this.error("Unrecognised directive-name: " + token.value);
-                if (this.hasNext(DirectiveValueToken.class))
-                    this.advance();
-                throw INVALID_DIRECTIVE_NAME;
-        }
-        if (this.hasNext(UnknownToken.class)) {
-            int cp = this.advance().value.codePointAt(0);
-            this.error(String.format(
-                "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded",
-                cp, new String(new int[] {cp}, 0, 1)));
-            throw INVALID_DIRECTIVE_VALUE;
+        try {
+            switch (token.subtype) {
+                case BaseUri:
+                    result = new BaseUriDirective(this.parseSourceList());
+                    break;
+                case BlockAllMixedContent:
+                    this.info(
+                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    this.enforceMissingDirectiveValue(token.value);
+                    result = new BlockAllMixedContentDirective();
+                    break;
+                case ChildSrc:
+                    result = new ChildSrcDirective(this.parseSourceList());
+                    break;
+                case ConnectSrc:
+                    result = new ConnectSrcDirective(this.parseSourceList());
+                    break;
+                case DefaultSrc:
+                    result = new DefaultSrcDirective(this.parseSourceList());
+                    break;
+                case FontSrc:
+                    result = new FontSrcDirective(this.parseSourceList());
+                    break;
+                case FormAction:
+                    result = new FormActionDirective(this.parseSourceList());
+                    break;
+                case FrameAncestors:
+                    result = new FrameAncestorsDirective(this.parseAncestorSourceList());
+                    break;
+                case ImgSrc:
+                    result = new ImgSrcDirective(this.parseSourceList());
+                    break;
+                case ManifestSrc:
+                    this.info(
+                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    result = new ManifestSrcDirective(this.parseSourceList());
+                    break;
+                case MediaSrc:
+                    result = new MediaSrcDirective(this.parseSourceList());
+                    break;
+                case ObjectSrc:
+                    result = new ObjectSrcDirective(this.parseSourceList());
+                    break;
+                case PluginTypes:
+                    result = new PluginTypesDirective(this.parseMediaTypeList());
+                    break;
+                case Referrer:
+                    this.info(
+                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    result = new ReferrerDirective(this.parseReferrerTokenList());
+                    break;
+                case ReportUri:
+                    result = new ReportUriDirective(this.parseUriList());
+                    break;
+                case Sandbox:
+                    result = new SandboxDirective(this.parseSandboxTokenList());
+                    break;
+                case ScriptSrc:
+                    result = new ScriptSrcDirective(this.parseSourceList());
+                    break;
+                case StyleSrc:
+                    result = new StyleSrcDirective(this.parseSourceList());
+                    break;
+                case UpgradeInsecureRequests:
+                    this.enforceMissingDirectiveValue(token.value);
+                    result = new UpgradeInsecureRequestsDirective();
+                    break;
+                case Allow:
+                    this.error(
+                        "The allow directive has been replaced with default-src and is not in the CSP specification.");
+                    if (this.hasNext(DirectiveValueToken.class))
+                        this.advance();
+                    throw INVALID_DIRECTIVE_NAME;
+                case FrameSrc:
+                    this.warn(
+                        "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
+                    result = new FrameSrcDirective(this.parseSourceList());
+                    break;
+                case Options:
+                    this.error(
+                        "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
+                    if (this.hasNext(DirectiveValueToken.class))
+                        this.advance();
+                    throw INVALID_DIRECTIVE_NAME;
+                case Unrecognised:
+                default:
+                    this.error("Unrecognised directive-name: " + token.value);
+                    if (this.hasNext(DirectiveValueToken.class))
+                        this.advance();
+                    throw INVALID_DIRECTIVE_NAME;
+            }
+        } finally {
+            if (this.hasNext(UnknownToken.class)) {
+                int cp = this.advance().value.codePointAt(0);
+                this.error(String.format(
+                    "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded",
+                    cp, new String(new int[] {cp}, 0, 1)));
+                throw INVALID_DIRECTIVE_VALUE;
+            }
         }
         return result;
     }

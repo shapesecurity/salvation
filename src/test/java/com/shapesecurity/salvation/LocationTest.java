@@ -14,8 +14,7 @@ public class LocationTest extends CSPTest {
 
     @Test public void testParseExceptionLocation() {
         ArrayList<Notice> notices = new ArrayList<>();
-        // TODO: fix
-        ParserWithLocation.parse("script-src aaa 'none' bbb ггг", "https://origin", notices);
+        ParserWithLocation.parse("script-src aaa 'none' bbb жжж", "https://origin", notices);
         assertNotNull(notices.get(0).startLocation);
         assertEquals(1, notices.get(0).startLocation.line);
         assertEquals(16, notices.get(0).startLocation.column);
@@ -157,7 +156,6 @@ public class LocationTest extends CSPTest {
     }
 
     @Test public void testWarningLocationFrameAncestor() {
-        // TODO: fix
         ArrayList<Notice> notices = new ArrayList<>();
         ParserWithLocation.parse("frame-ancestors aaa bbb 'none'     ггг", "https://origin", notices);
         assertEquals(2, notices.size());
@@ -183,22 +181,10 @@ public class LocationTest extends CSPTest {
         ArrayList<Notice> notices = new ArrayList<>();
 
         ParserWithLocation.parse("referrer origin", "https://origin", notices);
-        assertEquals(0, notices.size());
+        assertEquals(1, notices.size());
 
         notices.clear();
         ParserWithLocation.parse("referrer origin no-referrer", "https://origin", notices);
-        assertEquals(1, notices.size());
-        assertNotNull(notices.get(0).startLocation);
-        assertEquals(1, notices.get(0).startLocation.line);
-        assertEquals(10, notices.get(0).startLocation.column);
-        assertEquals(9, notices.get(0).startLocation.offset);
-        assertNotNull(notices.get(0).endLocation);
-        assertEquals(1, notices.get(0).endLocation.line);
-        assertEquals(28, notices.get(0).endLocation.column);
-        assertEquals(27, notices.get(0).endLocation.offset);
-
-        notices.clear();
-        ParserWithLocation.parse("referrer абц no-referrer", "https://origin", notices);
         assertEquals(2, notices.size());
         assertNotNull(notices.get(0).startLocation);
         assertEquals(1, notices.get(0).startLocation.line);
@@ -208,15 +194,43 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
+
         assertNotNull(notices.get(1).startLocation);
-        //TODO: is second notice right??
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(10, notices.get(1).startLocation.column);
         assertEquals(9, notices.get(1).startLocation.offset);
         assertNotNull(notices.get(1).endLocation);
         assertEquals(1, notices.get(1).endLocation.line);
-        assertEquals(25, notices.get(1).endLocation.column);
-        assertEquals(24, notices.get(1).endLocation.offset);
+        assertEquals(28, notices.get(1).endLocation.column);
+        assertEquals(27, notices.get(1).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("referrer абц no-referrer", "https://origin", notices);
+        assertEquals(3, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(9, notices.get(0).endLocation.column);
+        assertEquals(8, notices.get(0).endLocation.offset);
+        assertNotNull(notices.get(1).startLocation);
+        assertEquals(1, notices.get(1).startLocation.line);
+        assertEquals(1, notices.get(1).startLocation.column);
+        assertEquals(0, notices.get(1).startLocation.offset);
+        assertNotNull(notices.get(1).endLocation);
+        assertEquals(1, notices.get(1).endLocation.line);
+        assertEquals(9, notices.get(1).endLocation.column);
+        assertEquals(8, notices.get(1).endLocation.offset);
+        assertNotNull(notices.get(2).startLocation);
+        assertEquals(1, notices.get(2).startLocation.line);
+        assertEquals(10, notices.get(2).startLocation.column);
+        assertEquals(9, notices.get(2).startLocation.offset);
+        assertNotNull(notices.get(2).endLocation);
+        assertEquals(1, notices.get(2).endLocation.line);
+        assertEquals(25, notices.get(2).endLocation.column);
+        assertEquals(24, notices.get(2).endLocation.offset);
     }
 
     @Test public void testWarningLocationSandbox() {
@@ -305,5 +319,30 @@ public class LocationTest extends CSPTest {
         assertEquals(
             "Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'",
             notice.toString());
+    }
+
+    @Test public void testNoticeHelpers() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa; manifest-src; script-src д; стайл-соурс 22; frame-src 'none'; style-src 'nonce-123'", URI.parse("https://origin"), notices);
+        assertEquals(6, notices.size());
+        ArrayList<Notice> errors = Notice.getAllErrors(notices);
+        ArrayList<Notice> warnings = Notice.getAllWarnings(notices);
+        ArrayList<Notice> infos = Notice.getAllInfos(notices);
+        assertEquals(2, errors.size());
+        assertEquals(3, warnings.size());
+        assertEquals(1, infos.size());
+
+        notices.clear();
+        errors.clear();
+        warnings.clear();
+        infos.clear();
+        ParserWithLocation.parse("", URI.parse("https://origin"), notices);
+        assertEquals(0, notices.size());
+        errors = Notice.getAllErrors(notices);
+        warnings = Notice.getAllWarnings(notices);
+        infos = Notice.getAllInfos(notices);
+        assertEquals(0, errors.size());
+        assertEquals(0, warnings.size());
+        assertEquals(0, infos.size());
     }
 }

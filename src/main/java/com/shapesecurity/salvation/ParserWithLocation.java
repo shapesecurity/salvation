@@ -77,7 +77,8 @@ public class ParserWithLocation extends Parser {
         return token.endLocation;
     }
 
-    @Override @Nonnull protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
+    @Override @Nonnull
+    protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
         Notice notice = super.createNotice(type, message);
         notice.startLocation = this.getStartLocation(token);
         notice.endLocation = this.getEndLocation(token);

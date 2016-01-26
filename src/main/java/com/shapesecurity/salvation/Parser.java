@@ -98,11 +98,34 @@ public class Parser {
         int i;
         for (i = s.length() - 1; i >= 0; --i) {
             int c = s.codePointAt(i);
-            if (!WSP.matcher(new String(new int[]{c}, 0, 1)).find())
+            if (!WSP.matcher(new String(new int[] {c}, 0, 1)).find())
                 break;
         }
-        
+
         return s.substring(0, i + 1);
+    }
+
+    @Nonnull private static List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
+        List<SubDirectiveValueToken> tokens = new ArrayList<>();
+        @Nullable Location startLocation = token.startLocation;
+        if (startLocation == null) {
+            for (String s : WSP.split(trimRHSWS(token.value))) {
+                tokens.add(new SubDirectiveValueToken(s));
+            }
+        } else {
+            Matcher m = NotWSP.matcher(token.value);
+            int offset = 0;
+            while (m.find(offset)) {
+                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
+                dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(),
+                    startLocation.offset + m.start());
+                dv.endLocation =
+                    new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
+                offset = m.end();
+                tokens.add(dv);
+            }
+        }
+        return tokens;
     }
 
     @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
@@ -149,28 +172,6 @@ public class Parser {
             return true;
         }
         return false;
-    }
-
-    @Nonnull
-    private static List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
-        List<SubDirectiveValueToken> tokens = new ArrayList<>();
-        @Nullable Location startLocation = token.startLocation;
-        if (startLocation == null) {
-            for (String s : WSP.split(trimRHSWS(token.value))) {
-                tokens.add(new SubDirectiveValueToken(s));
-            }
-        } else {
-            Matcher m = NotWSP.matcher(token.value);
-            int offset = 0;
-            while (m.find(offset)) {
-                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
-                dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(), startLocation.offset + m.start());
-                dv.endLocation = new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
-                offset = m.end();
-                tokens.add(dv);
-            }
-        }
-        return tokens;
     }
 
     @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
@@ -235,8 +236,8 @@ public class Parser {
                     result = new BaseUriDirective(this.parseSourceList());
                     break;
                 case BlockAllMixedContent:
-                    this.warn(token,
-                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    this.warn(token, "The " + token.value
+                        + " is an experimental directive that will be likely added to the CSP specification.");
                     this.enforceMissingDirectiveValue(token);
                     result = new BlockAllMixedContentDirective();
                     break;
@@ -262,8 +263,8 @@ public class Parser {
                     result = new ImgSrcDirective(this.parseSourceList());
                     break;
                 case ManifestSrc:
-                    this.warn(token,
-                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    this.warn(token, "The " + token.value
+                        + " is an experimental directive that will be likely added to the CSP specification.");
                     result = new ManifestSrcDirective(this.parseSourceList());
                     break;
                 case MediaSrc:
@@ -281,8 +282,8 @@ public class Parser {
                     result = new PluginTypesDirective(mediaTypes);
                     break;
                 case Referrer:
-                    this.warn(token,
-                        "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
+                    this.warn(token, "The " + token.value
+                        + " is an experimental directive that will be likely added to the CSP specification.");
                     Set<ReferrerValue> referrerTokens = this.parseReferrerTokenList();
                     if (referrerTokens.isEmpty()) {
                         this.error(token, "The referrer directive must contain exactly one referrer-token");
@@ -375,7 +376,8 @@ public class Parser {
         return mediaTypes;
     }
 
-    @Nonnull private MediaType parseMediaType(@Nonnull SubDirectiveValueToken token) throws DirectiveValueParseException {
+    @Nonnull private MediaType parseMediaType(@Nonnull SubDirectiveValueToken token)
+        throws DirectiveValueParseException {
         Matcher matcher = Constants.mediaTypePattern.matcher(token.value);
         if (matcher.find()) {
             return new MediaType(matcher.group("type"), matcher.group("subtype"));
@@ -623,7 +625,8 @@ public class Parser {
         return sandboxTokens;
     }
 
-    @Nonnull private SandboxValue parseSandboxToken(@Nonnull SubDirectiveValueToken token) throws DirectiveValueParseException {
+    @Nonnull private SandboxValue parseSandboxToken(@Nonnull SubDirectiveValueToken token)
+        throws DirectiveValueParseException {
         Matcher matcher = Constants.sandboxEnumeratedTokenPattern.matcher(token.value);
         if (matcher.find()) {
             return new SandboxValue(token.value);
@@ -679,6 +682,7 @@ public class Parser {
         }
     }
 
+
     private static class DirectiveParseException extends Exception {
         @Nullable Location startLocation;
         @Nullable Location endLocation;
@@ -694,6 +698,7 @@ public class Parser {
             return startLocation.show() + ": " + super.getMessage();
         }
     }
+
 
     protected static class DirectiveValueParseException extends Exception {
         @Nullable Location startLocation;

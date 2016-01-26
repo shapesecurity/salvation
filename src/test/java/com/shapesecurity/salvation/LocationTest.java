@@ -33,18 +33,18 @@ public class LocationTest extends CSPTest {
         assertEquals(29, notices.get(1).endLocation.offset);
     }
 
-        @Test public void testParseExceptionLocationReportUriEOF() {
-            ArrayList<Notice> notices = new ArrayList<>();
-            ParserWithLocation.parse("report-uri", "https://origin", notices);
-            assertNotNull(notices.get(0).startLocation);
-            assertEquals(1, notices.get(0).startLocation.line);
-            assertEquals(1, notices.get(0).startLocation.column);
-            assertEquals(0, notices.get(0).startLocation.offset);
-            assertNotNull(notices.get(0).endLocation);
-            assertEquals(1, notices.get(0).endLocation.line);
-            assertEquals(11, notices.get(0).endLocation.column);
-            assertEquals(10, notices.get(0).endLocation.offset);
-        }
+    @Test public void testParseExceptionLocationReportUriEOF() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        ParserWithLocation.parse("report-uri", "https://origin", notices);
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(11, notices.get(0).endLocation.column);
+        assertEquals(10, notices.get(0).endLocation.offset);
+    }
 
     @Test public void testParseExceptionLocationEmptyMediaTypeListEOF() {
         ArrayList<Notice> notices = new ArrayList<>();
@@ -118,26 +118,26 @@ public class LocationTest extends CSPTest {
         assertEquals(16, notices.get(0).endLocation.offset);
     }
 
-        @Test public void testTokenLocation() {
-            Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
-            assertEquals(2, tokens.length);
-            assertNotNull(tokens[0].startLocation);
-            assertEquals(1, tokens[0].startLocation.line);
-            assertEquals(1, tokens[0].startLocation.column);
-            assertEquals(0, tokens[0].startLocation.offset);
-            assertNotNull(tokens[0].endLocation);
-            assertEquals(1, tokens[0].endLocation.line);
-            assertEquals(11, tokens[0].endLocation.column);
-            assertEquals(10, tokens[0].endLocation.offset);
-            assertNotNull(tokens[1].startLocation);
-            assertEquals(1, tokens[1].startLocation.line);
-            assertEquals(12, tokens[1].startLocation.column);
-            assertEquals(11, tokens[1].startLocation.offset);
-            assertNotNull(tokens[1].endLocation);
-            assertEquals(1, tokens[1].endLocation.line);
-            assertEquals(19, tokens[1].endLocation.column);
-            assertEquals(18, tokens[1].endLocation.offset);
-        }
+    @Test public void testTokenLocation() {
+        Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
+        assertEquals(2, tokens.length);
+        assertNotNull(tokens[0].startLocation);
+        assertEquals(1, tokens[0].startLocation.line);
+        assertEquals(1, tokens[0].startLocation.column);
+        assertEquals(0, tokens[0].startLocation.offset);
+        assertNotNull(tokens[0].endLocation);
+        assertEquals(1, tokens[0].endLocation.line);
+        assertEquals(11, tokens[0].endLocation.column);
+        assertEquals(10, tokens[0].endLocation.offset);
+        assertNotNull(tokens[1].startLocation);
+        assertEquals(1, tokens[1].startLocation.line);
+        assertEquals(12, tokens[1].startLocation.column);
+        assertEquals(11, tokens[1].startLocation.offset);
+        assertNotNull(tokens[1].endLocation);
+        assertEquals(1, tokens[1].endLocation.line);
+        assertEquals(19, tokens[1].endLocation.column);
+        assertEquals(18, tokens[1].endLocation.offset);
+    }
 
     @Test public void testWarningLocationFrameSrc() {
         ArrayList<Notice> notices = new ArrayList<>();
@@ -323,7 +323,9 @@ public class LocationTest extends CSPTest {
 
     @Test public void testNoticeHelpers() {
         ArrayList<Notice> notices = new ArrayList<>();
-        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa; manifest-src; script-src д; стайл-соурс 22; frame-src 'none'; style-src 'nonce-123'", URI.parse("https://origin"), notices);
+        ParserWithLocation.parse(
+            "script-src 'unsafe-redirect' aaa; manifest-src; script-src д; стайл-соурс 22; frame-src 'none'; style-src 'nonce-123'",
+            URI.parse("https://origin"), notices);
         assertEquals(6, notices.size());
         ArrayList<Notice> errors = Notice.getAllErrors(notices);
         ArrayList<Notice> warnings = Notice.getAllWarnings(notices);

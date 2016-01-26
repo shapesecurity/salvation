@@ -227,8 +227,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("frame-ancestors 'none' 'self'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("The 'none' keyword must not be combined with any other ancestor-source",
-            notices.get(0).message);
+        assertEquals("The 'none' keyword must not be combined with any other ancestor-source", notices.get(0).message);
 
         p = parse("frame-ancestors *    ");
         q = parse("frame-ancestors http://example.com");
@@ -548,7 +547,9 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
         assertEquals("The media-type-list must contain at least one media-type", notices.get(0).message);
-        assertEquals("Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
+        assertEquals(
+            "Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded",
+            notices.get(1).message);
 
     }
 

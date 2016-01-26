@@ -19,8 +19,7 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
         super(name, values);
     }
 
-    public boolean matchesHash(@Nonnull HashSource.HashAlgorithm algorithm,
-        @Nonnull Base64Value hashValue) {
+    public boolean matchesHash(@Nonnull HashSource.HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
         return this.values().filter(x -> x instanceof MatchesHash)
             .anyMatch(x -> ((MatchesHash) x).matchesHash(algorithm, hashValue));
     }
@@ -45,7 +44,8 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
             if (dv == KeywordSource.Self) {
                 if (origin instanceof SchemeHostPortTriple) {
                     SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
-                    return Collections.singleton(new HostSource(shpOrigin.scheme, shpOrigin.host, shpOrigin.port, null));
+                    return Collections
+                        .singleton(new HostSource(shpOrigin.scheme, shpOrigin.host, shpOrigin.port, null));
                 } else if (origin instanceof GUID) {
                     return Collections.EMPTY_SET;
                 }

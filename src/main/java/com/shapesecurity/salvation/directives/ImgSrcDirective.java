@@ -12,8 +12,7 @@ public class ImgSrcDirective extends SourceListDirective {
         super(ImgSrcDirective.name, sourceExpressions);
     }
 
-    @Nonnull @Override
-    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new ImgSrcDirective(newValues);
     }
 }

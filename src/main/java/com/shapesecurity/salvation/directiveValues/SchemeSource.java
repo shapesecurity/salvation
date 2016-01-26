@@ -20,8 +20,7 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
         return this.value.matches(source.scheme);
     }
 
-    @Override
-    public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
         return source.value.startsWith(this.value + ":");
     }
 

@@ -12,7 +12,7 @@ public class TokeniserWithLocation extends Tokeniser {
         super(sourceText);
     }
 
-    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) throws TokeniserException {
+    @Nonnull public static Token[] tokenise(@Nonnull String sourceText) {
         return new TokeniserWithLocation(sourceText).tokenise();
     }
 
@@ -20,14 +20,7 @@ public class TokeniserWithLocation extends Tokeniser {
         return new Location(1, this.index + 1, this.index);
     }
 
-    @Override @Nonnull protected TokeniserException createError(@Nonnull String message) {
-        TokeniserException e = super.createError(message);
-        e.location = this.getLocation();
-        return e;
-    }
-
-    @Override
-    protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
+    @Override protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
         Location startLocation = this.getLocation();
         return super.eat(tokenText -> {
             Location endLocation = this.getLocation();

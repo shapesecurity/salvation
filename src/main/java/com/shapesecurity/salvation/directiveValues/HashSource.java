@@ -43,8 +43,7 @@ public class HashSource implements SourceExpression, MatchesHash {
     @Override public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof HashSource))
             return false;
-        return this.algorithm.equals(((HashSource) other).algorithm) && this.value
-            .equals(((HashSource) other).value);
+        return this.algorithm.equals(((HashSource) other).algorithm) && this.value.equals(((HashSource) other).value);
     }
 
     @Override public int hashCode() {

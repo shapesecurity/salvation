@@ -13,108 +13,74 @@ public class ParserWithLocation extends Parser {
     private final Location EOF;
 
     // invariant: tokens will have non-null locations
-    private ParserWithLocation(@Nonnull String sourceText, @Nonnull Token[] tokens,
-        @Nonnull Origin origin, @Nullable Collection<Warning> warningsOut) {
+    private ParserWithLocation(@Nonnull String sourceText, @Nonnull Token[] tokens, @Nonnull Origin origin,
+        @Nullable Collection<Notice> warningsOut) {
         super(tokens, origin, warningsOut);
         EOF = new Location(1, sourceText.length() + 1, sourceText.length());
     }
 
-    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, null).parsePolicyAndAssertEOF();
+    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, null)
+            .parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull Origin origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, warningsOut).parsePolicyAndAssertEOF();
+        @Nonnull Collection<Notice> warningsOut) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, warningsOut)
+            .parsePolicyAndAssertEOF();
     }
 
-    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), null).parsePolicyAndAssertEOF();
+    @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), null)
+            .parsePolicyAndAssertEOF();
     }
 
     @Nonnull public static Policy parse(@Nonnull String sourceText, @Nonnull String origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), warningsOut).parsePolicyAndAssertEOF();
+        @Nonnull Collection<Notice> warningsOut) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin),
+            warningsOut).parsePolicyAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, null).parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, null)
+            .parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), null).parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin), null)
+            .parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            origin, warningsOut).parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull Origin origin,
+        @Nonnull Collection<Notice> warningsOut) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), origin, warningsOut)
+            .parsePolicyListAndAssertEOF();
     }
 
-    @Nonnull
-    public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin,
-        @Nonnull Collection<Warning> warningsOut)
-        throws ParseException, Tokeniser.TokeniserException {
-        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText),
-            URI.parse(origin), warningsOut).parsePolicyListAndAssertEOF();
+    @Nonnull public static List<Policy> parseMulti(@Nonnull String sourceText, @Nonnull String origin,
+        @Nonnull Collection<Notice> warningsOut) {
+        return new ParserWithLocation(sourceText, TokeniserWithLocation.tokenise(sourceText), URI.parse(origin),
+            warningsOut).parsePolicyListAndAssertEOF();
     }
 
-    @Nullable private Token getCurrentToken() {
-        return this.index <= this.tokens.length && this.index > 0 ?
-            this.tokens[this.index - 1] :
-            null;
-    }
-
-    @Nonnull private Location getStartLocation() {
-        Token currentToken = this.getCurrentToken();
-        if (currentToken == null || currentToken.startLocation == null) {
+    @Nonnull private Location getStartLocation(@Nullable Token token) {
+        if (token == null || token.startLocation == null) {
             return new Location(1, 1, 0);
         }
-        return currentToken.startLocation;
+        return token.startLocation;
     }
 
-    @Nonnull private Location getEndLocation() {
-        Token currentToken = this.getCurrentToken();
-        if (currentToken == null || currentToken.endLocation == null) {
+    @Nonnull private Location getEndLocation(@Nullable Token token) {
+        if (token == null || token.endLocation == null) {
             return EOF;
         }
-        return currentToken.endLocation;
+        return token.endLocation;
     }
 
-    @Override @Nonnull protected ParseException createUnexpectedEOF(@Nonnull String message) {
-        ParseException e = super.createError(message);
-        e.startLocation = EOF;
-        e.endLocation = EOF;
-        return e;
-    }
-
-    @Override @Nonnull protected ParseException createError(@Nonnull String message) {
-        ParseException e = super.createError(message);
-        e.startLocation = this.getStartLocation();
-        e.endLocation = this.getEndLocation();
-        return e;
-    }
-
-    @Override @Nonnull protected Warning createWarning(@Nonnull String message) {
-        Warning warning = super.createWarning(message);
-        warning.startLocation = this.getStartLocation();
-        warning.endLocation = this.getEndLocation();
-        return warning;
+    @Override @Nonnull protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
+        Notice notice = super.createNotice(type, message);
+        notice.startLocation = this.getStartLocation(token);
+        notice.endLocation = this.getEndLocation(token);
+        return notice;
     }
 }

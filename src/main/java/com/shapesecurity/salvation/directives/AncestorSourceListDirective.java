@@ -9,9 +9,8 @@ import com.shapesecurity.salvation.interfaces.MatchesSource;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-abstract class AncestorSourceListDirective extends Directive<AncestorSource> implements MatchesSource{
-    AncestorSourceListDirective(@Nonnull String name,
-        @Nonnull Set<AncestorSource> ancestorSources) {
+abstract class AncestorSourceListDirective extends Directive<AncestorSource> implements MatchesSource {
+    AncestorSourceListDirective(@Nonnull String name, @Nonnull Set<AncestorSource> ancestorSources) {
         super(name, ancestorSources);
     }
 

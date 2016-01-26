@@ -12,8 +12,7 @@ public class ChildSrcDirective extends SourceListDirective {
         super(ChildSrcDirective.NAME, sourceExpressions);
     }
 
-    @Nonnull @Override
-    public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
         return new ChildSrcDirective(newValues);
     }
 }

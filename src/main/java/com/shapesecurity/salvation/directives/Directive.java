@@ -6,7 +6,10 @@ import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,9 +30,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         set.addAll(a);
         set.addAll(b);
 
-        Optional<T> star = set.stream()
-            .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
-            .findAny();
+        Optional<T> star = set.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard()).findAny();
         if (star.isPresent()) {
             set.removeIf(y -> y instanceof HostSource);
             set.add(star.get());
@@ -49,9 +50,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
             return set;
         }
 
-        Optional<T> star = b.stream()
-            .filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
-            .findAny();
+        Optional<T> star = b.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard()).findAny();
         if (star.isPresent()) {
             set.addAll(a);
             return set;
@@ -77,8 +76,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     @Nonnull public abstract Directive<Value> construct(Set<Value> newValues);
 
-    @SuppressWarnings("CloneDoesntCallSuperClone")
-    @Nonnull @Override public final Directive<Value> clone() {
+    @SuppressWarnings("CloneDoesntCallSuperClone") @Nonnull @Override public final Directive<Value> clone() {
         Set<Value> s = new LinkedHashSet<>();
         s.addAll(this.values);
         return this.construct(s);
@@ -99,18 +97,16 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     public final void union(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
-            throw new IllegalArgumentException(
-                this.getClass() + " can be unioned with " + this.getClass() +
-                    ", but found " + other.getClass());
+            throw new IllegalArgumentException(this.getClass() + " can be unioned with " + this.getClass() +
+                ", but found " + other.getClass());
         }
         this.values = Directive.union(this.values, other.values);
     }
 
     public final void intersect(@Nonnull Directive<Value> other) {
         if (other.getClass() != this.getClass()) {
-            throw new IllegalArgumentException(
-                this.getClass() + " can be intersected with " + this.getClass() +
-                    ", but found " + other.getClass());
+            throw new IllegalArgumentException(this.getClass() + " can be intersected with " + this.getClass() +
+                ", but found " + other.getClass());
         }
         this.values = Directive.intersect(this.values, other.values);
     }
@@ -125,8 +121,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @Nonnull @Override public String show() {
-        return Stream.concat(Stream.of(this.name), this.values().map(Show::show))
-            .collect(Collectors.joining(" "));
+        return Stream.concat(Stream.of(this.name), this.values().map(Show::show)).collect(Collectors.joining(" "));
     }
 
     public final boolean contains(@Nonnull DirectiveValue value) {
@@ -134,8 +129,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     @SuppressWarnings("unchecked") @Override public final boolean equals(@Nullable Object other) {
-        return other != null && other.getClass() == this.getClass() && this
-            .equalsHelper((Directive<Value>) other);
+        return other != null && other.getClass() == this.getClass() && this.equalsHelper((Directive<Value>) other);
     }
 
     @Override public final int hashCode() {

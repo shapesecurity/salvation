@@ -6,8 +6,7 @@ import javax.annotation.Nonnull;
 import java.util.Objects;
 
 public class SchemeHostPortTriple extends Origin {
-    @Nonnull
-    public final String scheme;
+    @Nonnull public final String scheme;
     @Nonnull public final String host;
     public final int port;
 
@@ -56,8 +55,7 @@ public class SchemeHostPortTriple extends Origin {
     }
 
     @Nonnull @Override public String show() {
-        boolean isDefaultPort =
-            this.port == Constants.EMPTY_PORT || defaultPortForProtocol(this.scheme) == this.port;
+        boolean isDefaultPort = this.port == Constants.EMPTY_PORT || defaultPortForProtocol(this.scheme) == this.port;
         return this.scheme + "://" +
             this.host +
             (isDefaultPort ? "" : ":" + this.port);

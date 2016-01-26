@@ -197,8 +197,8 @@ public class LocationTest extends CSPTest {
 
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
-        assertEquals(10, notices.get(1).startLocation.column);
-        assertEquals(9, notices.get(1).startLocation.offset);
+        assertEquals(17, notices.get(1).startLocation.column);
+        assertEquals(16, notices.get(1).startLocation.offset);
         assertNotNull(notices.get(1).endLocation);
         assertEquals(1, notices.get(1).endLocation.line);
         assertEquals(28, notices.get(1).endLocation.column);
@@ -329,8 +329,8 @@ public class LocationTest extends CSPTest {
         ArrayList<Notice> warnings = Notice.getAllWarnings(notices);
         ArrayList<Notice> infos = Notice.getAllInfos(notices);
         assertEquals(2, errors.size());
-        assertEquals(3, warnings.size());
-        assertEquals(1, infos.size());
+        assertEquals(4, warnings.size());
+        assertEquals(0, infos.size());
 
         notices.clear();
         errors.clear();

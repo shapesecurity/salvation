@@ -25,30 +25,35 @@ public class Notice implements Show {
         return type.getValue() + ": " + message;
     }
 
+    public boolean isError() { return this.type == Type.ERROR; }
+
+    public boolean isWarning() { return this.type == Type.WARNING; }
+
+    public boolean isInfo() { return this.type == Type.INFO; }
+
     @Nonnull
-    public static ArrayList<Notice> getAllErrors(@Nullable ArrayList<Notice> notices) {
+    public static ArrayList<Notice> getAllErrors(@Nonnull ArrayList<Notice> notices) {
         if (notices == null) {
             return new ArrayList<>();
         }
-        return notices.stream().filter(notice -> notice.type == Type.ERROR).collect(Collectors.toCollection(ArrayList::new));
+        return notices.stream().filter(Notice::isError).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Nonnull
-    public static ArrayList<Notice> getAllWarnings(@Nullable ArrayList<Notice> notices) {
+    public static ArrayList<Notice> getAllWarnings(@Nonnull ArrayList<Notice> notices) {
         if (notices == null) {
             return new ArrayList<>();
         }
-        return notices.stream().filter(notice -> notice.type == Type.WARNING).collect(Collectors.toCollection(ArrayList::new));
+        return notices.stream().filter(Notice::isWarning).collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Nonnull
-    public static ArrayList<Notice> getAllInfos(@Nullable ArrayList<Notice> notices) {
+    public static ArrayList<Notice> getAllInfos(@Nonnull ArrayList<Notice> notices) {
         if (notices == null) {
             return new ArrayList<>();
         }
-        return notices.stream().filter(notice -> notice.type == Type.INFO).collect(Collectors.toCollection(ArrayList::new));
+        return notices.stream().filter(Notice::isInfo).collect(Collectors.toCollection(ArrayList::new));
     }
-
 
     @Nonnull @Override public String show() {
         if (startLocation == null) {

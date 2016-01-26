@@ -77,29 +77,6 @@ public class ParserWithLocation extends Parser {
         return token.endLocation;
     }
 
-    @Override @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
-        DirectiveValueParseException e = super.createError(message);
-        Token currentToken = this.getCurrentToken();
-        e.startLocation = this.getStartLocation(currentToken);
-        e.endLocation = this.getEndLocation(currentToken);
-        return e;
-    }
-
-    @Override @Nonnull protected DirectiveValueParseException createError(@Nonnull Token token, @Nonnull String message) {
-        DirectiveValueParseException e = super.createError(message);
-        e.startLocation = this.getStartLocation(token);
-        e.endLocation = this.getEndLocation(token);
-        return e;
-    }
-
-    @Override @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
-        Notice notice = super.createNotice(type, message);
-        Token currentToken = this.getCurrentToken();
-        notice.startLocation = this.getStartLocation(currentToken);
-        notice.endLocation = this.getEndLocation(currentToken);
-        return notice;
-    }
-
     @Override @Nonnull protected Notice createNotice(@Nullable Token token, @Nonnull Notice.Type type, @Nonnull String message) {
         Notice notice = super.createNotice(type, message);
         notice.startLocation = this.getStartLocation(token);

@@ -227,7 +227,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("frame-ancestors 'none' 'self'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("The 'none' keyword must not be combined with any other source-expression",
+        assertEquals("The 'none' keyword must not be combined with any other ancestor-source",
             notices.get(0).message);
 
         p = parse("frame-ancestors *    ");

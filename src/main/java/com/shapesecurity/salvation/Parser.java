@@ -43,6 +43,8 @@ public class Parser {
         new DirectiveValueParseException("Invalid sandbox-token");
     private static final DirectiveParseException INVALID_URI_REFERENCE_LIST =
         new DirectiveParseException("Invalid uri-reference list");
+    private static final DirectiveValueParseException INVALID_URI_REFERENCE =
+        new DirectiveValueParseException("Invalid uri-reference");
     private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST =
         new DirectiveParseException("Non-empty directive-value list");
     @Nonnull protected final Token[] tokens;
@@ -96,10 +98,11 @@ public class Parser {
         int i;
         for (i = s.length() - 1; i >= 0; --i) {
             int c = s.codePointAt(i);
-            if (WSP.matcher(new String(new int[]{c}, 0, 1)).find())
-                return s.substring(0, i + 1);
+            if (!WSP.matcher(new String(new int[]{c}, 0, 1)).find())
+                break;
         }
-        return s;
+        
+        return s.substring(0, i + 1);
     }
 
     @Nonnull protected Notice createNotice(@Nonnull Notice.Type type, @Nonnull String message) {
@@ -110,18 +113,10 @@ public class Parser {
         return new Notice(type, message);
     }
 
-    private void warn(@Nonnull String message) {
-        this.warn(this.getCurrentToken(), message);
-    }
-
     private void warn(@Nullable Token token, @Nonnull String message) {
         if (this.noticesOut != null) {
             this.noticesOut.add(this.createNotice(token, Notice.Type.WARNING, message));
         }
-    }
-
-    private void error(@Nonnull String message) {
-        this.error(this.getCurrentToken(), message);
     }
 
     private void error(@Nullable Token token, @Nonnull String message) {
@@ -130,18 +125,10 @@ public class Parser {
         }
     }
 
-    private void info(@Nonnull String message) {
-        this.info(this.getCurrentToken(), message);
-    }
-
     private void info(@Nullable Token token, @Nonnull String message) {
         if (this.noticesOut != null) {
             this.noticesOut.add(this.createNotice(token, Notice.Type.INFO, message));
         }
-    }
-
-    @Nullable protected Token getCurrentToken() {
-        return this.index <= this.tokens.length && this.index > 0 ? this.tokens[this.index - 1] : null;
     }
 
     @Nonnull private Token advance() {
@@ -164,11 +151,29 @@ public class Parser {
         return false;
     }
 
-    @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
-        return new DirectiveValueParseException(message);
+    @Nonnull
+    private static List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
+        List<SubDirectiveValueToken> tokens = new ArrayList<>();
+        @Nullable Location startLocation = token.startLocation;
+        if (startLocation == null) {
+            for (String s : WSP.split(trimRHSWS(token.value))) {
+                tokens.add(new SubDirectiveValueToken(s));
+            }
+        } else {
+            Matcher m = NotWSP.matcher(token.value);
+            int offset = 0;
+            while (m.find(offset)) {
+                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
+                dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(), startLocation.offset + m.start());
+                dv.endLocation = new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
+                offset = m.end();
+                tokens.add(dv);
+            }
+        }
+        return tokens;
     }
 
-    @Nonnull protected DirectiveValueParseException createError(@Nonnull Token token, @Nonnull String message) {
+    @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
         return new DirectiveValueParseException(message);
     }
 
@@ -190,7 +195,8 @@ public class Parser {
     @Nonnull protected Policy parsePolicyAndAssertEOF() {
         Policy policy = this.parsePolicy();
         if (this.hasNext()) {
-            this.error("Expecting end of policy but found " + this.advance().value);
+            Token t = this.advance();
+            this.error(t, "Expecting end of policy but found " + t.value);
         }
         return policy;
     }
@@ -209,14 +215,16 @@ public class Parser {
     @Nonnull protected List<Policy> parsePolicyListAndAssertEOF() {
         List<Policy> policies = this.parsePolicyList();
         if (this.hasNext()) {
-            this.error("Expecting end of policy list but found " + this.advance().value);
+            Token t = this.advance();
+            this.error(t, "Expecting end of policy list but found " + t.value);
         }
         return policies;
     }
 
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
-            this.error("Expecting directive-name but found " + WSP.split(this.advance().value, 2)[0]);
+            Token t = this.advance();
+            this.error(t, "Expecting directive-name but found " + WSP.split(t.value, 2)[0]);
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;
@@ -227,9 +235,9 @@ public class Parser {
                     result = new BaseUriDirective(this.parseSourceList());
                     break;
                 case BlockAllMixedContent:
-                    this.info(
+                    this.warn(token,
                         "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
-                    this.enforceMissingDirectiveValue(token.value);
+                    this.enforceMissingDirectiveValue(token);
                     result = new BlockAllMixedContentDirective();
                     break;
                 case ChildSrc:
@@ -254,7 +262,7 @@ public class Parser {
                     result = new ImgSrcDirective(this.parseSourceList());
                     break;
                 case ManifestSrc:
-                    this.info(
+                    this.warn(token,
                         "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
                     result = new ManifestSrcDirective(this.parseSourceList());
                     break;
@@ -265,15 +273,30 @@ public class Parser {
                     result = new ObjectSrcDirective(this.parseSourceList());
                     break;
                 case PluginTypes:
-                    result = new PluginTypesDirective(this.parseMediaTypeList());
+                    Set<MediaType> mediaTypes = this.parseMediaTypeList();
+                    if (mediaTypes.isEmpty()) {
+                        this.error(token, "The media-type-list must contain at least one media-type");
+                        throw INVALID_MEDIA_TYPE_LIST;
+                    }
+                    result = new PluginTypesDirective(mediaTypes);
                     break;
                 case Referrer:
-                    this.info(
+                    this.warn(token,
                         "The " + token.value + " is an experimental directive that will be likely added to the CSP specification.");
-                    result = new ReferrerDirective(this.parseReferrerTokenList());
+                    Set<ReferrerValue> referrerTokens = this.parseReferrerTokenList();
+                    if (referrerTokens.isEmpty()) {
+                        this.error(token, "The referrer directive must contain exactly one referrer-token");
+                        throw INVALID_REFERRER_TOKEN_LIST;
+                    }
+                    result = new ReferrerDirective(referrerTokens);
                     break;
                 case ReportUri:
-                    result = new ReportUriDirective(this.parseUriList());
+                    Set<URI> uriList = this.parseUriList();
+                    if (uriList.isEmpty()) {
+                        this.error(token, "The report-uri directive must contain at least one uri-reference");
+                        throw INVALID_URI_REFERENCE_LIST;
+                    }
+                    result = new ReportUriDirective(uriList);
                     break;
                 case Sandbox:
                     result = new SandboxDirective(this.parseSandboxTokenList());
@@ -285,37 +308,38 @@ public class Parser {
                     result = new StyleSrcDirective(this.parseSourceList());
                     break;
                 case UpgradeInsecureRequests:
-                    this.enforceMissingDirectiveValue(token.value);
+                    this.enforceMissingDirectiveValue(token);
                     result = new UpgradeInsecureRequestsDirective();
                     break;
                 case Allow:
-                    this.error(
+                    this.error(token,
                         "The allow directive has been replaced with default-src and is not in the CSP specification.");
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
                 case FrameSrc:
-                    this.warn(
+                    this.warn(token,
                         "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
                     result = new FrameSrcDirective(this.parseSourceList());
                     break;
                 case Options:
-                    this.error(
+                    this.error(token,
                         "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
                 case Unrecognised:
                 default:
-                    this.error("Unrecognised directive-name: " + token.value);
+                    this.error(token, "Unrecognised directive-name: " + token.value);
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
             }
         } finally {
             if (this.hasNext(UnknownToken.class)) {
-                int cp = this.advance().value.codePointAt(0);
-                this.error(String.format(
+                Token t = this.advance();
+                int cp = t.value.codePointAt(0);
+                this.error(t, String.format(
                     "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded",
                     cp, new String(new int[] {cp}, 0, 1)));
                 throw INVALID_DIRECTIVE_VALUE;
@@ -324,9 +348,9 @@ public class Parser {
         return result;
     }
 
-    private void enforceMissingDirectiveValue(@Nonnull String tokenValue) throws DirectiveParseException {
+    private void enforceMissingDirectiveValue(@Nonnull Token directiveNameToken) throws DirectiveParseException {
         if (this.eat(DirectiveValueToken.class)) {
-            this.error("The " + tokenValue + " directive must not contain any value");
+            this.error(directiveNameToken, "The " + directiveNameToken.value + " directive must not contain any value");
             throw NON_EMPTY_VALUE_TOKEN_LIST;
         }
     }
@@ -347,10 +371,7 @@ public class Parser {
                 throw INVALID_MEDIA_TYPE_LIST;
             }
         }
-        if (mediaTypes.isEmpty()) {
-            this.error("The media-type-list must contain at least one media-type");
-            throw INVALID_MEDIA_TYPE_LIST;
-        }
+
         return mediaTypes;
     }
 
@@ -367,14 +388,19 @@ public class Parser {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
+            boolean seenNone = false;
             Token dv = this.advance();
-            if (trimRHSWS(dv.value).equalsIgnoreCase("'none'")) {
-                sourceExpressions.add(None.INSTANCE);
-                return sourceExpressions;
-            }
             for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    sourceExpressions.add(this.parseSourceExpression(subdv));
+                    SourceExpression se = this.parseSourceExpression(subdv);
+                    if (seenNone || se == None.INSTANCE && !sourceExpressions.isEmpty()) {
+                        this.error(subdv, "'none' must not be combined with any other source-expression");
+                        throw INVALID_SOURCE_EXPR;
+                    }
+                    if (se == None.INSTANCE) {
+                        seenNone = true;
+                    }
+                    sourceExpressions.add(se);
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
                 }
@@ -386,34 +412,11 @@ public class Parser {
         return sourceExpressions;
     }
 
-    @Nonnull
-    private List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
-        List<SubDirectiveValueToken> tokens = new ArrayList<>();
-        @Nullable Location startLocation = token.startLocation;
-        if (startLocation == null) {
-            for (String s : WSP.split(token.value)) {
-                tokens.add(new SubDirectiveValueToken(s));
-            }
-        } else {
-            Matcher m = NotWSP.matcher(token.value);
-            int offset = 0;
-            while (m.find(offset)) {
-                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
-                dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(), startLocation.offset + m.start());
-                dv.endLocation = new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
-                offset = m.end();
-                tokens.add(dv);
-            }
-        }
-        return tokens;
-    }
-
     @Nonnull private SourceExpression parseSourceExpression(@Nonnull SubDirectiveValueToken token)
         throws DirectiveValueParseException {
         switch (token.value.toLowerCase()) {
             case "'none'":
-                this.error(token, "'none' must not be combined with any other source-expression");
-                throw INVALID_SOURCE_EXPR;
+                return None.INSTANCE;
             case "'self'":
                 return KeywordSource.Self;
             case "'unsafe-inline'":
@@ -435,7 +438,7 @@ public class Parser {
                 if (token.value.startsWith("'nonce-")) {
                     String nonce = token.value.substring(7, token.value.length() - 1);
                     NonceSource nonceSource = new NonceSource(nonce);
-                    nonceSource.validationErrors().forEach(this::warn);
+                    nonceSource.validationErrors().forEach(str -> this.warn(token, str));
                     return nonceSource;
                 } else if (token.value.toLowerCase().startsWith("'sha")) {
                     HashSource.HashAlgorithm algorithm;
@@ -509,14 +512,19 @@ public class Parser {
         Set<AncestorSource> ancestorSources = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
+            boolean seenNone = false;
             Token dv = this.advance();
-            if (trimRHSWS(dv.value).equalsIgnoreCase("'none'")) {
-                ancestorSources.add(None.INSTANCE);
-                return ancestorSources;
-            }
             for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    ancestorSources.add(this.parseAncestorSource(subdv));
+                    AncestorSource as = this.parseAncestorSource(subdv);
+                    if (seenNone || as == None.INSTANCE && !ancestorSources.isEmpty()) {
+                        this.error(subdv, "The 'none' keyword must not be combined with any other ancestor-source");
+                        throw INVALID_ANCESTOR_SOURCE;
+                    }
+                    if (as == None.INSTANCE) {
+                        seenNone = true;
+                    }
+                    ancestorSources.add(as);
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
                 }
@@ -531,8 +539,7 @@ public class Parser {
     @Nonnull private AncestorSource parseAncestorSource(@Nonnull SubDirectiveValueToken token)
         throws DirectiveValueParseException {
         if (token.value.equalsIgnoreCase("'none'")) {
-            this.error(token, "The 'none' keyword must not be combined with any other source-expression");
-            throw INVALID_ANCESTOR_SOURCE;
+            return None.INSTANCE;
         }
         if (token.value.equalsIgnoreCase("'self'")) {
             return KeywordSource.Self;
@@ -570,7 +577,12 @@ public class Parser {
             Token dv = this.advance();
             for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    referrerTokens.add(this.parseReferrerToken(subdv));
+                    ReferrerValue rv = this.parseReferrerToken(subdv);
+                    if (!referrerTokens.isEmpty()) {
+                        this.error(subdv, "The referrer directive must contain exactly one referrer-token");
+                        throw INVALID_REFERRER_TOKEN_LIST;
+                    }
+                    referrerTokens.add(rv);
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
                 }
@@ -578,10 +590,6 @@ public class Parser {
             if (parseException) {
                 throw INVALID_REFERRER_TOKEN_LIST;
             }
-        }
-        if (referrerTokens.size() != 1) {
-            this.error("The referrer directive must contain exactly one referrer-token");
-            throw INVALID_REFERRER_TOKEN_LIST;
         }
         return referrerTokens;
     }
@@ -637,35 +645,31 @@ public class Parser {
         Set<URI> uriList = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
-            String dv = trimRHSWS(this.advance().value);
-            for (String v : WSP.split(dv)) {
+            Token dv = this.advance();
+            for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
                 try {
-                    uriList.add(this.parseUri(v));
+                    uriList.add(this.parseUri(subdv));
                 } catch (DirectiveValueParseException e) {
                     parseException = true;
-                    this.error(e.getMessage());
                 }
             }
             if (parseException) {
                 throw INVALID_URI_REFERENCE_LIST;
             }
         }
-        if (uriList.isEmpty()) {
-            this.error("The report-uri directive must contain at least one uri-reference");
-            throw INVALID_URI_REFERENCE_LIST;
-        }
         return uriList;
     }
 
-    @Nonnull private URI parseUri(@Nonnull String uri) throws DirectiveValueParseException {
+    @Nonnull private URI parseUri(@Nonnull SubDirectiveValueToken token) throws DirectiveValueParseException {
         try {
-            return URI.parseWithOrigin(this.origin, uri);
+            return URI.parseWithOrigin(this.origin, token.value);
         } catch (IllegalArgumentException ignored) {
-            throw this.createError("Expecting uri-reference but found " + uri);
+            this.error(token, "Expecting uri-reference but found " + token.value);
+            throw INVALID_URI_REFERENCE;
         }
     }
 
-    private class SubDirectiveValueToken extends Token {
+    private static class SubDirectiveValueToken extends Token {
         protected SubDirectiveValueToken(@Nonnull String value) {
             super(value);
         }

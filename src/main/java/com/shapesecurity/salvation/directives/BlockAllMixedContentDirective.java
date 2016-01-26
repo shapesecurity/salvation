@@ -12,6 +12,6 @@ public class BlockAllMixedContentDirective extends Directive<DirectiveValue> {
     }
 
     @Nonnull @Override public Directive<DirectiveValue> construct(Set<DirectiveValue> newValues) {
-        return new BlockAllMixedContentDirective();
+        return this;
     }
 }

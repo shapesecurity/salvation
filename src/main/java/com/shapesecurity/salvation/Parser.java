@@ -37,6 +37,10 @@ public class Parser {
         new DirectiveParseException("Invalid referrer-token list");
     private static final DirectiveValueParseException INVALID_REFERRER_TOKEN =
         new DirectiveValueParseException("Invalid referrer-token");
+    private static final DirectiveParseException INVALID_REPORT_TO_TOKEN_LIST =
+        new DirectiveParseException("Invalid report-to token list");
+    private static final DirectiveValueParseException INVALID_REPORT_TO_TOKEN =
+        new DirectiveValueParseException("Invalid report-to token");
     private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST =
         new DirectiveParseException("Invalid sandbox-token list");
     private static final DirectiveValueParseException INVALID_SANDBOX_TOKEN =
@@ -291,7 +295,18 @@ public class Parser {
                     }
                     result = new ReferrerDirective(referrerTokens);
                     break;
+                case ReportTo:
+                    Set<ReportToValue> reportToTokens = this.parseReportToTokenList();
+                    if (reportToTokens.isEmpty()) {
+                        this.error(token, "The report-to directive must contain exactly one token");
+                        throw INVALID_REPORT_TO_TOKEN_LIST;
+                    }
+                    result = new ReportToDirective(reportToTokens);
+                    break;
                 case ReportUri:
+                    // TODO: bump to .warn once CSP3 becomes RC
+                    this.info(token,
+                        "A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.");
                     Set<URI> uriList = this.parseUriList();
                     if (uriList.isEmpty()) {
                         this.error(token, "The report-uri directive must contain at least one uri-reference");
@@ -572,7 +587,6 @@ public class Parser {
     }
 
     @Nonnull private Set<ReferrerValue> parseReferrerTokenList() throws DirectiveParseException {
-
         Set<ReferrerValue> referrerTokens = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
             boolean parseException = false;
@@ -606,6 +620,41 @@ public class Parser {
         throw INVALID_REFERRER_TOKEN;
     }
 
+    @Nonnull private Set<ReportToValue> parseReportToTokenList() throws DirectiveParseException {
+        Set<ReportToValue> reportToTokens = new LinkedHashSet<>();
+        if (this.hasNext(DirectiveValueToken.class)) {
+            boolean parseException = false;
+            Token dv = this.advance();
+            for (SubDirectiveValueToken subdv : splitByWSP(dv)) {
+                try {
+                    ReportToValue rv = this.parseReportToToken(subdv);
+                    if (!reportToTokens.isEmpty()) {
+                        this.error(subdv, "The report-to directive must contain exactly one token");
+                        throw INVALID_REPORT_TO_TOKEN_LIST;
+                    }
+                    reportToTokens.add(rv);
+                } catch (DirectiveValueParseException e) {
+                    parseException = true;
+                }
+            }
+            if (parseException) {
+                throw INVALID_REPORT_TO_TOKEN_LIST;
+            }
+        }
+        return reportToTokens;
+    }
+
+    @Nonnull private ReportToValue parseReportToToken(@Nonnull SubDirectiveValueToken token)
+        throws DirectiveValueParseException {
+        Matcher matcher = Constants.rfc7230TokenPattern.matcher(token.value);
+        if (matcher.find()) {
+            return new ReportToValue(token.value);
+        }
+        this.error(token, "Expecting report-to token but found " + token.value);
+        throw INVALID_REPORT_TO_TOKEN;
+    }
+
+
     @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws DirectiveParseException {
         Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
         if (this.hasNext(DirectiveValueToken.class)) {
@@ -634,7 +683,7 @@ public class Parser {
             this.warn(token, "The sandbox directive should contain only allow-forms, allow-modals, "
                 + "allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, "
                 + "allow-same-origin, allow-scripts, or allow-top-navigation");
-            matcher = Constants.sandboxTokenPattern.matcher(token.value);
+            matcher = Constants.rfc7230TokenPattern.matcher(token.value);
             if (matcher.find()) {
                 return new SandboxValue(token.value);
             }

@@ -272,6 +272,55 @@ public class LocationTest extends CSPTest {
         assertEquals(27, notices.get(1).endLocation.offset);
     }
 
+    @Test public void testWarningLocationReports() {
+        ArrayList<Notice> notices = new ArrayList<>();
+
+        ParserWithLocation.parse("report-uri /a; report-to b;", "https://origin", notices);
+        assertEquals(1, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(11, notices.get(0).endLocation.column);
+        assertEquals(10, notices.get(0).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("report-uri a /b", "https://origin", notices);
+        assertEquals(2, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(11, notices.get(0).endLocation.column);
+        assertEquals(10, notices.get(0).endLocation.offset);
+        assertNotNull(notices.get(1).startLocation);
+        assertEquals(1, notices.get(1).startLocation.line);
+        assertEquals(12, notices.get(1).startLocation.column);
+        assertEquals(11, notices.get(1).startLocation.offset);
+        assertNotNull(notices.get(1).endLocation);
+        assertEquals(1, notices.get(1).endLocation.line);
+        assertEquals(13, notices.get(1).endLocation.column);
+        assertEquals(12, notices.get(1).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("report-to a ыыы", "https://origin", notices);
+        assertEquals(1, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(13, notices.get(0).startLocation.column);
+        assertEquals(12, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(16, notices.get(0).endLocation.column);
+        assertEquals(15, notices.get(0).endLocation.offset);
+
+    }
+
+
     @Test public void testWarningLocationUnsafeRedirect() {
         ArrayList<Notice> notices = new ArrayList<>();
         ParserWithLocation.parse("script-src 'unsafe-redirect'", "https://origin", notices);

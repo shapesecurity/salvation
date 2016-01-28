@@ -142,6 +142,15 @@ public class PolicyMergeTest extends CSPTest {
             assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
         }
 
+        p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));
+        p2 = parse("script-src b; report-to abc");
+        try {
+            p1.intersect(p2);
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
+        }
+
         p1 = parse("script-src a");
         p2 = parse("script-src b; report-uri /x");
         try {
@@ -172,6 +181,15 @@ public class PolicyMergeTest extends CSPTest {
             fail();
         } catch (IllegalArgumentException e1) {
             assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        p1 = parse("script-src a; report-to bbb");
+        p2 = parse("report-to aaa");
+        try {
+            p1.intersect(p2);
+            fail();
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
         }
     }
 
@@ -232,6 +250,14 @@ public class PolicyMergeTest extends CSPTest {
             fail();
         } catch (IllegalArgumentException e1) {
             assertEquals("Cannot merge policies if either policy contains a report-uri directive.", e1.getMessage());
+        }
+
+        try {
+            p1 = parse("script-src a; report-to /a");
+            p2 = parse("script-src b");
+            p1.union(p2);
+        } catch (IllegalArgumentException e1) {
+            assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
         }
 
         p1 = parse("default-src a b ");

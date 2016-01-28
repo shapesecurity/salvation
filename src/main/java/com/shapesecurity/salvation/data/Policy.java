@@ -45,6 +45,13 @@ public class Policy implements Show {
                 "Cannot merge policies if either policy contains a report-uri directive.");
         }
 
+        if (this.directives.containsKey(ReportToDirective.class) || other.directives
+            .containsKey(ReportToDirective.class)) {
+            throw new IllegalArgumentException(
+                "Cannot merge policies if either policy contains a report-to directive.");
+        }
+
+
         this.resolveSelf();
         other.resolveSelf();
 

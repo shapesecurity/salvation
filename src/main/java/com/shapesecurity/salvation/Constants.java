@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
     public static final Pattern referrerTokenPattern = Pattern
         .compile("^(?:no-referrer|no-referrer-when-downgrade|origin" + "|origin-when-cross-origin|unsafe-url)$",
             Pattern.CASE_INSENSITIVE);
-    public static final Pattern sandboxTokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
+    public static final Pattern rfc7230TokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
     public static final Pattern sandboxEnumeratedTokenPattern = Pattern.compile(
         "^allow-(?:forms|modals|pointer-lock" + "|popups|popups-to-escape-sandbox|same-origin"
             + "|scripts|top-navigation)$");

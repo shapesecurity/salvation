@@ -303,18 +303,20 @@ public class ParserTest extends CSPTest {
         ArrayList<Notice> notices = new ArrayList<>();
 
         parseWithNotices("report-uri ", notices);
-        assertEquals(1, notices.size());
-        assertEquals("The report-uri directive must contain at least one uri-reference", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("The report-uri directive must contain at least one uri-reference", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-uri #", notices);
-        assertEquals(1, notices.size());
-        assertEquals("Expecting uri-reference but found #", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("Expecting uri-reference but found #", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-uri a", notices);
-        assertEquals(1, notices.size());
-        assertEquals("Expecting uri-reference but found a", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("Expecting uri-reference but found a", notices.get(1).message);
 
         Policy p, q;
         p = parse("report-uri http://a");
@@ -334,6 +336,36 @@ public class ParserTest extends CSPTest {
         SandboxDirective d2 = q.getDirectiveByType(SandboxDirective.class);
         assertEquals("report-uri http://a", d1.show());
         assertEquals("sandbox 4", d2.show());
+
+    }
+
+    @Test public void testReportTo() {
+        ArrayList<Notice> notices = new ArrayList<>();
+
+        parseWithNotices("report-to ", notices);
+        assertEquals(1, notices.size());
+        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+
+        notices.clear();
+        parseWithNotices("report-to д", notices);
+        assertEquals(2, notices.size());
+        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+        assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
+
+        notices.clear();
+        parseWithNotices("report-to a b", notices);
+        assertEquals(1, notices.size());
+        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+
+        Policy p, q;
+        p = parse("report-to a");
+        q = parse("report-to b");
+        assertNotEquals("report-to hashcode shouldn't match", p.hashCode(), q.hashCode());
+
+        p = parse("report-to        a");
+        q = parse("report-to a; ");
+        assertEquals("report-to hashcode match", p.hashCode(), q.hashCode());
+        assertTrue("report-to equals", p.equals(q));
 
     }
 

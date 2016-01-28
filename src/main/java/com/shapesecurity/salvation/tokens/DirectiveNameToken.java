@@ -32,7 +32,8 @@ public class DirectiveNameToken extends Token {
         ObjectSrc,
         PluginTypes,
         Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
-        ReportUri,
+        ReportTo, // CSP3; in draft at http://w3c.github.io/webappsec-csp/#directive-report-to
+        ReportUri, // CSP3 deprecates it
         Sandbox,
         ScriptSrc,
         StyleSrc,
@@ -75,8 +76,8 @@ public class DirectiveNameToken extends Token {
                     return PluginTypes;
                 case "referrer":
                     return Referrer;
-                case "report-uri":
-                    return ReportUri;
+                case "report-to":
+                    return ReportTo;
                 case "sandbox":
                     return Sandbox;
                 case "script-src":
@@ -93,6 +94,8 @@ public class DirectiveNameToken extends Token {
                     return FrameSrc;
                 case "options":
                     return Options;
+                case "report-uri":
+                    return ReportUri;
             }
             return Unrecognised;
         }

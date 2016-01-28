@@ -594,11 +594,13 @@ public class ParserTest extends CSPTest {
             // do not process commented lines
             if (!line[0].startsWith("//")) {
                 try {
-                    p = parse(line[1]);
+                    ArrayList<Notice> n = new ArrayList<>();
+                    p = parseWithNotices(line[1], n);
                     assertNotNull(String.format("policy should not be null: %s", line[0]), p);
                 } catch (IllegalArgumentException e) {
                     System.out.println(line[0]);
                     System.out.println(e);
+                    fail();
                 }
             }
         }

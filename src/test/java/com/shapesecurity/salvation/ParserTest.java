@@ -227,7 +227,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("frame-ancestors 'none' 'self'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("The 'none' keyword must not be combined with any other ancestor-source", notices.get(0).message);
+        assertEquals("'none' must not be combined with any other ancestor-source", notices.get(0).message);
 
         p = parse("frame-ancestors *    ");
         q = parse("frame-ancestors http://example.com");
@@ -304,13 +304,13 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("report-uri ", notices);
         assertEquals(2, notices.size());
-        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive", notices.get(0).message);
         assertEquals("The report-uri directive must contain at least one uri-reference", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-uri #", notices);
         assertEquals(2, notices.size());
-        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive", notices.get(0).message);
         assertEquals("Expecting uri-reference but found #", notices.get(1).message);
 
         notices.clear();
@@ -344,18 +344,18 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("report-to ", notices);
         assertEquals(1, notices.size());
-        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+        assertEquals("The report-to must contain exactly one RFC 7230 token", notices.get(0).message);
 
         notices.clear();
         parseWithNotices("report-to д", notices);
         assertEquals(2, notices.size());
-        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+        assertEquals("The report-to must contain exactly one RFC 7230 token", notices.get(0).message);
         assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-to a b", notices);
         assertEquals(1, notices.size());
-        assertEquals("The report-to directive must contain exactly one token", notices.get(0).message);
+        assertEquals("Expecting RFC 7230 token but found a b", notices.get(0).message);
 
         Policy p, q;
         p = parse("report-to a");
@@ -425,7 +425,7 @@ public class ParserTest extends CSPTest {
         assertEquals(
             "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation",
             notices.get(0).message);
-        assertEquals("Expecting sandbox-token but found a!*^:", notices.get(1).message);
+        assertEquals("Expecting RFC 7230 token but found a!*^:", notices.get(1).message);
 
         assertEquals("sandbox is valid", "sandbox abc",
             parse("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
@@ -613,7 +613,7 @@ public class ParserTest extends CSPTest {
         assertEquals("frame-src aaa", p1.show());
         assertEquals(1, notices.size());
         assertEquals(
-            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead",
             notices.iterator().next().message);
     }
 
@@ -621,7 +621,7 @@ public class ParserTest extends CSPTest {
         ArrayList<Notice> notices = new ArrayList<>();
         parseWithNotices("allow 'none'", notices);
         assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("The allow directive has been replaced with default-src and is not in the CSP specification.",
+        assertEquals("The allow directive has been replaced with default-src and is not in the CSP specification",
             notices.get(0).message);
 
     }
@@ -631,7 +631,7 @@ public class ParserTest extends CSPTest {
         parseWithNotices("options inline-script", notices);
         assertEquals("Error", notices.get(0).type.getValue());
         assertEquals(
-            "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.",
+            "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification",
             notices.get(0).message);
     }
 
@@ -646,19 +646,20 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("referrer", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(1).message);
+        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).message);
+        assertEquals("The referrer directive must contain exactly one referrer directive value", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer aaa", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("Expecting referrer-token but found aaa", notices.get(1).message);
+        assertEquals("Expecting referrer directive value but found aaa", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer no-referrer unsafe-url", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The referrer directive must contain exactly one referrer-token", notices.get(1).message);
+        assertEquals("Expecting referrer directive value but found no-referrer unsafe-url", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("upgrade-insecure-requests", notices);
@@ -728,7 +729,7 @@ public class ParserTest extends CSPTest {
         assertEquals("frame-src b", pl.get(1).show());
         assertEquals(1, notices.size());
         assertEquals(
-            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead",
             notices.get(0).show());
 
         pl.clear();
@@ -753,10 +754,10 @@ public class ParserTest extends CSPTest {
         pl = ParserWithLocation.parseMulti("allow 'none', options", "https://origin.com", notices);
         assertEquals(2, pl.size());
         assertEquals(2, notices.size());
-        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
+        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification",
             notices.get(0).show());
         assertEquals(
-            "1:15: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.",
+            "1:15: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification",
             notices.get(1).show());
 
 
@@ -765,9 +766,10 @@ public class ParserTest extends CSPTest {
         pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"), notices);
         assertEquals(2, pl.size());
         assertEquals(3, notices.size());
-        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
+        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification",
             notices.get(0).show());
-        assertEquals("1:15: The referrer directive must contain exactly one referrer-token", notices.get(2).show());
+        assertEquals("1:15: The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(1).show());
+        assertEquals("1:15: The referrer directive must contain exactly one referrer directive value", notices.get(2).show());
 
         notices.clear();
         p = parseWithNotices("script-src *, ", notices);

@@ -148,7 +148,7 @@ public class PolicyMergeTest extends CSPTest {
             p1.intersect(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-to directive", e1.getMessage());
         }
 
         p1 = parse("script-src a");
@@ -189,7 +189,7 @@ public class PolicyMergeTest extends CSPTest {
             p1.intersect(p2);
             fail();
         } catch (IllegalArgumentException e1) {
-            assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
+            assertEquals("Cannot merge policies if either policy contains a report-to directive", e1.getMessage());
         }
     }
 

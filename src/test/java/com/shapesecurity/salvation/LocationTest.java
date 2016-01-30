@@ -1,6 +1,7 @@
 package com.shapesecurity.salvation;
 
 import com.shapesecurity.salvation.data.Notice;
+import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.tokens.Token;
 import org.junit.Test;
@@ -120,7 +121,7 @@ public class LocationTest extends CSPTest {
 
     @Test public void testTokenLocation() {
         Token[] tokens = TokeniserWithLocation.tokenise("script-src aaa bbb");
-        assertEquals(2, tokens.length);
+        assertEquals(3, tokens.length);
         assertNotNull(tokens[0].startLocation);
         assertEquals(1, tokens[0].startLocation.line);
         assertEquals(1, tokens[0].startLocation.column);
@@ -135,8 +136,16 @@ public class LocationTest extends CSPTest {
         assertEquals(11, tokens[1].startLocation.offset);
         assertNotNull(tokens[1].endLocation);
         assertEquals(1, tokens[1].endLocation.line);
-        assertEquals(19, tokens[1].endLocation.column);
-        assertEquals(18, tokens[1].endLocation.offset);
+        assertEquals(15, tokens[1].endLocation.column);
+        assertEquals(14, tokens[1].endLocation.offset);
+        assertNotNull(tokens[2].startLocation);
+        assertEquals(1, tokens[2].startLocation.line);
+        assertEquals(16, tokens[2].startLocation.column);
+        assertEquals(15, tokens[2].startLocation.offset);
+        assertNotNull(tokens[2].endLocation);
+        assertEquals(1, tokens[2].endLocation.line);
+        assertEquals(19, tokens[2].endLocation.column);
+        assertEquals(18, tokens[2].endLocation.offset);
     }
 
     @Test public void testWarningLocationFrameSrc() {
@@ -183,6 +192,7 @@ public class LocationTest extends CSPTest {
         ParserWithLocation.parse("referrer origin", "https://origin", notices);
         assertEquals(1, notices.size());
 
+
         notices.clear();
         ParserWithLocation.parse("referrer origin no-referrer", "https://origin", notices);
         assertEquals(2, notices.size());
@@ -197,8 +207,8 @@ public class LocationTest extends CSPTest {
 
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
-        assertEquals(17, notices.get(1).startLocation.column);
-        assertEquals(16, notices.get(1).startLocation.offset);
+        assertEquals(10, notices.get(1).startLocation.column);
+        assertEquals(9, notices.get(1).startLocation.offset);
         assertNotNull(notices.get(1).endLocation);
         assertEquals(1, notices.get(1).endLocation.line);
         assertEquals(28, notices.get(1).endLocation.column);
@@ -215,6 +225,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
+        assertEquals("Warning: The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).toString());
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(1, notices.get(1).startLocation.column);
@@ -223,6 +234,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(1).endLocation.line);
         assertEquals(9, notices.get(1).endLocation.column);
         assertEquals(8, notices.get(1).endLocation.offset);
+        assertEquals("Error: The referrer directive must contain exactly one referrer directive value", notices.get(1).toString());
         assertNotNull(notices.get(2).startLocation);
         assertEquals(1, notices.get(2).startLocation.line);
         assertEquals(10, notices.get(2).startLocation.column);
@@ -231,6 +243,29 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(2).endLocation.line);
         assertEquals(25, notices.get(2).endLocation.column);
         assertEquals(24, notices.get(2).endLocation.offset);
+        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded", notices.get(2).message);
+
+        notices.clear();
+        ParserWithLocation.parse("referrer no-referrer абц", "https://origin", notices);
+        assertEquals(2, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(9, notices.get(0).endLocation.column);
+        assertEquals(8, notices.get(0).endLocation.offset);
+        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).message);
+        assertNotNull(notices.get(1).startLocation);
+        assertEquals(1, notices.get(1).startLocation.line);
+        assertEquals(22, notices.get(1).startLocation.column);
+        assertEquals(21, notices.get(1).startLocation.offset);
+        assertNotNull(notices.get(1).endLocation);
+        assertEquals(1, notices.get(1).endLocation.line);
+        assertEquals(25, notices.get(1).endLocation.column);
+        assertEquals(24, notices.get(1).endLocation.offset);
+        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
     }
 
     @Test public void testWarningLocationSandbox() {
@@ -313,10 +348,6 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).startLocation.line);
         assertEquals(13, notices.get(0).startLocation.column);
         assertEquals(12, notices.get(0).startLocation.offset);
-        assertNotNull(notices.get(0).endLocation);
-        assertEquals(1, notices.get(0).endLocation.line);
-        assertEquals(16, notices.get(0).endLocation.column);
-        assertEquals(15, notices.get(0).endLocation.offset);
 
     }
 

@@ -161,7 +161,7 @@ public class Parser {
         Policy policy = this.parsePolicy();
         if (this.hasNext()) {
             Token t = this.advance();
-            this.error(t, "Expecting end of policy but found " + t.value);
+            this.error(t, "Expecting end of policy but found \"" + t.value + "\".");
         }
         return policy;
     }
@@ -181,7 +181,7 @@ public class Parser {
         List<Policy> policies = this.parsePolicyList();
         if (this.hasNext()) {
             Token t = this.advance();
-            this.error(t, "Expecting end of policy list but found " + t.value);
+            this.error(t, "Expecting end of policy list but found \"" + t.value + "\".");
         }
         return policies;
     }
@@ -189,7 +189,7 @@ public class Parser {
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
             Token t = this.advance();
-            this.error(t, "Expecting directive-name but found " + t.value.split(" ", 2)[0]);
+            this.error(t, "Expecting directive-name but found \"" + t.value.split(" ", 2)[0] + "\".");
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;
@@ -238,7 +238,7 @@ public class Parser {
                 case PluginTypes:
                     Set<MediaType> mediaTypes = this.parseMediaTypeList();
                     if (mediaTypes.isEmpty()) {
-                        this.error(token, "The media-type-list must contain at least one media-type");
+                        this.error(token, "The media-type-list must contain at least one media-type.");
                         throw INVALID_MEDIA_TYPE_LIST;
                     }
                     result = new PluginTypesDirective(mediaTypes);
@@ -253,10 +253,10 @@ public class Parser {
                 case ReportUri:
                     // TODO: bump to .warn once CSP3 becomes RC
                     this.info(token,
-                        "A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive");
+                        "A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.");
                     Set<URI> uriList = this.parseUriList();
                     if (uriList.isEmpty()) {
-                        this.error(token, "The report-uri directive must contain at least one uri-reference");
+                        this.error(token, "The report-uri directive must contain at least one uri-reference.");
                         throw INVALID_URI_REFERENCE_LIST;
                     }
                     result = new ReportUriDirective(uriList);
@@ -276,24 +276,24 @@ public class Parser {
                     break;
                 case Allow:
                     this.error(token,
-                        "The allow directive has been replaced with default-src and is not in the CSP specification");
+                        "The allow directive has been replaced with default-src and is not in the CSP specification.");
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
                 case FrameSrc:
                     this.warn(token,
-                        "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead");
+                        "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
                     result = new FrameSrcDirective(this.parseSourceList());
                     break;
                 case Options:
                     this.error(token,
-                        "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification");
+                        "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
                 case Unrecognised:
                 default:
-                    this.error(token, "Unrecognised directive-name: " + token.value);
+                    this.error(token, "Unrecognised directive-name: \"" + token.value + "\".");
                     if (this.hasNext(DirectiveValueToken.class))
                         this.advance();
                     throw INVALID_DIRECTIVE_NAME;
@@ -303,7 +303,7 @@ public class Parser {
                 Token t = this.advance();
                 int cp = t.value.codePointAt(0);
                 this.error(t, String.format(
-                    "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded",
+                    "Expecting directive-value but found U+%04X (%s). Non-ASCII and non-printable characters must be percent-encoded.",
                     cp, new String(new int[] {cp}, 0, 1)));
                 throw INVALID_DIRECTIVE_VALUE;
             }
@@ -313,12 +313,12 @@ public class Parser {
 
     private void warnFutureDirective(DirectiveNameToken token) {
         this.warn(token, "The " + token.value
-            + " directive is an experimental directive that will be likely added to the CSP specification");
+            + " directive is an experimental directive that will be likely added to the CSP specification.");
     }
 
     private void enforceMissingDirectiveValue(@Nonnull Token directiveNameToken) throws DirectiveParseException {
         if (this.eat(DirectiveValueToken.class)) {
-            this.error(directiveNameToken, "The " + directiveNameToken.value + " directive must not contain any value");
+            this.error(directiveNameToken, "The " + directiveNameToken.value + " directive must not contain any value.");
             throw NON_EMPTY_VALUE_TOKEN_LIST;
         }
     }
@@ -345,7 +345,7 @@ public class Parser {
         if (matcher.find()) {
             return new MediaType(matcher.group("type"), matcher.group("subtype"));
         }
-        this.error(token, "Expecting media-type but found " + token.value);
+        this.error(token, "Expecting media-type but found \"" + token.value + "\".");
         throw INVALID_MEDIA_TYPE;
     }
 
@@ -374,7 +374,7 @@ public class Parser {
         throws DirectiveValueParseException {
         Token token = this.advance();
         if (seenNone || seenSome && token.value.equalsIgnoreCase("'none'")) {
-            this.error(token, "'none' must not be combined with any other source-expression");
+            this.error(token, "'none' must not be combined with any other source-expression.");
             throw INVALID_SOURCE_EXPR;
         }
         switch (token.value.toLowerCase()) {
@@ -387,7 +387,7 @@ public class Parser {
             case "'unsafe-eval'":
                 return KeywordSource.UnsafeEval;
             case "'unsafe-redirect'":
-                this.warn(token, "'unsafe-redirect' has been removed from CSP as of version 2.0");
+                this.warn(token, "'unsafe-redirect' has been removed from CSP as of version 2.0.");
                 return KeywordSource.UnsafeRedirect;
             case "self":
             case "unsafe-inline":
@@ -396,7 +396,7 @@ public class Parser {
             case "none":
                 this.warn(token,
                     "This host name is unusual, and likely meant to be a keyword that is missing the required quotes: \'"
-                        + token.value.toLowerCase() + "\'");
+                        + token.value.toLowerCase() + "\'.");
             default:
                 if (token.value.startsWith("'nonce-")) {
                     String nonce = token.value.substring(7, token.value.length() - 1);
@@ -416,7 +416,7 @@ public class Parser {
                             algorithm = HashSource.HashAlgorithm.SHA512;
                             break;
                         default:
-                            this.error(token, "Unrecognised hash algorithm " + token.value.substring(1, 7));
+                            this.error(token, "Unrecognised hash algorithm: \"" + token.value.substring(1, 7) + "\".");
                             throw INVALID_SOURCE_EXPR;
                     }
                     String value = token.value.substring(8, token.value.length() - 1);
@@ -432,7 +432,7 @@ public class Parser {
                     // warn if value is not RFC4648
                     if (value.contains("-") || value.contains("_")) {
                         this.warn(token,
-                            "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
+                            "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation.");
                     }
                     HashSource hashSource = new HashSource(algorithm, base64Value);
                     try {
@@ -467,7 +467,7 @@ public class Parser {
                     }
                 }
         }
-        this.error(token, "Expecting source-expression but found " + token.value);
+        this.error(token, "Expecting source-expression but found \"" + token.value + "\".");
         throw INVALID_SOURCE_EXPR;
     }
 
@@ -496,7 +496,7 @@ public class Parser {
         throws DirectiveValueParseException {
         Token token = this.advance();
         if (seenNone || seenSome && token.value.equalsIgnoreCase("'none'")) {
-            this.error(token, "'none' must not be combined with any other ancestor-source");
+            this.error(token, "'none' must not be combined with any other ancestor-source.");
             throw INVALID_ANCESTOR_SOURCE;
         }
         if (token.value.equalsIgnoreCase("'none'")) {
@@ -526,7 +526,7 @@ public class Parser {
                 return new HostSource(scheme, host, port, path);
             }
         }
-        this.error(token, "Expecting ancestor-source but found " + token.value);
+        this.error(token, "Expecting ancestor-source but found \"" + token.value + "\".");
         throw INVALID_ANCESTOR_SOURCE;
     }
 
@@ -537,9 +537,9 @@ public class Parser {
             if (matcher.find()) {
                 return new ReferrerValue(token.value);
             }
-            this.error(token, "Expecting referrer directive value but found " + token.value);
+            this.error(token, "Expecting referrer directive value but found \"" + token.value + "\".");
         } else {
-            this.error(directiveNameToken, "The referrer directive must contain exactly one referrer directive value");
+            this.error(directiveNameToken, "The referrer directive must contain exactly one referrer directive value.");
             throw INVALID_DIRECTIVE_VALUE;
         }
         throw INVALID_REFERRER_TOKEN;
@@ -552,9 +552,9 @@ public class Parser {
             if (matcher.find()) {
                 return new ReportToValue(token.value);
             }
-            this.error(token, "Expecting RFC 7230 token but found " + token.value);
+            this.error(token, "Expecting RFC 7230 token but found \"" + token.value + "\".");
         } else {
-            this.error(directiveNameToken, "The report-to must contain exactly one RFC 7230 token");
+            this.error(directiveNameToken, "The report-to must contain exactly one RFC 7230 token.");
         }
         throw INVALID_REPORT_TO_TOKEN;
     }
@@ -583,14 +583,14 @@ public class Parser {
         } else {
             this.warn(token, "The sandbox directive should contain only allow-forms, allow-modals, "
                 + "allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, "
-                + "allow-same-origin, allow-scripts, or allow-top-navigation");
+                + "allow-same-origin, allow-scripts, or allow-top-navigation.");
             matcher = Constants.rfc7230TokenPattern.matcher(token.value);
             if (matcher.find()) {
                 return new SandboxValue(token.value);
             }
         }
 
-        this.error(token, "Expecting RFC 7230 token but found " + token.value);
+        this.error(token, "Expecting RFC 7230 token but found \"" + token.value + "\".");
         throw INVALID_SANDBOX_TOKEN;
     }
 
@@ -615,7 +615,7 @@ public class Parser {
         try {
             return URI.parseWithOrigin(this.origin, token.value);
         } catch (IllegalArgumentException ignored) {
-            this.error(token, "Expecting uri-reference but found " + token.value);
+            this.error(token, "Expecting uri-reference but found \"" + token.value + "\".");
             throw INVALID_URI_REFERENCE;
         }
     }

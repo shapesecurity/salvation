@@ -25,14 +25,14 @@ public class NonceSource implements SourceExpression, MatchesNonce {
             // warn if value is not RFC4648
             if (this.value.contains("-") || this.value.contains("_")) {
                 errors.add(
-                    "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation");
+                    "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation.");
             }
         } catch (IllegalArgumentException e) {
             errors.add(e.getMessage());
             return errors;
         }
         if (base64Value.size() < 16) {
-            errors.add("CSP specification recommends nonce-value to be at least 128 bits long (before encoding)");
+            errors.add("CSP specification recommends nonce-value to be at least 128 bits long (before encoding).");
         }
         return errors;
     }

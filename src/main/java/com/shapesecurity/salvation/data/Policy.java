@@ -48,7 +48,7 @@ public class Policy implements Show {
         if (this.directives.containsKey(ReportToDirective.class) || other.directives
             .containsKey(ReportToDirective.class)) {
             throw new IllegalArgumentException(
-                "Cannot merge policies if either policy contains a report-to directive");
+                "Cannot merge policies if either policy contains a report-to directive.");
         }
 
 

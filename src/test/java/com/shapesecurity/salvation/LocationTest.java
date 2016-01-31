@@ -225,7 +225,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("Warning: The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).toString());
+        assertEquals("Warning: The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).toString());
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(1, notices.get(1).startLocation.column);
@@ -234,7 +234,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(1).endLocation.line);
         assertEquals(9, notices.get(1).endLocation.column);
         assertEquals(8, notices.get(1).endLocation.offset);
-        assertEquals("Error: The referrer directive must contain exactly one referrer directive value", notices.get(1).toString());
+        assertEquals("Error: The referrer directive must contain exactly one referrer directive value.", notices.get(1).toString());
         assertNotNull(notices.get(2).startLocation);
         assertEquals(1, notices.get(2).startLocation.line);
         assertEquals(10, notices.get(2).startLocation.column);
@@ -243,7 +243,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(2).endLocation.line);
         assertEquals(25, notices.get(2).endLocation.column);
         assertEquals(24, notices.get(2).endLocation.offset);
-        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded", notices.get(2).message);
+        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(2).message);
 
         notices.clear();
         ParserWithLocation.parse("referrer no-referrer абц", "https://origin", notices);
@@ -256,7 +256,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).message);
+        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(22, notices.get(1).startLocation.column);
@@ -265,7 +265,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(1).endLocation.line);
         assertEquals(25, notices.get(1).endLocation.column);
         assertEquals(24, notices.get(1).endLocation.offset);
-        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
+        assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
     }
 
     @Test public void testWarningLocationSandbox() {
@@ -374,7 +374,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.size());
         Notice notice = notices.get(0);
         assertNotNull(notice);
-        assertEquals("1:1: The media-type-list must contain at least one media-type", notice.show());
+        assertEquals("1:1: The media-type-list must contain at least one media-type.", notice.show());
     }
 
     @Test public void testWarningTextWithLocation() {
@@ -382,8 +382,8 @@ public class LocationTest extends CSPTest {
         ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", URI.parse("https://origin"), notices);
         assertEquals(1, notices.size());
         Notice notice = notices.get(0);
-        assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0", notice.show());
-        assertEquals("Warning: 'unsafe-redirect' has been removed from CSP as of version 2.0", notice.toString());
+        assertEquals("1:12: 'unsafe-redirect' has been removed from CSP as of version 2.0.", notice.show());
+        assertEquals("Warning: 'unsafe-redirect' has been removed from CSP as of version 2.0.", notice.toString());
     }
 
     @Test public void testPotentialTyposWarnings() {
@@ -394,10 +394,10 @@ public class LocationTest extends CSPTest {
         assertEquals(5, notices.size());
         Notice notice = notices.get(0);
         assertEquals(
-            "1:12: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'",
+            "1:12: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'.",
             notice.show());
         assertEquals(
-            "Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'",
+            "Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'.",
             notice.toString());
     }
 

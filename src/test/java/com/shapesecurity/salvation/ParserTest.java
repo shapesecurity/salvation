@@ -99,14 +99,14 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("abc", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Unrecognised directive-name: abc", notices.get(0).message);
+        assertEquals("Unrecognised directive-name: \"abc\".", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("zzscript-src *; bla", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("Unrecognised directive-name: zzscript-src", notices.get(0).message);
-        assertEquals("Unrecognised directive-name: bla", notices.get(1).message);
+        assertEquals("Unrecognised directive-name: \"zzscript-src\".", notices.get(0).message);
+        assertEquals("Unrecognised directive-name: \"bla\".", notices.get(1).message);
     }
 
     @Test public void testSourceExpressionParsing() {
@@ -129,26 +129,26 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("connect-src 'none' scheme:", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("'none' must not be combined with any other source-expression", notices.get(0).message);
+        assertEquals("'none' must not be combined with any other source-expression.", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("connect-src scheme: 'none'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("'none' must not be combined with any other source-expression", notices.get(0).message);
+        assertEquals("'none' must not be combined with any other source-expression.", notices.get(0).message);
 
         // XXX: these two tests are actually valid according to the CSP spec, but we choose not to support paths other than path-abempty
         notices.clear();
         p = parseWithNotices("base-uri abc_", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting source-expression but found abc_", notices.get(0).message);
+        assertEquals("Expecting source-expression but found \"abc_\".", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("base-uri abc..", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting source-expression but found abc..", notices.get(0).message);
+        assertEquals("Expecting source-expression but found \"abc..\".", notices.get(0).message);
 
         assertEquals("directive-name, port-part", "base-uri *:12", parseAndShow("base-uri *:12"));
 
@@ -156,7 +156,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("base-uri *:ee", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting source-expression but found *:ee", notices.get(0).message);
+        assertEquals("Expecting source-expression but found \"*:ee\".", notices.get(0).message);
 
         assertEquals("directive-name, path-part", "base-uri */abc", parseAndShow("base-uri */abc"));
 
@@ -165,7 +165,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Expecting directive-value but found U+000A (\n). Non-ASCII and non-printable characters must be percent-encoded",
+            "Expecting directive-value but found U+000A (\n). Non-ASCII and non-printable characters must be percent-encoded.",
             notices.get(0).message);
 
         assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
@@ -221,13 +221,13 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("frame-ancestors scheme::", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting ancestor-source but found scheme::", notices.get(0).message);
+        assertEquals("Expecting ancestor-source but found \"scheme::\".", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("frame-ancestors 'none' 'self'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("'none' must not be combined with any other ancestor-source", notices.get(0).message);
+        assertEquals("'none' must not be combined with any other ancestor-source.", notices.get(0).message);
 
         p = parse("frame-ancestors *    ");
         q = parse("frame-ancestors http://example.com");
@@ -261,13 +261,13 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("plugin-types", notices);
         assertEquals(1, notices.size());
-        assertEquals("The media-type-list must contain at least one media-type", notices.get(0).message);
+        assertEquals("The media-type-list must contain at least one media-type.", notices.get(0).message);
 
         notices.clear();
         // XXX: technically allowed via ietf-token if an RFC introduces a type/subtype that is empty
         parseWithNotices("plugin-types /", notices);
         assertEquals(1, notices.size());
-        assertEquals("Expecting media-type but found /", notices.get(0).message);
+        assertEquals("Expecting media-type but found \"/\".", notices.get(0).message);
 
         assertEquals("directive-name, directive-value", "plugin-types a/b",
             parse("plugin-types a/b").getDirectiveByType(PluginTypesDirective.class).show());
@@ -304,19 +304,19 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("report-uri ", notices);
         assertEquals(2, notices.size());
-        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive", notices.get(0).message);
-        assertEquals("The report-uri directive must contain at least one uri-reference", notices.get(1).message);
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("The report-uri directive must contain at least one uri-reference.", notices.get(1).message);
 
         notices.clear();
-        parseWithNotices("report-uri #", notices);
+        parseWithNotices("report-uri #\"", notices);
         assertEquals(2, notices.size());
-        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive", notices.get(0).message);
-        assertEquals("Expecting uri-reference but found #", notices.get(1).message);
+        assertEquals("A draft of the next version of CSP deprecates report-uri in favour of a new report-to directive.", notices.get(0).message);
+        assertEquals("Expecting uri-reference but found \"#\"\".", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-uri a", notices);
         assertEquals(2, notices.size());
-        assertEquals("Expecting uri-reference but found a", notices.get(1).message);
+        assertEquals("Expecting uri-reference but found \"a\".", notices.get(1).message);
 
         Policy p, q;
         p = parse("report-uri http://a");
@@ -344,18 +344,18 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("report-to ", notices);
         assertEquals(1, notices.size());
-        assertEquals("The report-to must contain exactly one RFC 7230 token", notices.get(0).message);
+        assertEquals("The report-to must contain exactly one RFC 7230 token.", notices.get(0).message);
 
         notices.clear();
         parseWithNotices("report-to д", notices);
         assertEquals(2, notices.size());
-        assertEquals("The report-to must contain exactly one RFC 7230 token", notices.get(0).message);
-        assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
+        assertEquals("The report-to must contain exactly one RFC 7230 token.", notices.get(0).message);
+        assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
 
         notices.clear();
         parseWithNotices("report-to a b", notices);
         assertEquals(1, notices.size());
-        assertEquals("Expecting RFC 7230 token but found a b", notices.get(0).message);
+        assertEquals("Expecting RFC 7230 token but found \"a b\".", notices.get(0).message);
 
         Policy p, q;
         p = parse("report-to a");
@@ -405,7 +405,7 @@ public class ParserTest extends CSPTest {
         assertEquals("sandbox allow-forms allow_forms", p.show());
         assertEquals(1, notices.size());
         assertEquals(
-            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation",
+            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation.",
             notices.get(0).message);
 
         notices.clear();
@@ -413,19 +413,19 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
         assertEquals(
-            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation",
+            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation.",
             notices.get(0).message);
         assertEquals("Expecting directive-value but found U+000A (\n"
-            + "). Non-ASCII and non-printable characters must be percent-encoded", notices.get(1).message);
+            + "). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("sandbox a!*^:", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
         assertEquals(
-            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation",
+            "The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation.",
             notices.get(0).message);
-        assertEquals("Expecting RFC 7230 token but found a!*^:", notices.get(1).message);
+        assertEquals("Expecting RFC 7230 token but found \"a!*^:\".", notices.get(1).message);
 
         assertEquals("sandbox is valid", "sandbox abc",
             parse("sandbox abc").getDirectiveByType(SandboxDirective.class).show());
@@ -451,7 +451,7 @@ public class ParserTest extends CSPTest {
             "script-src 'self' https://example.com 'sha255-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols'", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Unrecognised hash algorithm sha255", notices.get(0).message);
+        assertEquals("Unrecognised hash algorithm: \"sha255\".", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices(
@@ -459,7 +459,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Invalid base64-value (should be multiple of 4 bytes: 43). Consider using RFC4648 compliant base64 encoding implementation",
+            "Invalid base64-value (should be multiple of 4 bytes: 43). Consider using RFC4648 compliant base64 encoding implementation.",
             notices.get(0).message);
 
         assertEquals("directive-name, directive-value",
@@ -491,17 +491,17 @@ public class ParserTest extends CSPTest {
         parseWithNotices("script-src 'sha256-gpw4BEAbByf3D3PUQV4WJADL5Xs='", notices);
 
         assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("Invalid SHA-256 value (wrong length): 20", notices.get(0).message);
+        assertEquals("Invalid SHA-256 value (wrong length): 20.", notices.get(0).message);
 
         notices.clear();
         parseWithNotices("script-src 'sha384-gpw4BEAbByf3D3PUQV4WJADL5Xs='", notices);
         assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("Invalid SHA-384 value (wrong length): 20", notices.get(0).message);
+        assertEquals("Invalid SHA-384 value (wrong length): 20.", notices.get(0).message);
 
         notices.clear();
         parseWithNotices("script-src 'sha512-gpw4BEAbByf3D3PUQV4WJADL5Xs='", notices);
         assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("Invalid SHA-512 value (wrong length): 20", notices.get(0).message);
+        assertEquals("Invalid SHA-512 value (wrong length): 20.", notices.get(0).message);
     }
 
     @Test public void sourceListTest() {
@@ -549,7 +549,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded",
+            "Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded.",
             notices.get(0).message);
 
         notices.clear();
@@ -557,30 +557,30 @@ public class ParserTest extends CSPTest {
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded",
+            "Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded.",
             notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("√ a b c; img-src a", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting directive-name but found √", notices.get(0).message);
+        assertEquals("Expecting directive-name but found \"√\".", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("script-src 𝌆", notices); // non-ASCII char in source-expression
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Expecting directive-value but found U+1D306 (𝌆). Non-ASCII and non-printable characters must be percent-encoded",
+            "Expecting directive-value but found U+1D306 (𝌆). Non-ASCII and non-printable characters must be percent-encoded.",
             notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("plugin-types х/п", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The media-type-list must contain at least one media-type", notices.get(0).message);
+        assertEquals("The media-type-list must contain at least one media-type.", notices.get(0).message);
         assertEquals(
-            "Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded",
+            "Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded.",
             notices.get(1).message);
 
     }
@@ -613,7 +613,7 @@ public class ParserTest extends CSPTest {
         assertEquals("frame-src aaa", p1.show());
         assertEquals(1, notices.size());
         assertEquals(
-            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead",
+            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
             notices.iterator().next().message);
     }
 
@@ -621,7 +621,7 @@ public class ParserTest extends CSPTest {
         ArrayList<Notice> notices = new ArrayList<>();
         parseWithNotices("allow 'none'", notices);
         assertEquals("Error", notices.get(0).type.getValue());
-        assertEquals("The allow directive has been replaced with default-src and is not in the CSP specification",
+        assertEquals("The allow directive has been replaced with default-src and is not in the CSP specification.",
             notices.get(0).message);
 
     }
@@ -631,7 +631,7 @@ public class ParserTest extends CSPTest {
         parseWithNotices("options inline-script", notices);
         assertEquals("Error", notices.get(0).type.getValue());
         assertEquals(
-            "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification",
+            "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.",
             notices.get(0).message);
     }
 
@@ -646,20 +646,20 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("referrer", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(0).message);
-        assertEquals("The referrer directive must contain exactly one referrer directive value", notices.get(1).message);
+        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
+        assertEquals("The referrer directive must contain exactly one referrer directive value.", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer aaa", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("Expecting referrer directive value but found aaa", notices.get(1).message);
+        assertEquals("Expecting referrer directive value but found \"aaa\".", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer no-referrer unsafe-url", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("Expecting referrer directive value but found no-referrer unsafe-url", notices.get(1).message);
+        assertEquals("Expecting referrer directive value but found \"no-referrer unsafe-url\".", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("upgrade-insecure-requests", notices);
@@ -670,7 +670,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("upgrade-insecure-requests a", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("The upgrade-insecure-requests directive must not contain any value", notices.get(0).message);
+        assertEquals("The upgrade-insecure-requests directive must not contain any value.", notices.get(0).message);
 
 
         notices.clear();
@@ -682,7 +682,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("block-all-mixed-content a a", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The block-all-mixed-content directive must not contain any value", notices.get(1).message);
+        assertEquals("The block-all-mixed-content directive must not contain any value.", notices.get(1).message);
     }
 
     @Test public void testParseMulti() {
@@ -720,7 +720,7 @@ public class ParserTest extends CSPTest {
         assertEquals("plugin-types a/b", pl.get(0).show());
         assertEquals("script-src 'unsafe-redirect'", pl.get(1).show());
         assertEquals(1, notices.size());
-        assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0", notices.get(0).show());
+        assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0.", notices.get(0).show());
 
         notices = new ArrayList<>();
         pl = ParserWithLocation.parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), notices);
@@ -729,35 +729,35 @@ public class ParserTest extends CSPTest {
         assertEquals("frame-src b", pl.get(1).show());
         assertEquals(1, notices.size());
         assertEquals(
-            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead",
+            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
             notices.get(0).show());
 
         pl.clear();
         notices.clear();
         pl = parseMultiWithNotices("script-src a,b", notices);
         assertEquals(2, pl.size());
-        assertEquals("Unrecognised directive-name: b", notices.get(0).message);
+        assertEquals("Unrecognised directive-name: \"b\".", notices.get(0).message);
 
         notices.clear();
         Policy p;
         p = ParserWithLocation.parse("script-src a, script-src b", "https://origin.com", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals("1:13: Expecting end of policy but found ,", notices.get(0).show());
+        assertEquals("1:13: Expecting end of policy but found \",\".", notices.get(0).show());
 
         notices.clear();
         p = parseWithNotices("script-src a, script-src b", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals("Expecting end of policy but found ,", notices.get(0).message);
+        assertEquals("Expecting end of policy but found \",\".", notices.get(0).message);
 
         notices.clear();
         pl.clear();
         pl = ParserWithLocation.parseMulti("allow 'none', options", "https://origin.com", notices);
         assertEquals(2, pl.size());
         assertEquals(2, notices.size());
-        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification",
+        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
             notices.get(0).show());
         assertEquals(
-            "1:15: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification",
+            "1:15: The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.",
             notices.get(1).show());
 
 
@@ -766,17 +766,17 @@ public class ParserTest extends CSPTest {
         pl = ParserWithLocation.parseMulti("allow 'none', referrer", URI.parse("https://origin.com"), notices);
         assertEquals(2, pl.size());
         assertEquals(3, notices.size());
-        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification",
+        assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
             notices.get(0).show());
-        assertEquals("1:15: The referrer directive is an experimental directive that will be likely added to the CSP specification", notices.get(1).show());
-        assertEquals("1:15: The referrer directive must contain exactly one referrer directive value", notices.get(2).show());
+        assertEquals("1:15: The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(1).show());
+        assertEquals("1:15: The referrer directive must contain exactly one referrer directive value.", notices.get(2).show());
 
         notices.clear();
         p = parseWithNotices("script-src *, ", notices);
         // it actually optimised away
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("Expecting end of policy but found ,", notices.get(0).message);
+        assertEquals("Expecting end of policy but found \",\".", notices.get(0).message);
 
 
     }

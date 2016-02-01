@@ -51,6 +51,11 @@ public class Policy implements Show {
                 "Cannot merge policies if either policy contains a report-to directive.");
         }
 
+        if (this.directives.containsKey(ReferrerDirective.class) || other.directives
+            .containsKey(ReferrerDirective.class)) {
+            throw new IllegalArgumentException(
+                "Cannot merge policies if either policy contains a referrer directive.");
+        }
 
         this.resolveSelf();
         other.resolveSelf();
@@ -106,6 +111,9 @@ public class Policy implements Show {
         }
         if (!this.directives.containsKey(ObjectSrcDirective.class)) {
             this.unionDirectivePrivate(new ObjectSrcDirective(defaultSources));
+        }
+        if (!this.directives.containsKey(ManifestSrcDirective.class)) {
+            this.unionDirectivePrivate(new ManifestSrcDirective(defaultSources));
         }
     }
 
@@ -177,6 +185,7 @@ public class Policy implements Show {
         this.eliminateRedundantSourceExpression(defaultSources, FontSrcDirective.class);
         this.eliminateRedundantSourceExpression(defaultSources, MediaSrcDirective.class);
         this.eliminateRedundantSourceExpression(defaultSources, ObjectSrcDirective.class);
+        this.eliminateRedundantSourceExpression(defaultSources, ManifestSrcDirective.class);
 
         // * remove default-src nonces if the policy contains both script-src and style-src directives
         if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
@@ -194,7 +203,8 @@ public class Policy implements Show {
             this.directives.containsKey(ConnectSrcDirective.class) &&
             this.directives.containsKey(FontSrcDirective.class) &&
             this.directives.containsKey(MediaSrcDirective.class) &&
-            this.directives.containsKey(ObjectSrcDirective.class)) {
+            this.directives.containsKey(ObjectSrcDirective.class) &&
+            this.directives.containsKey(ManifestSrcDirective.class)) {
             this.directives.remove(DefaultSrcDirective.class);
         }
 

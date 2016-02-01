@@ -6,7 +6,7 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class ManifestSrcDirective extends SourceListDirective {
-    @Nonnull private static final String name = "default-src";
+    @Nonnull private static final String name = "manifest-src";
 
     public ManifestSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
         super(ManifestSrcDirective.name, sourceExpressions);

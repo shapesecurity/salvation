@@ -27,12 +27,12 @@ public class PolicyMergeTest extends CSPTest {
         p1.union(p2);
         assertEquals("default-src aaa https://origin2.com", p1.show());
 
-        p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a", "https://origin1.com");
+        p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a; ", "https://origin1.com");
         p2 = Parser
-            .parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b", "https://origin2.com");
+            .parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b; manifest-src b;", "https://origin2.com");
         p1.union(p2);
         assertEquals(
-            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b",
+            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b",
             p1.show());
     }
 

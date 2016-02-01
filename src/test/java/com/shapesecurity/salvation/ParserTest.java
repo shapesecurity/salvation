@@ -664,13 +664,14 @@ public class ParserTest extends CSPTest {
         notices.clear();
         p = parseWithNotices("upgrade-insecure-requests", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(0, notices.size());
+        assertEquals(1, notices.size());
 
         notices.clear();
         p = parseWithNotices("upgrade-insecure-requests a", notices);
         assertEquals(0, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("The upgrade-insecure-requests directive must not contain any value.", notices.get(0).message);
+        assertEquals(2, notices.size());
+        assertEquals("The upgrade-insecure-requests directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
+        assertEquals("The upgrade-insecure-requests directive must not contain any value.", notices.get(1).message);
 
 
         notices.clear();

@@ -271,6 +271,7 @@ public class Parser {
                     result = new StyleSrcDirective(this.parseSourceList());
                     break;
                 case UpgradeInsecureRequests:
+                    warnFutureDirective(token);
                     this.enforceMissingDirectiveValue(token);
                     result = new UpgradeInsecureRequestsDirective();
                     break;

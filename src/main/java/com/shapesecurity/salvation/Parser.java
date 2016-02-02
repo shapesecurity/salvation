@@ -278,8 +278,7 @@ public class Parser {
                 case Allow:
                     this.error(token,
                         "The allow directive has been replaced with default-src and is not in the CSP specification.");
-                    if (this.hasNext(DirectiveValueToken.class))
-                        this.advance();
+                    this.eat(DirectiveValueToken.class);
                     throw INVALID_DIRECTIVE_NAME;
                 case FrameSrc:
                     this.warn(token,
@@ -289,14 +288,12 @@ public class Parser {
                 case Options:
                     this.error(token,
                         "The options directive has been replaced with 'unsafe-inline' and 'unsafe-eval' and is not in the CSP specification.");
-                    if (this.hasNext(DirectiveValueToken.class))
-                        this.advance();
+                    this.eat(DirectiveValueToken.class);
                     throw INVALID_DIRECTIVE_NAME;
                 case Unrecognised:
                 default:
                     this.error(token, "Unrecognised directive-name: \"" + token.value + "\".");
-                    if (this.hasNext(DirectiveValueToken.class))
-                        this.advance();
+                    this.eat(DirectiveValueToken.class);
                     throw INVALID_DIRECTIVE_NAME;
             }
         } finally {

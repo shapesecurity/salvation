@@ -189,7 +189,7 @@ public class Parser {
     @Nonnull private Directive<?> parseDirective() throws DirectiveParseException {
         if (!this.hasNext(DirectiveNameToken.class)) {
             Token t = this.advance();
-            this.error(t, "Expecting directive-name but found \"" + t.value.split(" ", 2)[0] + "\".");
+            this.error(t, "Expecting directive-name but found \"" + t.value + "\".");
             throw MISSING_DIRECTIVE_NAME;
         }
         Directive result;

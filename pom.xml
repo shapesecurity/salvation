@@ -184,7 +184,7 @@
                                 <!-- Configures the file extension of the output files. -->
                                 <fileMapper
                                     implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
-                                    <targetExtension>.html</targetExtension>
+q                                    <targetExtension>.html</targetExtension>
                                 </fileMapper>
                             </fileMappers>
                         </transformationSet>

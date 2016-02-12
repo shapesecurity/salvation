@@ -9,7 +9,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Parser {
 
@@ -136,10 +135,6 @@ public class Parser {
             return true;
         }
         return false;
-    }
-
-    @Nonnull protected DirectiveValueParseException createError(@Nonnull String message) {
-        return new DirectiveValueParseException(message);
     }
 
     @Nonnull protected Policy parsePolicy() {

@@ -53,8 +53,8 @@ public class Tokeniser {
     }
 
     private boolean eatSeparator() {
-        return this.eat(DirectiveSeparatorToken::new, Tokeniser.directiveSeparator) || this
-            .eat(PolicySeparatorToken::new, Tokeniser.policySeparator);
+        return this.eat(DirectiveSeparatorToken::new, Tokeniser.directiveSeparator) ||
+            this.eat(PolicySeparatorToken::new, Tokeniser.policySeparator);
     }
 
     private boolean eatDirectiveName() {
@@ -77,18 +77,6 @@ public class Tokeniser {
 
     private boolean hasNext() {
         return this.index < this.length;
-    }
-
-    // invariant: hasNext has been called and returned true; next has not been called since; eat has not returned true since
-    private String next() {
-        int i = this.index;
-        while (i < this.length) {
-            char ch = this.sourceText.charAt(i);
-            if (Tokeniser.isWhitespace(ch) || ch == ';')
-                break;
-            ++i;
-        }
-        return this.sourceText.substring(this.index, i);
     }
 
     @Nonnull protected Token[] tokenise() {

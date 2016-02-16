@@ -28,7 +28,6 @@ public class Tokeniser {
         this.tokens = new ArrayList<>();
         this.sourceText = sourceText;
         this.length = sourceText.length();
-        this.eatWhitespace();
     }
 
     @Nonnull public static Token[] tokenise(@Nonnull String sourceText) {
@@ -48,7 +47,6 @@ public class Tokeniser {
         int start = this.index;
         this.index = matcher.end();
         this.tokens.add(ctor.apply(this.sourceText.substring(start, this.index)));
-        this.eatWhitespace();
         return true;
     }
 
@@ -69,6 +67,14 @@ public class Tokeniser {
         return this.eat(UnknownToken::new, Tokeniser.notSeparator);
     }
 
+    private boolean eatSingleWhitespace() {
+        if (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
+            ++this.index;
+            return true;
+        }
+        return false;
+    }
+
     private void eatWhitespace() {
         while (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
             ++this.index;
@@ -81,9 +87,15 @@ public class Tokeniser {
 
     @Nonnull protected Token[] tokenise() {
         while (this.hasNext()) {
-            if (this.eatSeparator())
+            this.eatWhitespace();
+            if (this.eatSeparator()) {
                 continue;
+            }
             if (!this.eatDirectiveName()) {
+                this.eatUntilSeparator();
+                continue;
+            }
+            if (!this.eatSingleWhitespace()) {
                 this.eatUntilSeparator();
                 continue;
             }
@@ -151,22 +163,18 @@ public class Tokeniser {
     @Nonnull private static List<SubDirectiveValueToken> splitByWSP(@Nonnull Token token) {
         List<SubDirectiveValueToken> tokens = new ArrayList<>();
         @Nullable Location startLocation = token.startLocation;
-        if (startLocation == null) {
-            for (String s : WSP.split(trimRHSWS(token.value))) {
-                tokens.add(new SubDirectiveValueToken(s));
-            }
-        } else {
-            Matcher m = NotWSP.matcher(token.value);
-            int offset = 0;
-            while (m.find(offset)) {
-                SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
+        Matcher m = NotWSP.matcher(token.value);
+        int offset = 0;
+        while (m.find(offset)) {
+            SubDirectiveValueToken dv = new SubDirectiveValueToken(token.value.substring(m.start(), m.end()));
+            if (startLocation != null) {
                 dv.startLocation = new Location(startLocation.line, startLocation.column + m.start(),
                     startLocation.offset + m.start());
                 dv.endLocation =
                     new Location(startLocation.line, startLocation.column + m.end(), startLocation.offset + m.end());
-                offset = m.end();
-                tokens.add(dv);
             }
+            offset = m.end();
+            tokens.add(dv);
         }
         return tokens;
     }

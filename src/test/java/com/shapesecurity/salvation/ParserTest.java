@@ -6,6 +6,9 @@ import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.HashSource;
 import com.shapesecurity.salvation.directives.*;
+import com.shapesecurity.salvation.tokens.DirectiveNameToken;
+import com.shapesecurity.salvation.tokens.DirectiveValueToken;
+import com.shapesecurity.salvation.tokens.Token;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
@@ -364,9 +367,7 @@ public class ParserTest extends CSPTest {
 
         p = parse("report-to        a");
         q = parse("report-to a; ");
-        assertEquals("report-to hashcode match", p.hashCode(), q.hashCode());
-        assertTrue("report-to equals", p.equals(q));
-
+        assertFalse("report-to equals", p.equals(q));
     }
 
     @Test public void testMediaTypeUnion() {
@@ -543,6 +544,27 @@ public class ParserTest extends CSPTest {
             parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
     }
 
+    @Test public void testDirectNameSpacing() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        Policy p = parseWithNotices("script-src'self'", notices);
+
+        assertEquals("", p.show());
+        assertEquals(1, notices.size());
+        assertEquals(Notice.Type.ERROR, notices.get(0).type);
+        assertEquals("Expecting directive-value but found U+0027 ('). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(0).message);
+    }
+
+    @Test public void testDirectValueSpacing() {
+        Token[] tokens = Tokeniser.tokenise("some-directive-name   a  ");
+
+        assertEquals(2, tokens.length);
+        assertTrue(tokens[0] instanceof DirectiveNameToken);
+        assertEquals("some-directive-name", tokens[0].value);
+        assertEquals(DirectiveNameToken.DirectiveNameSubtype.Unrecognised, ((DirectiveNameToken) tokens[0]).subtype);
+        assertTrue(tokens[1] instanceof DirectiveValueToken);
+        assertEquals("  a  ", tokens[1].value);
+    }
+
     @Test public void testUnknownTokens() {
         ArrayList<Notice> notices = new ArrayList();
         Policy p = parseWithNotices("img-src √", notices);
@@ -638,7 +660,7 @@ public class ParserTest extends CSPTest {
     @Test public void testNewDirectives() {
         Policy p;
         ArrayList<Notice> notices = new ArrayList<>();
-        p = parseWithNotices("referrer      no-referrer   ", notices);
+        p = parseWithNotices("referrer no-referrer", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
 
@@ -648,6 +670,12 @@ public class ParserTest extends CSPTest {
         assertEquals(2, notices.size());
         assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
         assertEquals("The referrer directive must contain exactly one referrer directive value.", notices.get(1).message);
+
+        notices.clear();
+        p = parseWithNotices("referrer   no-referrer  ", notices);
+        assertEquals(0, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("Expecting referrer directive value but found \"  no-referrer  \".", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("referrer aaa", notices);

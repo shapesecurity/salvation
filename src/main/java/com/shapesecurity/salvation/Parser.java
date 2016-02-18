@@ -547,7 +547,7 @@ public class Parser {
             }
             this.error(token, "Expecting RFC 7230 token but found \"" + token.value + "\".");
         } else {
-            this.error(directiveNameToken, "The report-to must contain exactly one RFC 7230 token.");
+            this.error(directiveNameToken, "The report-to directive must contain exactly one RFC 7230 token.");
         }
         throw INVALID_REPORT_TO_TOKEN;
     }

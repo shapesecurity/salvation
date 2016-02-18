@@ -347,12 +347,12 @@ public class ParserTest extends CSPTest {
 
         parseWithNotices("report-to ", notices);
         assertEquals(1, notices.size());
-        assertEquals("The report-to must contain exactly one RFC 7230 token.", notices.get(0).message);
+        assertEquals("The report-to directive must contain exactly one RFC 7230 token.", notices.get(0).message);
 
         notices.clear();
         parseWithNotices("report-to д", notices);
         assertEquals(2, notices.size());
-        assertEquals("The report-to must contain exactly one RFC 7230 token.", notices.get(0).message);
+        assertEquals("The report-to directive must contain exactly one RFC 7230 token.", notices.get(0).message);
         assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
 
         notices.clear();

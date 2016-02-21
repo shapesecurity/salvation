@@ -38,9 +38,18 @@ public class ParserTest extends CSPTest {
         ImgSrcDirective imgSrcDirective = p.getDirectiveByType(ImgSrcDirective.class);
         assertNotNull(imgSrcDirective);
         assertTrue(firstDirective instanceof ImgSrcDirective);
-        assertEquals("", imgSrcDirective, (ImgSrcDirective) firstDirective);
+        assertEquals("", imgSrcDirective, firstDirective);
         assertEquals("", "img-src", ImgSrcDirective.name);
         assertEquals("", "img-src a", imgSrcDirective.show());
+    }
+
+    @Test public void testDuplicatesWithLocation() {
+        Policy p;
+        ArrayList<Notice> notices = new ArrayList<>();
+        p = ParserWithLocation.parse("img-src a ;;; img-src b", "https://example.com", notices);
+        assertEquals(1, notices.size());
+        assertEquals("1:15: Policy contains more than one img-src directive. All but the first instance will be ignored.", notices.get(0).show());
+
     }
 
     @Test public void testDirectiveNameParsing() {

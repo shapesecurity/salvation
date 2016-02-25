@@ -366,4 +366,19 @@ public class PolicyMergeTest extends CSPTest {
             p.show());
     }
 
+    @Test public void testIntersectionIsCaseInsensitive(){
+        Policy p = parse("default-src 'self' example.com; ");
+        Policy q = parse("default-src 'self' EXAMPLE.COM; ");
+        p.intersect(q);
+        assertEquals("", "default-src 'self' example.com", p.show());
+    }
+
+    @Test public void testUnionCaseIsInsensitive(){
+        Policy p = parse("default-src 'self' example.com; ");
+        Policy q = parse("default-src 'self' EXAMPLE.COM; ");
+        p.union(q);
+        assertEquals("", "default-src 'self' example.com", p.show());
+    }
+
+
 }

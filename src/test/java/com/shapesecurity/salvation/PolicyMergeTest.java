@@ -366,4 +366,73 @@ public class PolicyMergeTest extends CSPTest {
             p.show());
     }
 
+    @Test public void testIntersectionIsCaseInsensitive(){
+        Policy p = parse("default-src 'self' example.org; ");
+        Policy q = parse("default-src 'self' EXAMPLE.ORG; ");
+        p.intersect(q);
+        assertEquals("default-src 'self' example.org", p.show());
+
+        p = parse("default-src 'self' EXAMPLE.ORG; ");
+        q = parse("default-src 'self' example.org; ");
+        p.intersect(q);
+        assertEquals("default-src 'self' EXAMPLE.ORG", p.show());
+
+        p = parse("default-src 'self' *.abc; ");
+        q = parse("default-src 'self' *.aBc; ");
+        p.intersect(q);
+        assertEquals("default-src 'self' *.abc", p.show());
+
+        p = parse("default-src 'self' *.abc/a/b/c/; ");
+        q = parse("default-src 'self' *.ABc/a/B/c/; ");
+        p.union(q);
+        assertEquals("default-src 'self' *.abc/a/b/c/ *.ABc/a/B/c/", p.show());
+
+        p = parse("default-src 'self' *.abc/a; ");
+        q = parse("default-src 'self' *.ABc/A; ");
+        p.intersect(q);
+        assertEquals("default-src 'self'", p.show());
+
+        p = parse("default-src 'self' http://abc/a; ");
+        q = parse("default-src 'self' hTtP://ABc/a; ");
+        p.intersect(q);
+        assertEquals("default-src 'self' http://abc/a", p.show());
+    }
+
+    @Test public void testUnionCaseIsInsensitive(){
+        Policy p = parse("default-src 'self' example.org; ");
+        Policy q = parse("default-src 'self' EXAMPLE.ORG; ");
+        p.union(q);
+        assertEquals("default-src 'self' example.org", p.show());
+
+        p = parse("default-src 'self' EXAMPLE.ORG; ");
+        q = parse("default-src 'self' example.org; ");
+        p.union(q);
+        assertEquals("default-src 'self' EXAMPLE.ORG", p.show());
+
+        p = parse("default-src 'self' *.abc; ");
+        q = parse("default-src 'self' *.ABc; ");
+        p.union(q);
+        assertEquals("default-src 'self' *.abc", p.show());
+
+        p = parse("default-src 'self' *.abc/a; ");
+        q = parse("default-src 'self' *.ABc/a; ");
+        p.union(q);
+        assertEquals("default-src 'self' *.abc/a", p.show());
+
+        p = parse("default-src 'self' *.abc/a/b/c/; ");
+        q = parse("default-src 'self' *.ABc/a/B/c/; ");
+        p.union(q);
+        assertEquals("default-src 'self' *.abc/a/b/c/ *.ABc/a/B/c/", p.show());
+
+        p = parse("default-src 'self' *.abc/a; ");
+        q = parse("default-src 'self' *.ABc/A; ");
+        p.union(q);
+        assertEquals("default-src 'self' *.abc/a *.ABc/A", p.show());
+
+        p = parse("default-src 'self' http://abc/a; ");
+        q = parse("default-src 'self' hTtP://ABc/a; ");
+        p.union(q);
+        assertEquals("default-src 'self' http://abc/a", p.show());
+    }
+
 }

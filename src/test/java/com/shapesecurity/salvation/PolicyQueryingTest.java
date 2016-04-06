@@ -47,18 +47,37 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("directive doesn't contain", d1.contains(value));
     }
 
+    @Test public void testDirectiveContainsCaseSensitivity() {
+        Policy p = parse("script-src a b c");
+        Policy q = parse("script-src A");
+        Policy r = parse("script-src M");
+        ScriptSrcDirective d1 = p.getDirectiveByType(ScriptSrcDirective.class);
+        ScriptSrcDirective d2 = q.getDirectiveByType(ScriptSrcDirective.class);
+        assertNotNull(d1);
+        assertNotNull(d2);
+        DirectiveValue value = d2.values().iterator().next();
+        assertTrue("directive contains", d1.contains(value));
+        ScriptSrcDirective d3 = r.getDirectiveByType(ScriptSrcDirective.class);
+        assertNotNull(d3);
+        value = d3.values().iterator().next();
+        assertFalse("directive doesn't contain", d1.contains(value));
+    }
+
     @Test public void testAllowsFromSource() {
         Policy p;
 
         p = Parser.parse(
-            "default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am",
+            "default-src 'none'; img-src https: 'self' http://abc.am/; style-src https://*.abc.am:*; script-src 'self' https://abc.am https://*.cde.am/a",
             URI.parse("https://abc.com"));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://a.com/12")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.am")));
         assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://abc.am")));
         assertTrue("resource is allowed", p.allowsImgFromSource(URI.parse("https://abc.com/12")));
+        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("httpS://www.cDE.am/a")));
+        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://www.cde.am/a")));
         assertFalse("resource is not allowed", p.allowsImgFromSource(URI.parse("http://a.com/12")));
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
+        assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.cde.am/A")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
 
         p = Parser.parse("default-src 'none'", "https://abc.com");
@@ -219,6 +238,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
@@ -229,9 +249,12 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/b/c")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/B/C")));
 
         p = Parser.parse("script-src example.com/a/b", "http://example.com");
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
@@ -239,6 +262,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/B")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
 
@@ -250,6 +274,9 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/C")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/B/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/B/c")));
 
         p = Parser.parse("script-src example.com/a/b/c", "http://example.com");
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
@@ -258,7 +285,9 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/B/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/C")));
     }
 
     @Test public void testWildcards() {
@@ -271,6 +300,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
 
         p = Parser.parse("script-src http://*", "http://example.com");
@@ -280,6 +310,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
 
         p = Parser.parse("style-src *:80", "http://example.com");
@@ -289,6 +320,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
 
         p = Parser.parse("style-src *:80", "https://example.com");

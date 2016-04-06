@@ -32,17 +32,23 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         HostSource otherPrime = (HostSource) other;
         if (this.isWildcard() && otherPrime.isWildcard())
             return true;
-        return Objects.equals(this.scheme, otherPrime.scheme) &&
-            Objects.equals(this.host, otherPrime.host) &&
+
+        // safe to do uniform comparison of scheme and host
+        return Objects.equals(this.scheme != null ? this.scheme.toLowerCase() : null ,
+                otherPrime.scheme != null ? otherPrime.scheme.toLowerCase() : null) &&
+            Objects.equals(this.host != null ? this.host.toLowerCase() : null,
+                otherPrime.host != null ? otherPrime.host.toLowerCase() : null) &&
             this.port == otherPrime.port &&
             Objects.equals(this.path, otherPrime.path);
     }
 
     @Override public int hashCode() {
+
+        // scheme and host matching is case-insensitive
         int h = 0;
         if (this.scheme != null)
-            h ^= this.scheme.hashCode() ^ 0xA303EFA3;
-        h ^= this.host.hashCode() ^ 0xFB2290B2;
+            h ^= this.scheme.toLowerCase().hashCode() ^ 0xA303EFA3;
+        h ^= this.host.toLowerCase().hashCode() ^ 0xFB2290B2;
         h ^= this.port ^ 0xB54E99F3;
         if (this.path != null)
             h ^= this.path.hashCode() ^ 0x13324C0E;
@@ -70,7 +76,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
             schemeMatches = this.scheme.equalsIgnoreCase(source.scheme);
         }
         boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
-            source.host.endsWith(this.host.substring(1)) :
+            source.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) :
             this.host.equalsIgnoreCase(source.host));
         boolean uriUsesDefaultPort = source.port == Constants.EMPTY_PORT
             || SchemeHostPortTriple.defaultPortForProtocol(source.scheme) == source.port;
@@ -80,8 +86,8 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
             uriUsesDefaultPort :
             (source.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == source.port));
         boolean pathMatches = this.path == null || (this.path.endsWith("/") ?
-            source.path.toLowerCase().startsWith(this.path.toLowerCase()) :
-            this.path.equalsIgnoreCase(source.path));
+            source.path.startsWith(this.path) :
+            this.path.equals(source.path));
         return schemeMatches && hostMatches && portMatches && pathMatches;
     }
 

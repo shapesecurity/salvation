@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class Directive<Value extends DirectiveValue> implements Show {
-    @Nonnull private final String name;
+    @Nonnull public final String name;
 
     @Nonnull private Set<Value> values;
 

@@ -145,7 +145,13 @@ public class Parser {
             if (this.eat(DirectiveSeparatorToken.class))
                 continue;
             try {
-                policy.addDirective(this.parseDirective());
+                Directive<? extends DirectiveValue> directive = this.parseDirective();
+                // only add a directive if it doesn't exist; used for handling duplicate directives in CSP headers
+                if (policy.getDirectiveByType(directive.getClass()) == null) {
+                    policy.addDirective(directive);
+                } else {
+                    this.warn(this.tokens[this.index - 2], "Policy contains more than one " + directive.name + " directive. All but the first instance will be ignored.");
+                }
             } catch (DirectiveParseException ignored) {
             }
         }

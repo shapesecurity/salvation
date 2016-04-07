@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
         "^allow-(?:forms|modals|pointer-lock" + "|popups|popups-to-escape-sandbox|same-origin"
             + "|scripts|top-navigation)$");
     public static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
+    public static final Pattern unquotedKeywordPattern = Pattern.compile("^(?:self|unsafe-inline|unsafe-eval|unsafe-redirect|none)$");
     // port-part constants
     public static final int WILDCARD_PORT = -200;
     public static final int EMPTY_PORT = -1;

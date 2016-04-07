@@ -399,6 +399,16 @@ public class LocationTest extends CSPTest {
         assertEquals(
             "Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'.",
             notice.toString());
+
+        notices.clear();
+        ParserWithLocation.parse("frame-ancestors abc none self", URI.parse("https://origin"), notices);
+        assertEquals(2, notices.size());
+        assertEquals(
+            "1:21: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'none'.",
+            notices.get(0).show());
+        assertEquals(
+            "Warning: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'self'.",
+            notices.get(1).toString());
     }
 
     @Test public void testNoticeHelpers() {

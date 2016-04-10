@@ -21,11 +21,12 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
     }
 
     @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
-        return source.value.startsWith(this.value + ":");
+        return source.value.toLowerCase().startsWith(this.value.toLowerCase() + ":");
     }
 
     public boolean matchesProtectedScheme() {
-        return this.value.equals("data") || this.value.equals("blob") || this.value.equals("filesystem");
+        return this.value.equalsIgnoreCase("about") || this.value.equalsIgnoreCase("blob") ||
+            this.value.equalsIgnoreCase("data") || this.value.equalsIgnoreCase("filesystem");
     }
 
     @Override public boolean equals(@Nullable Object other) {

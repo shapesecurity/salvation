@@ -142,7 +142,7 @@ public class Policy implements Show {
                     Set<SourceExpression> newSources = sourceListDirective.values()
                         // * remove all other host sources in a source list that contains *
                         .filter(x -> !(x instanceof HostSource))
-                        // * remove schemes sources other than data:, blob:, and filesystem: in source list that contains *
+                        // * remove schemes sources other than about:, data:, blob:, and filesystem: in source list that contains *
                         .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x).matchesProtectedScheme())
                         .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
@@ -516,6 +516,14 @@ public class Policy implements Show {
     }
 
     public boolean allowsFrameAncestor(@Nonnull URI source) {
+        FrameAncestorsDirective frameAncestorsDirective = this.getDirectiveByType(FrameAncestorsDirective.class);
+        if (frameAncestorsDirective == null) {
+            return true;
+        }
+        return frameAncestorsDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsFrameAncestor(@Nonnull GUID source) {
         FrameAncestorsDirective frameAncestorsDirective = this.getDirectiveByType(FrameAncestorsDirective.class);
         if (frameAncestorsDirective == null) {
             return true;

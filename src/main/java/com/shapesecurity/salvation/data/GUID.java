@@ -12,11 +12,11 @@ public class GUID extends Origin {
     @Override public boolean equals(Object other) {
         if (!(other instanceof GUID))
             return false;
-        return ((GUID) other).value.equals(this.value);
+        return ((GUID) other).value.equalsIgnoreCase(this.value);
     }
 
     @Override public int hashCode() {
-        return this.value.hashCode();
+        return this.value.toLowerCase().hashCode();
     }
 
     @Nonnull @Override public String show() {

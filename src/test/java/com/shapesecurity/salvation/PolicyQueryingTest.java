@@ -290,6 +290,37 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/C")));
     }
 
+    @Test public void testLocalSchemes() {
+        Policy p = Parser.parse("script-src *.example.com data: blob:; frame-ancestors data: about:", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(new GUID("data:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("DATA:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("blob:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("BLOB:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("about::")));
+        assertFalse(p.allowsScriptFromSource(new GUID("ABOUT:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("data:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("DATA:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("about:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("ABOUT:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("blob:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("BLOB:")));
+
+        p = Parser.parse("script-src *.example.com DATA: BLOB:; frame-ancestors DATA: ABOUT:", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(new GUID("data:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("DATA:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("blob:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("BLOB:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("about::")));
+        assertFalse(p.allowsScriptFromSource(new GUID("ABOUT:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("data:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("DATA:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("about:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("ABOUT:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("blob:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("BLOB:")));
+
+    }
+
     @Test public void testWildcards() {
         Policy p;
 

@@ -139,9 +139,9 @@ public class PolicyQueryingTest extends CSPTest {
     }
 
     @Test public void testAllowsPlugin() {
-        Policy p;
-
-        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
+        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("A", "b")));
+        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "B")));
+        assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("A", "B")));
         assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("a", "b")));
         assertFalse("plugin is not allowed", parse("default-src 'none'").allowsPlugin(new MediaType("z", "b")));
         assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(new MediaType("z", "b")));

@@ -26,7 +26,7 @@ public class MediaType implements DirectiveValue, MatchesMediaType {
     }
 
     @Override public int hashCode() {
-        return (this.type.hashCode() ^ 0x887E088E) ^ (this.subtype.hashCode() ^ 0x33E42712);
+        return (this.type.toLowerCase().hashCode() ^ 0x887E088E) ^ (this.subtype.toLowerCase().hashCode() ^ 0x33E42712);
     }
 
     @Nonnull @Override public String show() {

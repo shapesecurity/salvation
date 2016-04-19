@@ -144,6 +144,8 @@ public class Policy implements Show {
                         .filter(x -> !(x instanceof HostSource))
                         // * remove schemes sources other than about:, data:, blob:, and filesystem: in source list that contains *
                         .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x).matchesProtectedScheme())
+                        // remove 'unsafe-inline' if needed
+                        .filter(x -> !((x == KeywordSource.UnsafeInline) && sourceListDirective.containsUnsafeInlineDisabler()))
                         .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
                     this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));

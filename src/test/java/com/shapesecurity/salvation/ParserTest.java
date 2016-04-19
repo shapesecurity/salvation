@@ -192,6 +192,10 @@ public class ParserTest extends CSPTest {
         assertEquals("optimisation", "", parseAndShow("script-src 'self' *"));
         assertEquals("optimisation", "script-src 'unsafe-inline'; style-src 'unsafe-inline'",
             parseAndShow("script-src 'unsafe-inline'; style-src 'unsafe-inline';"));
+        assertEquals("optimisation", "script-src 'unsafe-inline' *", parseAndShow("script-src example.com * 'unsafe-inline'"));
+        assertEquals("optimisation", "script-src 'nonce-123' *", parseAndShow("script-src example.com * 'unsafe-inline' 'nonce-123'"));
+        assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' *", parseAndShow("script-src example.com * 'unsafe-inline' 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='"));
+        assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' *", parseAndShow("script-src example.com * 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' 'unsafe-inline'"));
 
 
     }

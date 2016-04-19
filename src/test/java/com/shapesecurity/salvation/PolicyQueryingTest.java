@@ -304,6 +304,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsFrameAncestor(new GUID("ABOUT:")));
         assertFalse(p.allowsFrameAncestor(new GUID("blob:")));
         assertFalse(p.allowsFrameAncestor(new GUID("BLOB:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("custom.scheme:")));
 
         p = Parser.parse("script-src *.example.com DATA: BLOB:; frame-ancestors DATA: ABOUT:", "http://example.com");
         assertTrue(p.allowsScriptFromSource(new GUID("data:")));
@@ -318,6 +319,15 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsFrameAncestor(new GUID("ABOUT:")));
         assertFalse(p.allowsFrameAncestor(new GUID("blob:")));
         assertFalse(p.allowsFrameAncestor(new GUID("BLOB:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("custom.scheme:")));
+
+        p = Parser.parse("script-src *.example.com custom-scheme:; frame-ancestors custom.scheme2:", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("custom-scheme:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("BLOB:")));
+        assertFalse(p.allowsFrameAncestor(new GUID("custom-scheme:")));
+        assertTrue(p.allowsFrameAncestor(new GUID("custom.scheme2:")));
+
 
     }
 
@@ -332,7 +342,11 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
+
 
         p = Parser.parse("script-src http://*", "http://example.com");
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
@@ -342,7 +356,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src *:80", "http://example.com");
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -352,7 +369,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src *:80", "https://example.com");
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -361,7 +381,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src *:80", "ftp://example.com");
         assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -370,7 +393,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("img-src ftp://*", "http://example.com");
         assertFalse(p.allowsImgFromSource(URI.parse("http://example.com")));
@@ -379,7 +405,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsImgFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com:80")));
         assertFalse(p.allowsImgFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsImgFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsImgFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsImgFromSource(new GUID("data:")));
+        assertFalse(p.allowsImgFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src *:*", "http://example.com");
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -388,7 +417,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src http://*:*", "http://example.com");
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -397,7 +429,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("style-src ftp://*:*", "http://example.com");
         assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com")));
@@ -406,7 +441,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com")));
         assertTrue(p.allowsStyleFromSource(URI.parse("ftp://example.com:80")));
         assertFalse(p.allowsStyleFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsStyleFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsStyleFromSource(new GUID("data:")));
+        assertFalse(p.allowsStyleFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("img-src */path", "http://example.com");
         assertFalse(p.allowsImgFromSource(URI.parse("http://example.com")));
@@ -415,7 +453,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com")));
         assertFalse(p.allowsImgFromSource(URI.parse("ftp://example.com:80")));
         assertTrue(p.allowsImgFromSource(URI.parse("http://example.com/path")));
+        assertFalse(p.allowsImgFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsImgFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsImgFromSource(new GUID("data:")));
+        assertFalse(p.allowsImgFromSource(new GUID("custom.scheme:")));
 
         p = Parser.parse("script-src *.example.com", "http://example.com");
         assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com/c/d")));
@@ -423,7 +464,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("http://www.example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
     }
 
 }

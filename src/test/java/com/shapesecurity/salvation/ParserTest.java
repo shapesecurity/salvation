@@ -192,7 +192,10 @@ public class ParserTest extends CSPTest {
         assertEquals("optimisation", "", parseAndShow("script-src 'self' *"));
         assertEquals("optimisation", "script-src 'unsafe-inline'; style-src 'unsafe-inline'",
             parseAndShow("script-src 'unsafe-inline'; style-src 'unsafe-inline';"));
-
+        assertEquals("optimisation with network scheme", "", parseAndShow("script-src 'self' * ftp:"));
+        assertEquals("optimisation with other scheme", "script-src data: *", parseAndShow("script-src 'self' * data:"));
+        assertEquals("optimisation with other scheme", "script-src custom: *", parseAndShow("script-src 'self' * custom:"));
+        assertEquals("optimisation with mixed schemes", "script-src custom: blob: *", parseAndShow("script-src 'self' * custom: ftp: blob:"));
 
     }
 

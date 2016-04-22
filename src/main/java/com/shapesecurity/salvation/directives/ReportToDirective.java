@@ -1,6 +1,5 @@
 package com.shapesecurity.salvation.directives;
 
-import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.ReportToValue;
 
 import javax.annotation.Nonnull;

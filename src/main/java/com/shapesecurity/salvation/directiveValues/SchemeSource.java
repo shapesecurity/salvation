@@ -28,6 +28,12 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
         return this.value.equalsIgnoreCase("about") || this.value.equalsIgnoreCase("blob") ||
             this.value.equalsIgnoreCase("data") || this.value.equalsIgnoreCase("filesystem");
     }
+    // Note: WebSocket schemes are not networks schemes but CSP spec decided to treat them as equivalent to http/https
+    public boolean matchesNetworkScheme() {
+        return this.value.equalsIgnoreCase("ftp") || this.value.equalsIgnoreCase("http") ||
+            this.value.equalsIgnoreCase("https") || this.value.equalsIgnoreCase("ws") ||
+            this.value.equalsIgnoreCase("wss");
+    }
 
     @Override public boolean equals(@Nullable Object other) {
         if (other == null || !(other instanceof SchemeSource))

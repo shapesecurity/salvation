@@ -142,8 +142,8 @@ public class Policy implements Show {
                     Set<SourceExpression> newSources = sourceListDirective.values()
                         // * remove all other host sources in a source list that contains *
                         .filter(x -> !(x instanceof HostSource))
-                        // * remove schemes sources other than about:, data:, blob:, and filesystem: in source list that contains *
-                        .filter(x -> !(x instanceof SchemeSource) || ((SchemeSource) x).matchesProtectedScheme())
+                        // * remove network-schemes in source list that contains *
+                        .filter(x -> !(x instanceof SchemeSource) || !((SchemeSource) x).matchesNetworkScheme())
                         .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
                     this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));

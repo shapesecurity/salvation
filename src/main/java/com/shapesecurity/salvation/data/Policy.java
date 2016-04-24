@@ -531,7 +531,7 @@ public class Policy implements Show {
         return frameAncestorsDirective.matchesSource(this.origin, source);
     }
 
-    public boolean isEnforceable() {
+    public boolean hasSomeEffect() {
         for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();
             if (!(directive instanceof ReportToDirective) && !(directive instanceof ReportUriDirective)) {

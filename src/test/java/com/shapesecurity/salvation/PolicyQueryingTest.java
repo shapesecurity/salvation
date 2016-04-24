@@ -136,8 +136,6 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("style hash is allowed",
             p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
-        p = Parser.parse("default-src * 'unsafe-inline' 'nonce-123'", "https://abc.com");
-        assertFalse("inline script is not allowed", p.allowsUnsafeInlineScript());
     }
 
     @Test public void testAllowsPlugin() {
@@ -174,14 +172,6 @@ public class PolicyQueryingTest extends CSPTest {
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse("style hash is not allowed", p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
             "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-
-        p = Parser.parse("default-src * 'unsafe-inline' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", "https://abc.com");
-        assertTrue("script hash is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
-            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse("unknown script is not allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA256, new Base64Value(
-            "7HY1KLziIDGNSsu67SifYO1B69r1EFEfvPg3McqyIcM=")));
-        assertFalse("unknown script is not allowed", p.allowsUnsafeInlineScript());
-        assertFalse("unknown style is not allowed", p.allowsUnsafeInlineStyle());
     }
 
     @Test public void testAllowsNonce() {
@@ -198,12 +188,6 @@ public class PolicyQueryingTest extends CSPTest {
         p = Parser.parse("default-src 'none'", "https://abc.com");
         assertFalse("script nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
         assertFalse("style nonce is not allowed", p.allowsStyleWithNonce(new Base64Value("0gQAAA==")));
-
-        p = Parser.parse("default-src * 'unsafe-inline' 'nonce-0gQAAA=='", "https://abc.com");
-        assertTrue("script nonce is allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
-        assertFalse("script wrong nonce is not allowed", p.allowsScriptWithNonce(new Base64Value("1234")));
-        assertFalse("unsafe inline script is not allowed", p.allowsUnsafeInlineScript());
-        assertFalse("unsafe inline style is not allowed", p.allowsUnsafeInlineStyle());
     }
 
     @Test public void testAllowsConnect() {

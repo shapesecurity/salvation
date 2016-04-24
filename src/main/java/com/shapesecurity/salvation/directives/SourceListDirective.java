@@ -1,7 +1,10 @@
 package com.shapesecurity.salvation.directives;
 
 import com.shapesecurity.salvation.data.*;
-import com.shapesecurity.salvation.directiveValues.*;
+import com.shapesecurity.salvation.directiveValues.HashSource;
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.KeywordSource;
+import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import com.shapesecurity.salvation.interfaces.MatchesHash;
 import com.shapesecurity.salvation.interfaces.MatchesNonce;
 import com.shapesecurity.salvation.interfaces.MatchesSource;
@@ -34,10 +37,6 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
     public boolean matchesNonce(@Nonnull String nonce) {
         return this.values().filter(x -> x instanceof MatchesNonce)
             .anyMatch(x -> ((MatchesNonce) x).matchesNonce(nonce));
-    }
-
-    public boolean containsUnsafeInlineDisabler() {
-        return this.values().anyMatch(x -> (x instanceof HashSource || x instanceof NonceSource));
     }
 
     @Nonnull public Directive<SourceExpression> resolveSelf(@Nonnull Origin origin) {

@@ -351,19 +351,12 @@ public class Parser {
     @Nonnull private Set<SourceExpression> parseSourceList() throws DirectiveParseException {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
         boolean parseException = false;
-        Map<String, Boolean> seenStates = new HashMap<>();
-        seenStates.put("seenNone", false);
-        seenStates.put("seenUnsafeInline", false);
-        seenStates.put("seenHashOrNonce", false);
+        boolean seenNone = false;
         while (this.hasNext(SubDirectiveValueToken.class)) {
             try {
-                SourceExpression se = this.parseSourceExpression(seenStates, !sourceExpressions.isEmpty());
+                SourceExpression se = this.parseSourceExpression(seenNone, !sourceExpressions.isEmpty());
                 if (se == None.INSTANCE) {
-                    seenStates.put("seenNone", true);
-                } else if (se == KeywordSource.UnsafeInline) {
-                    seenStates.put("seenUnsafeInline", true);
-                } else if (se instanceof HashSource || se instanceof NonceSource) {
-                    seenStates.put("seenHashOrNonce", true);
+                    seenNone = true;
                 }
                 sourceExpressions.add(se);
             } catch (DirectiveValueParseException e) {
@@ -376,10 +369,10 @@ public class Parser {
         return sourceExpressions;
     }
 
-    @Nonnull private SourceExpression parseSourceExpression(Map<String, Boolean> seenStates, boolean seenSome)
+    @Nonnull private SourceExpression parseSourceExpression(boolean seenNone, boolean seenSome)
         throws DirectiveValueParseException {
         Token token = this.advance();
-        if (seenStates.get("seenNone") || seenSome && token.value.equalsIgnoreCase("'none'")) {
+        if (seenNone || seenSome && token.value.equalsIgnoreCase("'none'")) {
             this.error(token, "'none' must not be combined with any other source-expression.");
             throw INVALID_SOURCE_EXPR;
         }
@@ -389,9 +382,6 @@ public class Parser {
             case "'self'":
                 return KeywordSource.Self;
             case "'unsafe-inline'":
-                if (seenStates.get("seenHashOrNonce")) {
-                    this.warn(token, "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source");
-                }
                 return KeywordSource.UnsafeInline;
             case "'unsafe-eval'":
                 return KeywordSource.UnsafeEval;
@@ -404,9 +394,6 @@ public class Parser {
                     String nonce = token.value.substring(7, token.value.length() - 1);
                     NonceSource nonceSource = new NonceSource(nonce);
                     nonceSource.validationErrors().forEach(str -> this.warn(token, str));
-                    if (seenStates.get("seenUnsafeInline")) {
-                        this.warn(token, "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source");
-                    }
                     return nonceSource;
                 } else if (token.value.toLowerCase().startsWith("'sha")) {
                     HashSource.HashAlgorithm algorithm;
@@ -445,9 +432,6 @@ public class Parser {
                     } catch (IllegalArgumentException e) {
                         this.error(token, e.getMessage());
                         throw INVALID_SOURCE_EXPR;
-                    }
-                    if (seenStates.get("seenUnsafeInline")) {
-                        this.warn(token, "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source");
                     }
                     return hashSource;
                 } else if (token.value.matches("^" + Constants.schemePart + ":$")) {

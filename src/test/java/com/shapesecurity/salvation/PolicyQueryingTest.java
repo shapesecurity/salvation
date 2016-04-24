@@ -470,4 +470,12 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
     }
 
+    @Test public void testHasSomeEffect() {
+        Policy p = Parser.parse("", "http://example.com");
+        assertFalse(p.hasSomeEffect());
+        p = Parser.parse("script-src a; upgrade-insecure-requests; report-to a", "http://example.com");
+        assertTrue(p.hasSomeEffect());
+        p = Parser.parse("report-to a", "http://example.com");
+        assertFalse(p.hasSomeEffect());
+    }
 }

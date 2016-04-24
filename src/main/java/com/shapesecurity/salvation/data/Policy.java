@@ -144,6 +144,9 @@ public class Policy implements Show {
                         .filter(x -> !(x instanceof HostSource))
                         // * remove network-schemes in source list that contains *
                         .filter(x -> !(x instanceof SchemeSource) || !((SchemeSource) x).matchesNetworkScheme())
+                        // remove 'unsafe-inline' if source list contains hash or nonce
+                        .filter(x -> !((x == KeywordSource.UnsafeInline) &&
+                            (sourceListDirective.containsNonceSource() || sourceListDirective.containsHashSource())))
                         .collect(Collectors.toCollection(LinkedHashSet::new));
                     newSources.add(star.get());
                     this.directives.put(entry.getKey(), sourceListDirective.construct(newSources));

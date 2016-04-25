@@ -196,7 +196,10 @@ public class ParserTest extends CSPTest {
         assertEquals("optimisation with other scheme", "script-src data: *", parseAndShow("script-src 'self' * data:"));
         assertEquals("optimisation with other scheme", "script-src custom: *", parseAndShow("script-src 'self' * custom:"));
         assertEquals("optimisation with mixed schemes", "script-src custom: blob: *", parseAndShow("script-src 'self' * custom: ftp: blob:"));
-
+        assertEquals("optimisation", "script-src 'unsafe-inline' *", parseAndShow("script-src example.com * 'unsafe-inline'"));
+        assertEquals("optimisation", "script-src 'nonce-123' *", parseAndShow("script-src example.com * 'unsafe-inline' 'nonce-123'"));
+        assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' *", parseAndShow("script-src example.com * 'unsafe-inline' 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='"));
+        assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' *", parseAndShow("script-src example.com * 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' 'unsafe-inline'"));
     }
 
     @Test public void testAncestorSource() {
@@ -818,7 +821,37 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals("Expecting end of policy but found \",\".", notices.get(0).message);
+    }
 
+    @Test public void testUnsafeInlineWithHashNonce() {
+        Policy p;
+        ArrayList<Notice> notices = new ArrayList<>();
+        p = parseWithNotices("default-src 'unsafe-inline' 'nonce-abcdef'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(1).message);
 
+        notices.clear();
+        p = parseWithNotices("default-src 'Unsafe-INLINE' 'nonce-abcd'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(1).message);
+
+        notices.clear();
+        p = parseWithNotices("default-src 'unsafe-inline' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("default-src 'unsafe-inline' 'unsafe-redirect'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("'unsafe-redirect' has been removed from CSP as of version 2.0.", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("default-src 'unsafe-inline'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
     }
 }

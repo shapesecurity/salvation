@@ -44,6 +44,9 @@ public class Parser {
         new DirectiveValueParseException("Invalid uri-reference");
     private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST =
         new DirectiveParseException("Non-empty directive-value list");
+
+    private static final String unsafeInlineWarningMessage = "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.";
+    private enum SeenStates {SEEN_HASH, SEEN_NONE, SEEN_NONCE, SEEN_UNSAFE_INLINE};
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
     protected int index = 0;
@@ -351,12 +354,18 @@ public class Parser {
     @Nonnull private Set<SourceExpression> parseSourceList() throws DirectiveParseException {
         Set<SourceExpression> sourceExpressions = new LinkedHashSet<>();
         boolean parseException = false;
-        boolean seenNone = false;
+        Set<SeenStates> seenStates = new HashSet<>();
         while (this.hasNext(SubDirectiveValueToken.class)) {
             try {
-                SourceExpression se = this.parseSourceExpression(seenNone, !sourceExpressions.isEmpty());
+                SourceExpression se = this.parseSourceExpression(seenStates, !sourceExpressions.isEmpty());
                 if (se == None.INSTANCE) {
-                    seenNone = true;
+                    seenStates.add(SeenStates.SEEN_NONE);
+                } else if (se == KeywordSource.UnsafeInline) {
+                    seenStates.add(SeenStates.SEEN_UNSAFE_INLINE);
+                } else if (se instanceof HashSource) {
+                    seenStates.add(SeenStates.SEEN_HASH);
+                } else if (se instanceof NonceSource) {
+                    seenStates.add(SeenStates.SEEN_NONCE);
                 }
                 sourceExpressions.add(se);
             } catch (DirectiveValueParseException e) {
@@ -369,10 +378,10 @@ public class Parser {
         return sourceExpressions;
     }
 
-    @Nonnull private SourceExpression parseSourceExpression(boolean seenNone, boolean seenSome)
+    @Nonnull private SourceExpression parseSourceExpression(Set<SeenStates> seenStates, boolean seenSome)
         throws DirectiveValueParseException {
         Token token = this.advance();
-        if (seenNone || seenSome && token.value.equalsIgnoreCase("'none'")) {
+        if (seenStates.contains(SeenStates.SEEN_NONE) || seenSome && token.value.equalsIgnoreCase("'none'")) {
             this.error(token, "'none' must not be combined with any other source-expression.");
             throw INVALID_SOURCE_EXPR;
         }
@@ -382,6 +391,9 @@ public class Parser {
             case "'self'":
                 return KeywordSource.Self;
             case "'unsafe-inline'":
+                if (seenStates.contains(SeenStates.SEEN_HASH) || seenStates.contains(SeenStates.SEEN_NONCE))  {
+                    this.warn(token, unsafeInlineWarningMessage);
+                }
                 return KeywordSource.UnsafeInline;
             case "'unsafe-eval'":
                 return KeywordSource.UnsafeEval;
@@ -394,6 +406,9 @@ public class Parser {
                     String nonce = token.value.substring(7, token.value.length() - 1);
                     NonceSource nonceSource = new NonceSource(nonce);
                     nonceSource.validationErrors().forEach(str -> this.warn(token, str));
+                    if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE)) {
+                        this.warn(token, unsafeInlineWarningMessage);
+                    }
                     return nonceSource;
                 } else if (token.value.toLowerCase().startsWith("'sha")) {
                     HashSource.HashAlgorithm algorithm;
@@ -432,6 +447,9 @@ public class Parser {
                     } catch (IllegalArgumentException e) {
                         this.error(token, e.getMessage());
                         throw INVALID_SOURCE_EXPR;
+                    }
+                    if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE)) {
+                        this.warn(token, unsafeInlineWarningMessage);
                     }
                     return hashSource;
                 } else if (token.value.matches("^" + Constants.schemePart + ":$")) {

@@ -410,6 +410,27 @@ public class LocationTest extends CSPTest {
             notices.get(1).toString());
     }
 
+    @Test public void testUnsafeInlineWarnings() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        ParserWithLocation
+            .parse("script-src 'unsafe-inline' 'nonce-123'", URI.parse("https://origin"), notices);
+        assertEquals(2, notices.size());
+        Notice notice = notices.get(0);
+        assertEquals(
+            "1:28: Invalid base64-value (should be multiple of 4 bytes: 3). Consider using RFC4648 compliant base64 encoding implementation.",
+            notice.show());
+        assertEquals(
+            "Warning: Invalid base64-value (should be multiple of 4 bytes: 3). Consider using RFC4648 compliant base64 encoding implementation.",
+            notice.toString());
+        notice = notices.get(1);
+        assertEquals(
+            "1:28: The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.",
+            notice.show());
+        assertEquals(
+            "Warning: The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.",
+            notice.toString());
+    }
+
     @Test public void testNoticeHelpers() {
         ArrayList<Notice> notices = new ArrayList<>();
         ParserWithLocation.parse(

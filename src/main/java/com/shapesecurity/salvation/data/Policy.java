@@ -81,9 +81,7 @@ public class Policy implements Show {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         Set<SourceExpression> defaultSources;
         if (defaultSrcDirective == null) {
-            defaultSources = new LinkedHashSet<>();
-            defaultSources.add(HostSource.WILDCARD);
-            this.directives.put(DefaultSrcDirective.class, new DefaultSrcDirective(defaultSources));
+            return;
         } else {
             defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
         }
@@ -172,49 +170,40 @@ public class Policy implements Show {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 
         Set<SourceExpression> defaultSources;
-        if (defaultSrcDirective == null) {
-            defaultSources = new LinkedHashSet<>();
-            defaultSources.add(HostSource.WILDCARD);
-        } else {
+
+        if (defaultSrcDirective != null) {
             defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-        }
 
-        // * remove source directives that are equivalent to default-src
-        this.eliminateRedundantSourceExpression(defaultSources, ScriptSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, StyleSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, ImgSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, ChildSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, ConnectSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, FontSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, MediaSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, ObjectSrcDirective.class);
-        this.eliminateRedundantSourceExpression(defaultSources, ManifestSrcDirective.class);
 
-        // * remove default-src nonces if the policy contains both script-src and style-src directives
-        if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
-            .containsKey(StyleSrcDirective.class)) {
-            defaultSources.removeIf(x -> x instanceof NonceSource);
-            defaultSrcDirective = new DefaultSrcDirective(defaultSources);
-            this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
-        }
+            // * remove source directives that are equivalent to default-src
+            this.eliminateRedundantSourceExpression(defaultSources, ScriptSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, StyleSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, ImgSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, ChildSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, ConnectSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, FontSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, MediaSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, ObjectSrcDirective.class);
+            this.eliminateRedundantSourceExpression(defaultSources, ManifestSrcDirective.class);
 
-        // * remove unnecessary default-src directives if all source directives exist
-        if (this.directives.containsKey(ScriptSrcDirective.class) &&
-            this.directives.containsKey(StyleSrcDirective.class) &&
-            this.directives.containsKey(ImgSrcDirective.class) &&
-            this.directives.containsKey(ChildSrcDirective.class) &&
-            this.directives.containsKey(ConnectSrcDirective.class) &&
-            this.directives.containsKey(FontSrcDirective.class) &&
-            this.directives.containsKey(MediaSrcDirective.class) &&
-            this.directives.containsKey(ObjectSrcDirective.class) &&
-            this.directives.containsKey(ManifestSrcDirective.class)) {
-            this.directives.remove(DefaultSrcDirective.class);
-        }
+            // * remove default-src nonces if the policy contains both script-src and style-src directives
+            if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
+                .containsKey(StyleSrcDirective.class)) {
+                defaultSources.removeIf(x -> x instanceof NonceSource);
+                defaultSrcDirective = new DefaultSrcDirective(defaultSources);
+                this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
+            }
 
-        // remove `default-src *`
-        if (defaultSources.size() == 1) {
-            SourceExpression first = defaultSources.iterator().next();
-            if (first instanceof HostSource && ((HostSource) first).isWildcard()) {
+            // * remove unnecessary default-src directives if all source directives exist
+            if (this.directives.containsKey(ScriptSrcDirective.class) &&
+                this.directives.containsKey(StyleSrcDirective.class) &&
+                this.directives.containsKey(ImgSrcDirective.class) &&
+                this.directives.containsKey(ChildSrcDirective.class) &&
+                this.directives.containsKey(ConnectSrcDirective.class) &&
+                this.directives.containsKey(FontSrcDirective.class) &&
+                this.directives.containsKey(MediaSrcDirective.class) &&
+                this.directives.containsKey(ObjectSrcDirective.class) &&
+                this.directives.containsKey(ManifestSrcDirective.class)) {
                 this.directives.remove(DefaultSrcDirective.class);
             }
         }
@@ -318,7 +307,7 @@ public class Policy implements Show {
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return true;
+            return false;
         }
         return defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
@@ -328,7 +317,7 @@ public class Policy implements Show {
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return true;
+            return false;
         }
         return defaultSrcDirective.matchesNonce(nonce);
     }
@@ -342,7 +331,7 @@ public class Policy implements Show {
     private boolean defaultsAllowSource(@Nonnull URI source) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return true;
+            return false;
         }
         return defaultSrcDirective.matchesSource(this.origin, source);
     }

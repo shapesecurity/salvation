@@ -486,6 +486,19 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
     }
 
+    @Test public void testEmptyPolicy() {
+        Policy p;
+
+        p = Parser.parse("", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("wss://example.com")));
+        assertFalse(p.allowsScriptWithNonce(new Base64Value("1234")));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+    }
+
     @Test public void testHasSomeEffect() {
         Policy p = Parser.parse("", "http://example.com");
         assertFalse(p.hasSomeEffect());

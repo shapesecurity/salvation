@@ -47,7 +47,7 @@ public class PolicyMergeTest extends CSPTest {
         p1 = parse("default-src *; script-src");
         p2 = parse("default-src; script-src b");
         p1.union(p2);
-        assertEquals("script-src b", p1.show());
+        assertEquals("default-src *; script-src b", p1.show());
 
         p1 = parse("default-src a");
         p2 = parse("default-src; script-src b");
@@ -82,6 +82,11 @@ public class PolicyMergeTest extends CSPTest {
 
     @Test public void testIntersect() {
         Policy p1, p2;
+
+        p1 = parse("default-src 'none';");
+        p2 = parse("default-src *;");
+        p1.intersect(p2);
+        assertEquals("default-src", p1.show());
 
         p1 = parse("default-src a; script-src b");
         p2 = parse("default-src c; img-src d");
@@ -126,7 +131,7 @@ public class PolicyMergeTest extends CSPTest {
         p1 = parse("default-src *; script-src *; style-src *:80");
         p2 = parse("default-src 'self'; script-src a");
         p1.intersect(p2);
-        assertEquals("style-src; default-src 'self'; script-src a", p1.show());
+        assertEquals("default-src 'self'; style-src; script-src a", p1.show());
 
         p1 = parse("default-src 'self'; script-src a");
         p2 = parse("default-src *; script-src *; style-src *:80");
@@ -313,7 +318,7 @@ public class PolicyMergeTest extends CSPTest {
         set.add(HostSource.WILDCARD);
         DefaultSrcDirective d3 = new DefaultSrcDirective(set);
         p.unionDirective(d3);
-        assertEquals("script-src a; report-uri http://example.com/z", p.show());
+        assertEquals("default-src *; script-src a; report-uri http://example.com/z", p.show());
 
         set.clear();
         p = Parser.parse("", "http://example.com");
@@ -324,7 +329,7 @@ public class PolicyMergeTest extends CSPTest {
 
         p.unionDirective(scriptSrcDirective);
         p.unionDirective(styleSrcDirective);
-        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr' *",
+        assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'",
             p.show());
     }
 

@@ -417,10 +417,10 @@ public class LocationTest extends CSPTest {
         assertEquals(2, notices.size());
         Notice notice = notices.get(0);
         assertEquals(
-            "1:28: Invalid base64-value (should be multiple of 4 bytes: 3). Consider using RFC4648 compliant base64 encoding implementation.",
+            "1:28: Invalid base64-value (should be multiple of 4 bytes: 3).",
             notice.show());
         assertEquals(
-            "Warning: Invalid base64-value (should be multiple of 4 bytes: 3). Consider using RFC4648 compliant base64 encoding implementation.",
+            "Warning: Invalid base64-value (should be multiple of 4 bytes: 3).",
             notice.toString());
         notice = notices.get(1);
         assertEquals(

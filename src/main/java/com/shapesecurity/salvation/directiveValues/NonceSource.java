@@ -22,11 +22,6 @@ public class NonceSource implements SourceExpression, MatchesNonce {
             // convert url-safe base64 to RFC4648 base64
             String safeValue = this.value.replace('-', '+').replace('_', '/');
             base64Value = new Base64Value(safeValue);
-            // warn if value is not RFC4648
-            if (this.value.contains("-") || this.value.contains("_")) {
-                errors.add(
-                    "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation.");
-            }
         } catch (IllegalArgumentException e) {
             errors.add(e.getMessage());
             return errors;

@@ -23,10 +23,6 @@ public class ParserTest extends CSPTest {
     @Test public void testEmptyPolicy() {
         Policy p = parse("");
         assertNotNull("empty policy should not be null", p);
-        assertTrue("resource is allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am")));
-        assertTrue("resource is allowed", p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
-            "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertTrue("resource is allowed", p.allowsScriptWithNonce(new Base64Value("0gQAAA==")));
     }
 
     @Test public void testDuplicates() {
@@ -188,11 +184,11 @@ public class ParserTest extends CSPTest {
         assertEquals("directive-name, host-source http://a:*", "script-src http://a:*",
             parseAndShow("script-src http://a:*"));
 
-        assertEquals("optimisation", "", parseAndShow("script-src example.com *"));
-        assertEquals("optimisation", "", parseAndShow("script-src 'self' *"));
+        assertEquals("optimisation", "script-src *", parseAndShow("script-src example.com *"));
+        assertEquals("optimisation", "script-src *", parseAndShow("script-src 'self' *"));
         assertEquals("optimisation", "script-src 'unsafe-inline'; style-src 'unsafe-inline'",
             parseAndShow("script-src 'unsafe-inline'; style-src 'unsafe-inline';"));
-        assertEquals("optimisation with network scheme", "", parseAndShow("script-src 'self' * ftp:"));
+        assertEquals("optimisation with network scheme", "script-src *", parseAndShow("script-src 'self' * ftp:"));
         assertEquals("optimisation with other scheme", "script-src data: *", parseAndShow("script-src 'self' * data:"));
         assertEquals("optimisation with other scheme", "script-src custom: *", parseAndShow("script-src 'self' * custom:"));
         assertEquals("optimisation with mixed schemes", "script-src custom: blob: *", parseAndShow("script-src 'self' * custom: ftp: blob:"));
@@ -258,17 +254,25 @@ public class ParserTest extends CSPTest {
         assertEquals("policy show", "", a.show());
 
         Policy b = parse("style-src *");
-        assertEquals("policy show", "", b.show());
+        assertEquals("policy show", "style-src *", b.show());
+
+        assertFalse("policy equality", a.equals(b));
+
+        a = parse("style-src 'self' *");
+        assertEquals("policy show", "style-src *", a.show());
+
+        b = parse("style-src *");
+        assertEquals("policy show", "style-src *", b.show());
 
         assertTrue("policy equality", a.equals(b));
 
         Policy c = parse("script-src *");
         b.union(c);
-        assertEquals("policy union", "", b.show());
+        assertEquals("policy union", "style-src *; script-src *", b.show());
 
         Policy d = parse("script-src abc");
         b.union(d);
-        assertEquals("policy union", "", b.show());
+        assertEquals("policy union", "style-src *; script-src *", b.show());
 
         a.setOrigin(URI.parse("http://qwe.zz:80"));
         assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());
@@ -475,7 +479,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Invalid base64-value (should be multiple of 4 bytes: 43). Consider using RFC4648 compliant base64 encoding implementation.",
+            "Invalid base64-value (should be multiple of 4 bytes: 43).",
             notices.get(0).message);
 
         assertEquals("directive-name, directive-value",
@@ -817,8 +821,7 @@ public class ParserTest extends CSPTest {
 
         notices.clear();
         p = parseWithNotices("script-src *, ", notices);
-        // it actually optimised away
-        assertEquals(0, p.getDirectives().size());
+        assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals("Expecting end of policy but found \",\".", notices.get(0).message);
     }

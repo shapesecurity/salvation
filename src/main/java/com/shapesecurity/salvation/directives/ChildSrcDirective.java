@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class ChildSrcDirective extends SourceListDirective {
+public class ChildSrcDirective extends FetchDirective {
     @Nonnull private static final String NAME = "child-src";
 
     public ChildSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

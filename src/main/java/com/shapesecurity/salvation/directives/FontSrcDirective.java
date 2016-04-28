@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class FontSrcDirective extends SourceListDirective {
+public class FontSrcDirective extends FetchDirective {
     @Nonnull private static final String name = "font-src";
 
     public FontSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

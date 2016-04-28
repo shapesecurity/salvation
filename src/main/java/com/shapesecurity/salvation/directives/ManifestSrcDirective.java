@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class ManifestSrcDirective extends SourceListDirective {
+public class ManifestSrcDirective extends FetchDirective {
     @Nonnull private static final String name = "manifest-src";
 
     public ManifestSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

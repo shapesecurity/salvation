@@ -30,5 +30,4 @@ import java.util.regex.Pattern;
             + ")?" + queryFragmentPart + "$");
     public static final Pattern relativeReportUriPattern =
         Pattern.compile("^(?<path>" + pathPart + ")" + queryFragmentPart + "$");
-
 }

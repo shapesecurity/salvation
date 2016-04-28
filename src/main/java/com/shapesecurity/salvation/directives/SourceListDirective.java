@@ -44,6 +44,10 @@ public abstract class SourceListDirective extends Directive<SourceExpression>
         return this.values().anyMatch(x -> (x instanceof NonceSource));
     }
 
+    public boolean containsKeywordsAndNoncesOnly() {
+        return this.values().allMatch(x -> (x instanceof KeywordSource || x instanceof NonceSource));
+    }
+
     @Nonnull public Directive<SourceExpression> resolveSelf(@Nonnull Origin origin) {
         return this.bind(dv -> {
             if (dv == KeywordSource.Self) {

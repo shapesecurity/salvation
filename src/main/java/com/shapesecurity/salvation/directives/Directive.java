@@ -6,10 +6,7 @@ import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -18,6 +15,46 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull public final String name;
 
     @Nonnull private Set<Value> values;
+
+    public static List<Class<? extends Directive>> getFetchDirectives() {
+        return fetchDirectives;
+    }
+
+    static List<Class<? extends Directive>> fetchDirectives = new ArrayList<>();
+    static public final int FETCH_DIRECIVE_COUNT;
+
+    static void register(Class<? extends Directive> directiveClass) {
+        if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class) {
+            fetchDirectives.add(directiveClass);
+        }
+    }
+
+    static {
+        // NOTE: new direvctive types must be registered here
+        register(ScriptSrcDirective.class);
+        register(StyleSrcDirective.class);
+        register(ImgSrcDirective.class);
+        register(ChildSrcDirective.class);
+        register(ConnectSrcDirective.class);
+        register(FontSrcDirective.class);
+        register(MediaSrcDirective.class);
+        register(ObjectSrcDirective.class);
+        register(ManifestSrcDirective.class);
+        register(DefaultSrcDirective.class);
+        register(ReferrerDirective.class);
+        register(FrameSrcDirective.class);
+        register(ReportUriDirective.class);
+        register(ReportToDirective.class);
+        register(FrameAncestorsDirective.class);
+        register(SandboxDirective.class);
+        register(PluginTypesDirective.class);
+        register(FormActionDirective.class);
+        register(UpgradeInsecureRequestsDirective.class);
+        register(BlockAllMixedContentDirective.class);
+        register(BaseUriDirective.class);
+        FETCH_DIRECIVE_COUNT = fetchDirectives.size();
+
+    }
 
     Directive(@Nonnull String name, @Nonnull Set<Value> values) {
         this.name = name;
@@ -126,6 +163,10 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
     public final boolean contains(@Nonnull DirectiveValue value) {
         return values().anyMatch(value::equals);
+    }
+
+    public final boolean sourceListEquals(@Nullable Object other) {
+        return other != null && this.equalsHelper((Directive<Value>) other);
     }
 
     @SuppressWarnings("unchecked") @Override public final boolean equals(@Nullable Object other) {

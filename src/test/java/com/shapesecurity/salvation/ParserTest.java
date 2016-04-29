@@ -479,7 +479,7 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());
         assertEquals(
-            "Invalid base64-value (should be multiple of 4 bytes: 43). Consider using RFC4648 compliant base64 encoding implementation.",
+            "Invalid base64-value (should be multiple of 4 bytes: 43).",
             notices.get(0).message);
 
         assertEquals("directive-name, directive-value",

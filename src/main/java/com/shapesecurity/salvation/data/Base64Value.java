@@ -24,7 +24,7 @@ public class Base64Value implements Show {
 
         if (chars.length % 4 != 0) {
             throw new IllegalArgumentException("Invalid base64-value (should be multiple of 4 bytes: " + chars.length
-                + "). Consider using RFC4648 compliant base64 encoding implementation.");
+                + ").");
         }
 
         int i;
@@ -34,17 +34,17 @@ public class Base64Value implements Show {
             }
             if (!isBase64Char(chars[i])) {
                 throw new IllegalArgumentException(
-                    "Invalid base64-value (characters are not in the base64-value grammar). Consider using RFC4648 compliant base64 encoding implementation.");
+                    "Invalid base64-value (characters are not in the base64-value grammar).");
             }
         }
         if (i < chars.length - 2) {
             throw new IllegalArgumentException(
-                "Invalid base64-value (bad padding). Consider using RFC4648 compliant base64 encoding implementation.");
+                "Invalid base64-value (bad padding).");
         }
         for (; i < chars.length; i++) {
             if (chars[i] != '=') {
                 throw new IllegalArgumentException(
-                    "Invalid base64-value padding (illegal characters). Consider using RFC4648 compliant base64 encoding implementation.");
+                    "Invalid base64-value padding (illegal characters).");
             }
         }
 
@@ -57,7 +57,8 @@ public class Base64Value implements Show {
         return '0' <= ch && ch <= '9' ||
             'A' <= ch && ch <= 'Z' ||
             'a' <= ch && ch <= 'z' ||
-            ch == '+' || ch == '/';
+            ch == '+' || ch == '/' ||
+            ch == '-' || ch == '_';
     }
 
     public int size() {

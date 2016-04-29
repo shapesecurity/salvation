@@ -4,6 +4,8 @@ import com.shapesecurity.salvation.data.Notice;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
@@ -66,10 +68,25 @@ public class Base64ValueTest {
 
         notices.clear();
         Parser.parse("script-src 'self' https://example.com 'nonce-12_/-+=='", "https://origin", notices);
-        assertEquals(1, notices.size());
+        assertEquals(2, notices.size());
+        assertEquals(
+            "Invalid base64-value. Must use either RFC4648 \"base64\" characters (including + and /) or RFC4648 \"base64url\" characters (including - and _), but not both.",
+            notices.get(0).show());
         assertEquals(
             "CSP specification recommends nonce-value to be at least 128 bits long (before encoding).",
+            notices.get(1).show());
+
+        Parser.parse("script-src 'self' https://example.com 'nonce-12-+/'", "https://origin", notices);
+        assertEquals(3, notices.size());
+        assertEquals(
+            "Invalid base64-value. Must use either RFC4648 \"base64\" characters (including + and /) or RFC4648 \"base64url\" characters (including - and _), but not both.",
             notices.get(0).show());
+        assertEquals(
+            "CSP specification recommends nonce-value to be at least 128 bits long (before encoding).",
+            notices.get(1).show());
+        assertEquals(
+            "Invalid base64-value (should be multiple of 4 bytes: 5).",
+            notices.get(2).show());
     }
 
     @Test public void testIllegalPadding() {
@@ -96,6 +113,33 @@ public class Base64ValueTest {
         assertEquals(1, notices.size());
         assertEquals("CSP specification recommends nonce-value to be at least 128 bits long (before encoding).",
             notices.get(0).show());
+
+    }
+
+    @Test public void testValid() {
+
+        for (int i = 16; i <= 32; i++) {
+            byte[] b = new byte[i];
+            new Random().nextBytes(b);
+            String encoded = Base64.getEncoder().encodeToString(b);
+            ArrayList<Notice> notices = new ArrayList<>();
+
+            Parser.parse("script-src 'self' https://example.com 'nonce-" + encoded + "'",
+                "https://origin", notices);
+            assertEquals(0, notices.size());
+        }
+
+        for (int i = 16; i <= 32; i++) {
+            byte[] b = new byte[i];
+            new Random().nextBytes(b);
+            String encoded = Base64.getUrlEncoder().encodeToString(b);
+            ArrayList<Notice> notices = new ArrayList<>();
+
+            Parser.parse("script-src 'self' https://example.com 'nonce-" + encoded + "'",
+                "https://origin", notices);
+            assertEquals(0, notices.size());
+
+        }
 
     }
 }

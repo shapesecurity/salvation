@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Policy implements Show {
@@ -176,15 +177,8 @@ public class Policy implements Show {
 
 
             // * remove source directives that are equivalent to default-src
-            this.eliminateRedundantSourceExpression(defaultSources, ScriptSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, StyleSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, ImgSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, ChildSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, ConnectSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, FontSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, MediaSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, ObjectSrcDirective.class);
-            this.eliminateRedundantSourceExpression(defaultSources, ManifestSrcDirective.class);
+
+            Directive.getFetchDirectives().forEach(x -> this.eliminateRedundantSourceExpression(defaultSources, x));
 
             // * remove default-src nonces if the policy contains both script-src and style-src directives
             if (this.directives.containsKey(ScriptSrcDirective.class) && this.directives
@@ -195,16 +189,64 @@ public class Policy implements Show {
             }
 
             // * remove unnecessary default-src directives if all source directives exist
-            if (this.directives.containsKey(ScriptSrcDirective.class) &&
-                this.directives.containsKey(StyleSrcDirective.class) &&
-                this.directives.containsKey(ImgSrcDirective.class) &&
-                this.directives.containsKey(ChildSrcDirective.class) &&
-                this.directives.containsKey(ConnectSrcDirective.class) &&
-                this.directives.containsKey(FontSrcDirective.class) &&
-                this.directives.containsKey(MediaSrcDirective.class) &&
-                this.directives.containsKey(ObjectSrcDirective.class) &&
-                this.directives.containsKey(ManifestSrcDirective.class)) {
+            if (all(Directive.getFetchDirectives(), this.directives::containsKey)) {
                 this.directives.remove(DefaultSrcDirective.class);
+            }
+        }
+    }
+
+    private static <A> boolean all(List<A> list, Function<A, Boolean> predicate) {
+        for (A a : list) if (!predicate.apply(a)) return false;
+        return true;
+    }
+
+    public void postProcessOptimisation() {
+
+        DefaultSrcDirective defaultSrcDirective;
+
+        int directiveCount = this.directives.size();
+
+        // below optimisations kick in when there are two or more directives
+        if (directiveCount < 2) {
+            return;
+        }
+        // move source-expressions to default-src if they exist in every fetch directive
+        SourceListDirective prevDirective = null;
+        int fetchDirectiveCount = 0;
+        boolean isfetchSourceListIdentical = true;
+        for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
+            Directive<? extends DirectiveValue> directive = entry.getValue();
+            if (directive instanceof FetchDirective) {
+                fetchDirectiveCount++;
+                if (prevDirective != null) {
+                    if (!prevDirective.sourceListEquals(directive)) {
+                        isfetchSourceListIdentical = false;
+                        break;
+                    }
+                }
+                prevDirective = (SourceListDirective) directive;
+            }
+        }
+
+        // remove all fetch directives and replace with default-src
+        if (fetchDirectiveCount == Directive.FETCH_DIRECIVE_COUNT && isfetchSourceListIdentical) {
+            Set<SourceExpression> combinedSources = prevDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            defaultSrcDirective = new DefaultSrcDirective(combinedSources);
+            Directive.getFetchDirectives().forEach(x -> this.directives.remove(x));
+            this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
+        }
+
+        // if policy contains only fetch directives and those are script-src and style-src with identical source-lists,
+        // and source-lists contain solely keyword-source or nonce-source, source-list can be moved to default-src
+        if (directiveCount == 2 && this.directives.containsKey(ScriptSrcDirective.class) && this.directives
+            .containsKey(StyleSrcDirective.class)) {
+            ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+            StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+            if (scriptSrcDirective.sourceListEquals(styleSrcDirective) && scriptSrcDirective.containsKeywordsAndNoncesOnly()) {
+                defaultSrcDirective = new DefaultSrcDirective(scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)));
+                this.directives.remove(ScriptSrcDirective.class);
+                this.directives.remove(StyleSrcDirective.class);
+                this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
             }
         }
     }

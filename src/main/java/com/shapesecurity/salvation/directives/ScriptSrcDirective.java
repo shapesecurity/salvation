@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class ScriptSrcDirective extends SourceListDirective {
+public class ScriptSrcDirective extends FetchDirective {
     @Nonnull private static final String NAME = "script-src";
 
     public ScriptSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

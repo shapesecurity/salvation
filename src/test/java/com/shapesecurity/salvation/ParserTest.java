@@ -1,10 +1,8 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.data.Base64Value;
 import com.shapesecurity.salvation.data.Notice;
 import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
-import com.shapesecurity.salvation.directiveValues.HashSource;
 import com.shapesecurity.salvation.directives.*;
 import com.shapesecurity.salvation.tokens.DirectiveNameToken;
 import com.shapesecurity.salvation.tokens.DirectiveValueToken;
@@ -196,6 +194,21 @@ public class ParserTest extends CSPTest {
         assertEquals("optimisation", "script-src 'nonce-123' *", parseAndShow("script-src example.com * 'unsafe-inline' 'nonce-123'"));
         assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' *", parseAndShow("script-src example.com * 'unsafe-inline' 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='"));
         assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' *", parseAndShow("script-src example.com * 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' 'unsafe-inline'"));
+
+        p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
+        assertEquals("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
+        p = parse("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
+        assertEquals("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
+        p = parse("script-src 'nonce-1234'; style-src 'nonce-1234'");
+        assertEquals("script-src 'nonce-1234'; style-src 'nonce-1234'", p.show());
+        p = parse("script-src 'nonce-abcd'; style-src 'nonce-1234'");
+        assertEquals("script-src 'nonce-abcd'; style-src 'nonce-1234'", p.show());
+        p = parse("script-src 'nonce-abcd' 'nonce-1234'; style-src 'nonce-1234'");
+        assertEquals("script-src 'nonce-abcd' 'nonce-1234'; style-src 'nonce-1234'", p.show());
+        p = parse("script-src a 'nonce-1234'; style-src a 'nonce-1234'");
+        assertEquals("script-src a 'nonce-1234'; style-src a 'nonce-1234'", p.show());
+        p = parse("script-src 'nonce-1234'; style-src 'nonce-1234'; default-src a");
+        assertEquals("script-src 'nonce-1234'; style-src 'nonce-1234'; default-src a", p.show());
     }
 
     @Test public void testAncestorSource() {

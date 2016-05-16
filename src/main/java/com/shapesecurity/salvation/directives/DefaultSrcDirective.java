@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class DefaultSrcDirective extends SourceListDirective {
+public class DefaultSrcDirective extends FetchDirective {
     @Nonnull private static final String name = "default-src";
 
     public DefaultSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

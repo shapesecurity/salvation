@@ -31,13 +31,17 @@ public class Parser {
     private static final DirectiveValueParseException INVALID_ANCESTOR_SOURCE =
         new DirectiveValueParseException("Invalid ancestor-source");
     private static final DirectiveParseException INVALID_REFERRER_TOKEN =
-        new DirectiveParseException("Invalid referrer-token");
+        new DirectiveParseException("Invalid referrer token");
     private static final DirectiveParseException INVALID_REPORT_TO_TOKEN =
         new DirectiveParseException("Invalid report-to token");
+    private static final DirectiveParseException INVALID_REQUIRE_SRI_FOR_TOKEN_LIST =
+            new DirectiveParseException("Invalid require-sri-for token list");
+    private static final DirectiveValueParseException INVALID_REQUIRE_SRI_FOR_TOKEN =
+            new DirectiveValueParseException("Invalid require-sri-for token");
     private static final DirectiveParseException INVALID_SANDBOX_TOKEN_LIST =
-        new DirectiveParseException("Invalid sandbox-token list");
+        new DirectiveParseException("Invalid sandbox token list");
     private static final DirectiveValueParseException INVALID_SANDBOX_TOKEN =
-        new DirectiveValueParseException("Invalid sandbox-token");
+        new DirectiveValueParseException("Invalid sandbox token");
     private static final DirectiveParseException INVALID_URI_REFERENCE_LIST =
         new DirectiveParseException("Invalid uri-reference list");
     private static final DirectiveValueParseException INVALID_URI_REFERENCE =
@@ -264,6 +268,9 @@ public class Parser {
                         throw INVALID_URI_REFERENCE_LIST;
                     }
                     result = new ReportUriDirective(uriList);
+                    break;
+                case RequireSriFor:
+                    result = new RequireSriForDirective(this.parseRequireSriForTokenList(token));
                     break;
                 case Sandbox:
                     result = new SandboxDirective(this.parseSandboxTokenList());
@@ -544,12 +551,12 @@ public class Parser {
         }
     }
 
-    @Nonnull private ReferrerValue parseReferrerToken(@Nonnull Token directiveNameToken) throws DirectiveParseException {
+    @Nonnull private RFC7230Token parseReferrerToken(@Nonnull Token directiveNameToken) throws DirectiveParseException {
         if (this.hasNext(DirectiveValueToken.class)) {
             Token token = this.advance();
             Matcher matcher = Constants.referrerTokenPattern.matcher(Tokeniser.trimRHSWS(token.value));
             if (matcher.find()) {
-                return new ReferrerValue(token.value);
+                return new RFC7230Token(token.value);
             }
             this.error(token, "Expecting referrer directive value but found \"" + token.value + "\".");
         } else {
@@ -573,8 +580,47 @@ public class Parser {
         throw INVALID_REPORT_TO_TOKEN;
     }
 
-    @Nonnull private Set<SandboxValue> parseSandboxTokenList() throws DirectiveParseException {
-        Set<SandboxValue> sandboxTokens = new LinkedHashSet<>();
+    @Nonnull private Set<RFC7230Token> parseRequireSriForTokenList(@Nonnull Token directiveNameToken) throws DirectiveParseException {
+        Set<RFC7230Token> requireSriForTokens = new LinkedHashSet<>();
+        boolean parseException = false;
+        while (this.hasNext(SubDirectiveValueToken.class)) {
+            try {
+                RFC7230Token rsfToken = this.parseRequireSriForToken();
+                if (!requireSriForTokens.add(rsfToken)) {
+                    this.warn(directiveNameToken, "The require-sri-for directive contains duplicate token: \"" + rsfToken.show() + "\".");
+                }
+            } catch (DirectiveValueParseException e) {
+                parseException = true;
+            }
+        }
+        if (parseException) {
+            throw INVALID_REQUIRE_SRI_FOR_TOKEN_LIST;
+        }
+        if (requireSriForTokens.isEmpty()) {
+            this.warn(directiveNameToken, "Empty require-sri-for directive has no effect.");
+        }
+        return requireSriForTokens;
+    }
+
+    @Nonnull private RFC7230Token parseRequireSriForToken() throws DirectiveValueParseException {
+        Token token = this.advance();
+        Matcher matcher = Constants.requireSriForEnumeratedTokenPattern.matcher(token.value);
+        if (matcher.find()) {
+            return new RFC7230Token(token.value.toLowerCase());
+        } else {
+            this.warn(token, "The require-sri-for directive should contain only \"script\", \"style\" tokens.");
+            matcher = Constants.rfc7230TokenPattern.matcher(token.value);
+            if (matcher.find()) {
+                return new RFC7230Token(token.value);
+            }
+        }
+
+        this.error(token, "Expecting RFC 7230 token but found \"" + token.value + "\".");
+        throw INVALID_REQUIRE_SRI_FOR_TOKEN;
+    }
+
+    @Nonnull private Set<RFC7230Token> parseSandboxTokenList() throws DirectiveParseException {
+        Set<RFC7230Token> sandboxTokens = new LinkedHashSet<>();
         boolean parseException = false;
         while (this.hasNext(SubDirectiveValueToken.class)) {
             try {
@@ -589,18 +635,18 @@ public class Parser {
         return sandboxTokens;
     }
 
-    @Nonnull private SandboxValue parseSandboxToken() throws DirectiveValueParseException {
+    @Nonnull private RFC7230Token parseSandboxToken() throws DirectiveValueParseException {
         Token token = this.advance();
         Matcher matcher = Constants.sandboxEnumeratedTokenPattern.matcher(token.value);
         if (matcher.find()) {
-            return new SandboxValue(token.value);
+            return new RFC7230Token(token.value);
         } else {
             this.warn(token, "The sandbox directive should contain only allow-forms, allow-modals, "
                 + "allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, "
                 + "allow-same-origin, allow-scripts, or allow-top-navigation.");
             matcher = Constants.rfc7230TokenPattern.matcher(token.value);
             if (matcher.find()) {
-                return new SandboxValue(token.value);
+                return new RFC7230Token(token.value);
             }
         }
 

@@ -744,6 +744,64 @@ public class ParserTest extends CSPTest {
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
         assertEquals("The block-all-mixed-content directive must not contain any value.", notices.get(1).message);
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("Empty require-sri-for directive has no effect.", notices.get(0).message);
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for script", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+        assertEquals("require-sri-for script", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for style", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+        assertEquals("require-sri-for style", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for script    style", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+        assertEquals("require-sri-for script style", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for Script    StYlE", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+        assertEquals("require-sri-for script style", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for script script", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The require-sri-for directive contains duplicate token: \"script\".", notices.get(0).message);
+        assertEquals("require-sri-for script", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for Script sCrIpT", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The require-sri-for directive contains duplicate token: \"script\".", notices.get(0).message);
+        assertEquals("require-sri-for script", p.show());
+
+        notices.clear();
+        p = parseWithNotices("require-sri-for script bla script", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertTrue(notices.get(1).isWarning());
+        assertEquals("The require-sri-for directive should contain only \"script\", \"style\" tokens.", notices.get(0).message);
+        assertEquals("The require-sri-for directive contains duplicate token: \"script\".", notices.get(1).message);
+        assertEquals("require-sri-for script bla", p.show());
+
+
     }
 
     @Test public void testParseMulti() {

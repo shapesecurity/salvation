@@ -138,6 +138,8 @@ public class Tokeniser {
                     case FrameAncestors:
                 // sandbox directive value
                     case Sandbox:
+                // require-sri-for directive value
+                    case RequireSriFor:
                 // uri-reference list
                     case ReportUri:
                         newTokens.addAll(splitByWSP(t));

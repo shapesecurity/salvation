@@ -306,6 +306,54 @@ public class LocationTest extends CSPTest {
         assertEquals(27, notices.get(1).endLocation.offset);
     }
 
+    @Test public void testWarningLocationRequireSriFor() {
+        ArrayList<Notice> notices = new ArrayList<>();
+
+        ParserWithLocation.parse("require-sri-for", "https://origin", notices);
+        assertEquals(1, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(16, notices.get(0).endLocation.column);
+        assertEquals(15, notices.get(0).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("require-sri-for script aaa", "https://origin", notices);
+        assertEquals(1, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(24, notices.get(0).startLocation.column);
+        assertEquals(23, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(27, notices.get(0).endLocation.column);
+        assertEquals(26, notices.get(0).endLocation.offset);
+
+        notices.clear();
+        ParserWithLocation.parse("require-sri-for     абц ert", "https://origin", notices);
+        assertEquals(2, notices.size());
+        assertNotNull(notices.get(0).startLocation);
+        assertEquals(1, notices.get(0).startLocation.line);
+        assertEquals(1, notices.get(0).startLocation.column);
+        assertEquals(0, notices.get(0).startLocation.offset);
+        assertNotNull(notices.get(0).endLocation);
+        assertEquals(1, notices.get(0).endLocation.line);
+        assertEquals(16, notices.get(0).endLocation.column);
+        assertEquals(15, notices.get(0).endLocation.offset);
+        assertNotNull(notices.get(1).startLocation);
+        assertEquals(1, notices.get(1).startLocation.line);
+        assertEquals(21, notices.get(1).startLocation.column);
+        assertEquals(20, notices.get(1).startLocation.offset);
+        assertNotNull(notices.get(1).endLocation);
+        assertEquals(1, notices.get(1).endLocation.line);
+        assertEquals(28, notices.get(1).endLocation.column);
+        assertEquals(27, notices.get(1).endLocation.offset);
+    }
+
+
     @Test public void testWarningLocationReports() {
         ArrayList<Notice> notices = new ArrayList<>();
 

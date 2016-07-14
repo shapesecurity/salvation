@@ -30,7 +30,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     }
 
     static {
-        // NOTE: new direvctive types must be registered here
+        // NOTE: new directive types must be registered here
         register(ScriptSrcDirective.class);
         register(StyleSrcDirective.class);
         register(ImgSrcDirective.class);
@@ -45,6 +45,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(FrameSrcDirective.class);
         register(ReportUriDirective.class);
         register(ReportToDirective.class);
+        register(RequireSriForDirective.class);
         register(FrameAncestorsDirective.class);
         register(SandboxDirective.class);
         register(PluginTypesDirective.class);

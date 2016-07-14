@@ -5,10 +5,10 @@ import com.shapesecurity.salvation.directives.DirectiveValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class ReferrerValue implements DirectiveValue {
+public class RFC7230Token implements DirectiveValue {
     @Nonnull private final String value;
 
-    public ReferrerValue(@Nonnull String value) {
+    public RFC7230Token(@Nonnull String value) {
         this.value = value;
     }
 
@@ -21,6 +21,6 @@ public class ReferrerValue implements DirectiveValue {
     }
 
     @Override public boolean equals(@Nullable Object other) {
-        return other instanceof ReferrerValue && ((ReferrerValue) other).value.equals(this.value);
+        return other instanceof RFC7230Token && ((RFC7230Token) other).value.equals(this.value);
     }
 }

@@ -564,7 +564,71 @@ public class Policy implements Show {
         }
         return frameAncestorsDirective.matchesSource(this.origin, source);
     }
+    
+    public boolean allowsFontFromSource(@Nonnull URI source) {
+    	FontSrcDirective fontSrcDirective = this.getDirectiveByType(FontSrcDirective.class);
+        if (fontSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return fontSrcDirective.matchesSource(this.origin, source);
+    }
 
+    public boolean allowsFontFromSource(@Nonnull GUID source) {
+        FontSrcDirective fontSrcDirective = this.getDirectiveByType(FontSrcDirective.class);
+        if (fontSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return fontSrcDirective.matchesSource(this.origin, source);
+    }
+    
+    public boolean allowsObjectFromSource(@Nonnull URI source) {
+    	ObjectSrcDirective objectSrcDirective = this.getDirectiveByType(ObjectSrcDirective.class);
+        if (objectSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return objectSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsObjectFromSource(@Nonnull GUID source) {
+        ObjectSrcDirective objectSrcDirective = this.getDirectiveByType(ObjectSrcDirective.class);
+        if (objectSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return objectSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsMediaFromSource(@Nonnull URI source) {
+    	MediaSrcDirective mediaSrcDirective = this.getDirectiveByType(MediaSrcDirective.class);
+        if (mediaSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return mediaSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsMediaFromSource(@Nonnull GUID source) {
+        MediaSrcDirective mediaSrcDirective = this.getDirectiveByType(MediaSrcDirective.class);
+        if (mediaSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return mediaSrcDirective.matchesSource(this.origin, source);
+    }
+    
+    public boolean allowsManifestFromSource(@Nonnull URI source) {
+    	ManifestSrcDirective manifestSrcDirective = this.getDirectiveByType(ManifestSrcDirective.class);
+        if (manifestSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return manifestSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsManifestFromSource(@Nonnull GUID source) {
+        ManifestSrcDirective manifestSrcDirective = this.getDirectiveByType(ManifestSrcDirective.class);
+        if (manifestSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return manifestSrcDirective.matchesSource(this.origin, source);
+    }
+    
     public boolean hasSomeEffect() {
         for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
             Directive<? extends DirectiveValue> directive = entry.getValue();

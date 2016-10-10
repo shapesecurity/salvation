@@ -50,7 +50,8 @@ public class Parser {
         new DirectiveParseException("Non-empty directive-value list");
 
     private static final String unsafeInlineWarningMessage = "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.";
-    private enum SeenStates {SEEN_HASH, SEEN_NONE, SEEN_NONCE, SEEN_UNSAFE_INLINE};
+    private static final String strictDynamicWarningMessage = "The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.";
+    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE};
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
     protected int index = 0;
@@ -367,12 +368,20 @@ public class Parser {
                 SourceExpression se = this.parseSourceExpression(seenStates, !sourceExpressions.isEmpty());
                 if (se == None.INSTANCE) {
                     seenStates.add(SeenStates.SEEN_NONE);
+                } else if (se == KeywordSource.UnsafeEval) {
+                    seenStates.add(SeenStates.SEEN_UNSAFE_EVAL);
+                } else if (se == KeywordSource.Self) {
+                    seenStates.add(SeenStates.SEEN_SELF);
                 } else if (se == KeywordSource.UnsafeInline) {
                     seenStates.add(SeenStates.SEEN_UNSAFE_INLINE);
                 } else if (se instanceof HashSource) {
                     seenStates.add(SeenStates.SEEN_HASH);
                 } else if (se instanceof NonceSource) {
                     seenStates.add(SeenStates.SEEN_NONCE);
+                } else if (se == KeywordSource.StrictDynamic) {
+                    seenStates.add(SeenStates.SEEN_STRICT_DYNAMIC);
+                } else if (se instanceof HostSource || se instanceof SchemeSource) {
+                    seenStates.add(SeenStates.SEEN_HOST_OR_SCHEME_SOURCE);
                 }
                 sourceExpressions.add(se);
             } catch (DirectiveValueParseException e) {
@@ -396,10 +405,21 @@ public class Parser {
             case "'none'":
                 return None.INSTANCE;
             case "'self'":
+                if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
+                    this.warn(token, strictDynamicWarningMessage);
+                }
                 return KeywordSource.Self;
+            case "'strict-dynamic'":
+                if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE) || seenStates.contains(SeenStates.SEEN_HOST_OR_SCHEME_SOURCE) || seenStates.contains(SeenStates.SEEN_SELF))  {
+                    this.warn(token, strictDynamicWarningMessage);
+                }
+                return KeywordSource.StrictDynamic;
             case "'unsafe-inline'":
                 if (seenStates.contains(SeenStates.SEEN_HASH) || seenStates.contains(SeenStates.SEEN_NONCE))  {
                     this.warn(token, unsafeInlineWarningMessage);
+                }
+                if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
+                    this.warn(token, strictDynamicWarningMessage);
                 }
                 return KeywordSource.UnsafeInline;
             case "'unsafe-eval'":
@@ -460,6 +480,9 @@ public class Parser {
                     }
                     return hashSource;
                 } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
+                    if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
+                        this.warn(token, strictDynamicWarningMessage);
+                    }
                     return new SchemeSource(token.value.substring(0, token.value.length() - 1));
                 } else {
                     Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
@@ -473,6 +496,9 @@ public class Parser {
                             port = scheme == null ? Constants.EMPTY_PORT : SchemeHostPortTriple.defaultPortForProtocol(scheme);
                         } else {
                             port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
+                        }
+                        if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
+                            this.warn(token, strictDynamicWarningMessage);
                         }
                         String host = matcher.group("host");
                         String path = matcher.group("path");

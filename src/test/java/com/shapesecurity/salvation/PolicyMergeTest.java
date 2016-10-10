@@ -78,6 +78,11 @@ public class PolicyMergeTest extends CSPTest {
         p2 = parse("default-src a");
         p1.union(p2);
         assertEquals("default-src b a; script-src a", p1.show());
+
+        p1 = parse("default-src 'strict-dynamic' 'nonce-1234' b; script-src a");
+        p2 = parse("default-src a");
+        p1.union(p2);
+        assertEquals("default-src 'strict-dynamic' 'nonce-1234' b a; script-src a", p1.show());
     }
 
     @Test public void testIntersect() {
@@ -137,6 +142,11 @@ public class PolicyMergeTest extends CSPTest {
         p2 = parse("default-src *; script-src *; style-src *:80");
         p1.intersect(p2);
         assertEquals("default-src 'self'; script-src a; style-src", p1.show());
+
+        p1 = parse("default-src 'self' 'strict-dynamic'; script-src a");
+        p2 = parse("default-src *; script-src *; style-src *:80");
+        p1.intersect(p2);
+        assertEquals("default-src 'self' 'strict-dynamic'; script-src a; style-src", p1.show());
 
         p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));
         p2 = parse("script-src b; report-uri /x");

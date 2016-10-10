@@ -574,6 +574,8 @@ public class ParserTest extends CSPTest {
             parse("img-src example.com 'unsafe-eval'").getDirectiveByType(ImgSrcDirective.class).show());
         assertEquals("directive-name, directive-value", "img-src example.com 'unsafe-redirect'",
             parse("img-src example.com 'unsafe-redirect'").getDirectiveByType(ImgSrcDirective.class).show());
+        assertEquals("directive-name, directive-value", "img-src 'nonce-123' 'strict-dynamic'",
+            parse("img-src 'nonce-123' 'strict-dynamic'").getDirectiveByType(ImgSrcDirective.class).show());
     }
 
     @Test public void testDirectNameSpacing() {
@@ -800,8 +802,64 @@ public class ParserTest extends CSPTest {
         assertEquals("The require-sri-for directive should contain only \"script\", \"style\" tokens.", notices.get(0).message);
         assertEquals("The require-sri-for directive contains duplicate token: \"script\".", notices.get(1).message);
         assertEquals("require-sri-for script bla", p.show());
+    }
 
+    @Test public void testStrictDynamic() {
+        Policy p;
+        ArrayList<Notice> notices = new ArrayList<>();
+        p = parseWithNotices("script-src a 'strict-dynamic'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertEquals("script-src a 'strict-dynamic'", p.show());
 
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' a", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertEquals("script-src 'strict-dynamic' a", p.show());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' https:", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertEquals("script-src 'strict-dynamic' https:", p.show());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' 'self'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertEquals("script-src 'strict-dynamic' 'self'", p.show());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' 'unsafe-inline'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertEquals("script-src 'strict-dynamic' 'unsafe-inline'", p.show());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' 'unsafe-inline' 'self' a https:", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(4, notices.size());
+        assertTrue(notices.get(0).isWarning());
+        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later" +
+                ".", notices.get(0).message);
+        assertEquals("script-src 'strict-dynamic' 'unsafe-inline' 'self' a https:", p.show());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'strict-dynamic' 'unsafe-eval'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+        assertEquals("script-src 'strict-dynamic' 'unsafe-eval'", p.show());
     }
 
     @Test public void testParseMulti() {

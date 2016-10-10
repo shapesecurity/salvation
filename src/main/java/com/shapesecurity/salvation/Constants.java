@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
     public static final Pattern requireSriForEnumeratedTokenPattern = Pattern
             .compile("^(?:script|style)$", Pattern.CASE_INSENSITIVE);
     public static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[^/]+)/(?<subtype>[^/]+)$");
-    public static final Pattern unquotedKeywordPattern = Pattern.compile("^(?:self|unsafe-inline|unsafe-eval|unsafe-redirect|none)$");
+    public static final Pattern unquotedKeywordPattern = Pattern.compile("^(?:self|unsafe-inline|unsafe-eval|unsafe-redirect|none|strict-dynamic)$");
     // port-part constants
     public static final int WILDCARD_PORT = -200;
     public static final int EMPTY_PORT = -1;

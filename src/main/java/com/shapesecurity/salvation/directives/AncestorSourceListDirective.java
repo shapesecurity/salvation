@@ -14,13 +14,13 @@ abstract class AncestorSourceListDirective extends Directive<AncestorSource> imp
         super(name, ancestorSources);
     }
 
-    public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source) {
+    public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
         return this.values().filter(x -> x instanceof MatchesSource)
-            .anyMatch(x -> ((MatchesSource) x).matchesSource(origin, source));
+            .anyMatch(x -> ((MatchesSource) x).matchesSource(origin, resource));
     }
 
-    public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
+    public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {
         return this.values().filter(x -> x instanceof MatchesSource)
-            .anyMatch(x -> ((MatchesSource) x).matchesSource(origin, source));
+            .anyMatch(x -> ((MatchesSource) x).matchesSource(origin, resource));
     }
 }

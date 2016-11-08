@@ -20,12 +20,12 @@ public class KeywordSource implements SourceExpression, AncestorSource, MatchesS
         this.value = value;
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source) {
-        return this == Self && origin.equals(source);
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
+        return this == Self && origin.equals(resource);
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
-        return this == Self && origin.equals(source);
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {
+        return this == Self && origin.equals(resource);
     }
 
     @Nonnull @Override public String show() {

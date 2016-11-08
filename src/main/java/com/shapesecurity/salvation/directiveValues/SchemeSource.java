@@ -3,6 +3,7 @@ package com.shapesecurity.salvation.directiveValues;
 
 import com.shapesecurity.salvation.data.GUID;
 import com.shapesecurity.salvation.data.Origin;
+import com.shapesecurity.salvation.data.SchemeHostPortTriple;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.interfaces.MatchesSource;
 
@@ -16,18 +17,18 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
         this.value = value;
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source) {
-        return this.value.matches(source.scheme);
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
+        SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
+        return this.value.matches(resource.scheme);
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
-        return source.value.toLowerCase().startsWith(this.value.toLowerCase() + ":");
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {
+        SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
+        String resourceString = resource.value.toLowerCase();
+        return resourceString.startsWith(this.value.toLowerCase() + ":") ||
+                resourceString.startsWith(shpOrigin.scheme + ":");
     }
 
-    public boolean matchesProtectedScheme() {
-        return this.value.equalsIgnoreCase("about") || this.value.equalsIgnoreCase("blob") ||
-            this.value.equalsIgnoreCase("data") || this.value.equalsIgnoreCase("filesystem");
-    }
     // Note: WebSocket schemes are not networks schemes but CSP spec decided to treat them as equivalent to http/https
     public boolean matchesNetworkScheme() {
         return this.value.equalsIgnoreCase("ftp") || this.value.equalsIgnoreCase("http") ||

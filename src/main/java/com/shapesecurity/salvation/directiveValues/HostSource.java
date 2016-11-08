@@ -59,40 +59,52 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         return this.host.equals("*") && this.scheme == null && this.port == Constants.EMPTY_PORT && this.path == null;
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI source) {
-        if (!(origin instanceof SchemeHostPortTriple)) {
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
+        if (origin instanceof GUID) {
+            // wildcard matches a network scheme
+            return this.isWildcard() && resource.isNetworkScheme();
+        } else if (!(origin instanceof SchemeHostPortTriple)) {
             return false;
         }
         SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
         if (this.isWildcard()) {
-            return true;
+            return resource.isNetworkScheme() || shpOrigin.scheme.matches(resource.scheme);
         }
         boolean schemeMatches;
         if (this.scheme == null) {
-            schemeMatches = source.scheme.equalsIgnoreCase("http") ?
+            schemeMatches = resource.scheme.equalsIgnoreCase("http") ?
                 shpOrigin.scheme.equalsIgnoreCase("http") || shpOrigin.scheme.equalsIgnoreCase("https") :
-                source.scheme.equalsIgnoreCase(shpOrigin.scheme);
+                resource.scheme.equalsIgnoreCase(shpOrigin.scheme);
         } else {
-            schemeMatches = this.scheme.equalsIgnoreCase(source.scheme);
+            schemeMatches = this.scheme.equalsIgnoreCase(resource.scheme);
         }
         boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
-            source.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) :
-            this.host.equalsIgnoreCase(source.host));
-        boolean uriUsesDefaultPort = source.port == Constants.EMPTY_PORT
-            || SchemeHostPortTriple.defaultPortForProtocol(source.scheme) == source.port;
+            resource.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) :
+            this.host.equalsIgnoreCase(resource.host));
+        boolean uriUsesDefaultPort = resource.port == Constants.EMPTY_PORT
+            || SchemeHostPortTriple.defaultPortForProtocol(resource.scheme) == resource.port;
         boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT
             || SchemeHostPortTriple.defaultPortForProtocol(this.scheme) == this.port);
         boolean portMatches = this.port == Constants.WILDCARD_PORT || (this.port == Constants.EMPTY_PORT ?
             uriUsesDefaultPort :
-            (source.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == source.port));
+            (resource.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == resource.port));
         boolean pathMatches = this.path == null || (this.path.endsWith("/") ?
-            source.path.startsWith(this.path) :
-            this.path.equals(source.path));
+            resource.path.startsWith(this.path) :
+            this.path.equals(resource.path));
         return schemeMatches && hostMatches && portMatches && pathMatches;
     }
 
-    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID source) {
-        return false;
+    @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {
+        String originScheme = null;
+        if (origin instanceof GUID) {
+            originScheme = ((GUID)origin).scheme();
+        }
+        String resourceScheme = resource.scheme();
+        if (origin instanceof GUID && originScheme != null && resourceScheme != null) {
+            return originScheme.equalsIgnoreCase(resourceScheme);
+        } else {
+            return false;
+        }
     }
 
     public boolean matchesOnlyOrigin(@Nonnull SchemeHostPortTriple origin) {

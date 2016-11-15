@@ -4,6 +4,7 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("MalformedRegex") public class Constants {
     public static final String schemePart = "[a-zA-Z][a-zA-Z0-9+\\-.]*";
+    public static final Pattern schemePattern = Pattern.compile("^(?<scheme>" + Constants.schemePart + ":)");
     public static final Pattern referrerTokenPattern = Pattern
         .compile("^(?:no-referrer|no-referrer-when-downgrade|origin" + "|origin-when-cross-origin|unsafe-url)$",
             Pattern.CASE_INSENSITIVE);

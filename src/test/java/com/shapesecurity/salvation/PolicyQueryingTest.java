@@ -6,10 +6,23 @@ import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.HashSource;
 import com.shapesecurity.salvation.directiveValues.MediaType;
-import com.shapesecurity.salvation.directives.*;
+import com.shapesecurity.salvation.directives.ChildSrcDirective;
+import com.shapesecurity.salvation.directives.ConnectSrcDirective;
+import com.shapesecurity.salvation.directives.DefaultSrcDirective;
+import com.shapesecurity.salvation.directives.DirectiveValue;
+import com.shapesecurity.salvation.directives.FontSrcDirective;
+import com.shapesecurity.salvation.directives.ImgSrcDirective;
+import com.shapesecurity.salvation.directives.MediaSrcDirective;
+import com.shapesecurity.salvation.directives.ObjectSrcDirective;
+import com.shapesecurity.salvation.directives.ReportUriDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class PolicyQueryingTest extends CSPTest {
 
@@ -388,6 +401,47 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(new GUID("data:")));
         assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
 
+        p = Parser.parse("script-src *", "applewebdata://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("applewebdata://resource")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("somethingelse://resource")));
+
+        p = Parser.parse("script-src *", "file://resource");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
+        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("file://anotherresource")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("applewebdata://resource")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("somethingelse://resource")));
+
+        p = Parser.parse("script-src *", new GUID("data:text/html,%3Ch1%3EHello%2C%20World!%3C%2Fh1%3E"));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("https://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com:81")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ftp://example.com:80")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/path")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("wss://example.com/PATH")));
+        assertTrue(p.allowsScriptFromSource(new GUID("data:")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("somethingelse://resource")));
 
         p = Parser.parse("script-src http://*", "http://example.com");
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));

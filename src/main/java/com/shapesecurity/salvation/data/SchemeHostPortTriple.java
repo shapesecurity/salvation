@@ -60,4 +60,22 @@ public class SchemeHostPortTriple extends Origin {
             this.host +
             (isDefaultPort ? "" : ":" + this.port);
     }
+
+    public static boolean isSchemeNetworkScheme(String scheme) {
+        return scheme != null && (scheme.equalsIgnoreCase("ftp") || scheme.equalsIgnoreCase("http") ||
+                scheme.equalsIgnoreCase("https") || scheme.equalsIgnoreCase("ws") ||
+                scheme.equalsIgnoreCase("wss"));
+    }
+
+    public static boolean isSchemeSecureScheme(String scheme) {
+        return scheme != null && (scheme.equalsIgnoreCase("https") || scheme.equalsIgnoreCase("wss"));
+    }
+
+    public boolean isNetworkScheme() {
+        return isSchemeNetworkScheme(this.scheme);
+    }
+
+    public boolean isSecureScheme() {
+        return isSchemeSecureScheme(this.scheme);
+    }
 }

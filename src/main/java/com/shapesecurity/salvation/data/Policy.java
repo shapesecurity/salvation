@@ -345,7 +345,7 @@ public class Policy implements Show {
 
 
     private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        if (this.defaultsAllowUnsafeInline())
+        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveStrictDynamic())
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -355,7 +355,7 @@ public class Policy implements Show {
     }
 
     private boolean defaultsAllowNonce(@Nonnull String nonce) {
-        if (this.defaultsAllowUnsafeInline())
+        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveStrictDynamic())
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -368,8 +368,6 @@ public class Policy implements Show {
         return this.defaultsAllowNonce(nonce.value);
     }
 
-
-    // 7.4.1
     private boolean defaultsAllowSource(@Nonnull URI source) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -386,7 +384,7 @@ public class Policy implements Show {
         return defaultSrcDirective.matchesSource(this.origin, source);
     }
 
-    private boolean defaultsAllowUnsafeInline() {
+    private boolean defaultsHaveUnsafeInline() {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
             return false;
@@ -394,6 +392,21 @@ public class Policy implements Show {
         return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
     }
 
+    private boolean defaultsHaveStrictDynamic() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.StrictDynamic);
+    }
+
+    public boolean hasStrictDynamic() {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsHaveStrictDynamic();
+        }
+        return scriptSrcDirective.values().anyMatch(x -> x == KeywordSource.StrictDynamic);
+    }
 
     public boolean allowsImgFromSource(@Nonnull URI source) {
         ImgSrcDirective imgSrcDirective = this.getDirectiveByType(ImgSrcDirective.class);
@@ -480,19 +493,27 @@ public class Policy implements Show {
     }
 
     public boolean allowsUnsafeInlineScript() {
+        return this.hasUnsafeInlineScript() && !this.hasStrictDynamic();
+    }
+
+    public boolean hasUnsafeInlineScript() {
         ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
         if (scriptSrcDirective == null) {
-            return this.defaultsAllowUnsafeInline();
+            return this.defaultsHaveUnsafeInline();
         }
         return scriptSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
     }
 
-    public boolean allowsUnsafeInlineStyle() {
+    public boolean hasUnsafeInlineStyle() {
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {
-            return this.defaultsAllowUnsafeInline();
+            return this.defaultsHaveUnsafeInline();
         }
         return styleSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    public boolean allowsUnsafeInlineStyle() {
+        return this.hasUnsafeInlineStyle();
     }
 
     public boolean allowsPlugin(@Nonnull MediaType mediaType) {
@@ -500,7 +521,6 @@ public class Policy implements Show {
         if (pluginTypesDirective == null) {
             return false;
         }
-
         return pluginTypesDirective.matchesMediaType(mediaType);
     }
 
@@ -519,7 +539,7 @@ public class Policy implements Show {
     }
 
     public boolean allowsStyleWithNonce(@Nonnull String nonce) {
-        if (this.allowsUnsafeInlineScript())
+        if (this.allowsUnsafeInlineStyle())
             return true;
         StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
         if (styleSrcDirective == null) {

@@ -72,18 +72,9 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         }
         boolean schemeMatches;
         if (this.scheme == null) {
-            schemeMatches = resource.isNetworkScheme() ?
-                shpOrigin.isNetworkScheme() :
-                resource.scheme.equalsIgnoreCase(shpOrigin.scheme);
+            schemeMatches = SchemeHostPortTriple.matchesSecureScheme(shpOrigin.scheme, resource.scheme);
         } else {
-            if (resource.isNetworkScheme() && !resource.scheme.equalsIgnoreCase("ftp") && !this.scheme.equalsIgnoreCase("ftp")) {
-                schemeMatches = resource.isSecureScheme() ?
-                        SchemeHostPortTriple.isSchemeNetworkScheme(this.scheme) :
-                        !SchemeHostPortTriple.isSchemeSecureScheme(this.scheme);
-
-            } else {
-                schemeMatches = this.scheme.equalsIgnoreCase(resource.scheme);
-            }
+            schemeMatches = SchemeHostPortTriple.matchesSecureScheme(this.scheme, resource.scheme);
         }
         boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
             resource.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) :

@@ -78,4 +78,23 @@ public class SchemeHostPortTriple extends Origin {
     public boolean isSecureScheme() {
         return isSchemeSecureScheme(this.scheme);
     }
+
+    public static boolean matchesSecureScheme(@Nonnull String expressionScheme, @Nonnull String resourceScheme) {
+        expressionScheme = expressionScheme.toLowerCase();
+        resourceScheme = resourceScheme.toLowerCase();
+
+        if (expressionScheme.equals(resourceScheme))
+            return true;
+
+        if(expressionScheme.equals("http") && resourceScheme.equals("https"))
+            return true;
+
+        if(expressionScheme.equals("ws") && (resourceScheme.equals("wss") || resourceScheme.equals("http") || resourceScheme.equals("https")))
+            return true;
+
+        if(expressionScheme.equals("wss") && resourceScheme.equals("https"))
+            return true;
+
+        return false;
+    }
 }

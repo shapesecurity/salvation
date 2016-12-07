@@ -385,6 +385,74 @@ public class PolicyQueryingTest extends CSPTest {
 
     }
 
+    @Test public void testStrictDynamic() {
+        Policy p;
+
+        // NOTE, this behaviour will likely change, but for now presence of hash does not invalidate unsafe-inline
+        p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic'", "http://example.com");
+        assertTrue(p.hasStrictDynamic());
+        assertTrue(p.hasUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertTrue(p.hasUnsafeInlineStyle());
+        assertTrue(p.allowsUnsafeInlineStyle());
+        assertFalse(p.allowsScriptWithNonce("123"));
+        assertTrue(p.allowsStyleWithNonce("123"));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        // NOTE, this behaviour will likely change, but for now presence of hash does not invalidate unsafe-inline
+        p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", "http://example.com");
+        assertTrue(p.hasStrictDynamic());
+        assertTrue(p.hasUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertTrue(p.allowsScriptWithNonce("123"));
+        assertFalse(p.allowsScriptWithNonce("345"));
+        assertTrue(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        assertTrue(p.allowsUnsafeInlineStyle());
+        assertTrue(p.hasUnsafeInlineStyle());
+        assertTrue(p.allowsStyleWithNonce("123"));
+        assertTrue(p.allowsStyleWithNonce("345"));
+        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='; script-src;", "http://example.com");
+        assertFalse(p.hasStrictDynamic());
+        assertFalse(p.hasUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertTrue(p.hasUnsafeInlineStyle());
+        assertTrue(p.allowsUnsafeInlineStyle());
+
+        assertFalse(p.allowsScriptWithNonce("123"));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        assertTrue(p.allowsStyleWithNonce("123"));
+        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='; style-src;", "http://example.com");
+        assertTrue(p.hasStrictDynamic());
+        assertTrue(p.hasUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertFalse(p.hasUnsafeInlineStyle());
+        assertFalse(p.allowsUnsafeInlineStyle());
+
+        assertTrue(p.allowsScriptWithNonce("123"));
+        assertFalse(p.allowsScriptWithNonce("345"));
+        assertTrue(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        assertFalse(p.allowsStyleWithNonce("123"));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+    }
+
     @Test public void testWildcards() {
         Policy p;
 

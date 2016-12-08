@@ -345,7 +345,7 @@ public class Policy implements Show {
 
 
     private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveStrictDynamic())
+        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveNonceSource() && !this.defaultsHaveHashSource() && !this.defaultsHaveStrictDynamic())
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -355,7 +355,7 @@ public class Policy implements Show {
     }
 
     private boolean defaultsAllowNonce(@Nonnull String nonce) {
-        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveStrictDynamic())
+        if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveHashSource() && !this.defaultsHaveNonceSource() && !this.defaultsHaveStrictDynamic())
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
@@ -390,6 +390,22 @@ public class Policy implements Show {
             return false;
         }
         return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    private boolean defaultsHaveNonceSource() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.values().anyMatch(x -> x instanceof NonceSource);
+    }
+
+    private boolean defaultsHaveHashSource() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.values().anyMatch(x -> x instanceof HashSource);
     }
 
     private boolean defaultsHaveStrictDynamic() {
@@ -493,7 +509,7 @@ public class Policy implements Show {
     }
 
     public boolean allowsUnsafeInlineScript() {
-        return this.hasUnsafeInlineScript() && !this.hasStrictDynamic();
+        return this.hasUnsafeInlineScript() && !(this.hasNonceSourceForScripts() || this.hasHashSourceForScripts() || this.hasStrictDynamic());
     }
 
     public boolean hasUnsafeInlineScript() {
@@ -502,6 +518,38 @@ public class Policy implements Show {
             return this.defaultsHaveUnsafeInline();
         }
         return scriptSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    public boolean hasNonceSourceForScripts() {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsHaveNonceSource();
+        }
+        return scriptSrcDirective.values().anyMatch(x -> x instanceof NonceSource);
+    }
+
+    public boolean hasNonceSourceForStyles() {
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
+            return this.defaultsHaveNonceSource();
+        }
+        return styleSrcDirective.values().anyMatch(x -> x instanceof NonceSource);
+    }
+
+    public boolean hasHashSourceForScripts() {
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsHaveHashSource();
+        }
+        return scriptSrcDirective.values().anyMatch(x -> x instanceof HashSource);
+    }
+
+    public boolean hasHashSourceForStyles() {
+        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+        if (styleSrcDirective == null) {
+            return this.defaultsHaveHashSource();
+        }
+        return styleSrcDirective.values().anyMatch(x -> x instanceof HashSource);
     }
 
     public boolean hasUnsafeInlineStyle() {
@@ -513,7 +561,7 @@ public class Policy implements Show {
     }
 
     public boolean allowsUnsafeInlineStyle() {
-        return this.hasUnsafeInlineStyle();
+        return this.hasUnsafeInlineStyle() && !(this.hasNonceSourceForStyles() || this.hasHashSourceForStyles());
     }
 
     public boolean allowsPlugin(@Nonnull MediaType mediaType) {

@@ -1,16 +1,51 @@
 package com.shapesecurity.salvation.data;
 
+import com.shapesecurity.salvation.directiveValues.HashSource;
 import com.shapesecurity.salvation.directiveValues.HashSource.HashAlgorithm;
-import com.shapesecurity.salvation.directiveValues.*;
-import com.shapesecurity.salvation.directives.*;
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.KeywordSource;
+import com.shapesecurity.salvation.directiveValues.MediaType;
+import com.shapesecurity.salvation.directiveValues.NonceSource;
+import com.shapesecurity.salvation.directiveValues.None;
+import com.shapesecurity.salvation.directiveValues.SchemeSource;
+import com.shapesecurity.salvation.directiveValues.SourceExpression;
+import com.shapesecurity.salvation.directives.ChildSrcDirective;
+import com.shapesecurity.salvation.directives.ConnectSrcDirective;
+import com.shapesecurity.salvation.directives.DefaultSrcDirective;
+import com.shapesecurity.salvation.directives.Directive;
+import com.shapesecurity.salvation.directives.DirectiveValue;
+import com.shapesecurity.salvation.directives.FetchDirective;
+import com.shapesecurity.salvation.directives.FontSrcDirective;
+import com.shapesecurity.salvation.directives.FrameAncestorsDirective;
+import com.shapesecurity.salvation.directives.FrameSrcDirective;
+import com.shapesecurity.salvation.directives.ImgSrcDirective;
+import com.shapesecurity.salvation.directives.ManifestSrcDirective;
+import com.shapesecurity.salvation.directives.MediaSrcDirective;
+import com.shapesecurity.salvation.directives.ObjectSrcDirective;
+import com.shapesecurity.salvation.directives.PluginTypesDirective;
+import com.shapesecurity.salvation.directives.ReferrerDirective;
+import com.shapesecurity.salvation.directives.ReportToDirective;
+import com.shapesecurity.salvation.directives.ReportUriDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.SourceListDirective;
+import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Policy implements Show {
 
@@ -509,59 +544,33 @@ public class Policy implements Show {
     }
 
     public boolean allowsUnsafeInlineScript() {
-        return this.hasUnsafeInlineScript() && !(this.hasNonceSourceForScripts() || this.hasHashSourceForScripts() || this.hasStrictDynamic());
+        return containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline) &&
+                !containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource) &&
+                !containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof HashSource) &&
+                !containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic);
+
     }
 
-    public boolean hasUnsafeInlineScript() {
-        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-        if (scriptSrcDirective == null) {
-            return this.defaultsHaveUnsafeInline();
+    public <T extends SourceListDirective> boolean containsSourceExpression(Class<T> type, @Nonnull Predicate<SourceExpression> predicate) {
+        T d = this.getDirectiveByType(type);
+        if (d == null) {
+            return type != DefaultSrcDirective.class && this.containsSourceExpression(DefaultSrcDirective.class, predicate);
         }
-        return scriptSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+        return d.values().anyMatch(predicate);
     }
-
-    public boolean hasNonceSourceForScripts() {
-        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-        if (scriptSrcDirective == null) {
-            return this.defaultsHaveNonceSource();
+    @Nonnull
+    public <T extends SourceListDirective>  Stream<SourceExpression> getEffectiveSourceExpressions(Class<T> type) {
+        SourceListDirective d = this.getDirectiveByType(type);
+        if (d == null && type != DefaultSrcDirective.class) {
+            d = this.getDirectiveByType(DefaultSrcDirective.class);
         }
-        return scriptSrcDirective.values().anyMatch(x -> x instanceof NonceSource);
-    }
-
-    public boolean hasNonceSourceForStyles() {
-        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-        if (styleSrcDirective == null) {
-            return this.defaultsHaveNonceSource();
-        }
-        return styleSrcDirective.values().anyMatch(x -> x instanceof NonceSource);
-    }
-
-    public boolean hasHashSourceForScripts() {
-        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-        if (scriptSrcDirective == null) {
-            return this.defaultsHaveHashSource();
-        }
-        return scriptSrcDirective.values().anyMatch(x -> x instanceof HashSource);
-    }
-
-    public boolean hasHashSourceForStyles() {
-        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-        if (styleSrcDirective == null) {
-            return this.defaultsHaveHashSource();
-        }
-        return styleSrcDirective.values().anyMatch(x -> x instanceof HashSource);
-    }
-
-    public boolean hasUnsafeInlineStyle() {
-        StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-        if (styleSrcDirective == null) {
-            return this.defaultsHaveUnsafeInline();
-        }
-        return styleSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+        return d != null ? d.values() : Stream.empty();
     }
 
     public boolean allowsUnsafeInlineStyle() {
-        return this.hasUnsafeInlineStyle() && !(this.hasNonceSourceForStyles() || this.hasHashSourceForStyles());
+        return containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline) &&
+                !containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource) &&
+                !containsSourceExpression(StyleSrcDirective.class, x -> x instanceof HashSource);
     }
 
     public boolean allowsPlugin(@Nonnull MediaType mediaType) {

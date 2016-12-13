@@ -399,10 +399,6 @@ public class Policy implements Show {
         return defaultSrcDirective.matchesNonce(nonce);
     }
 
-    private boolean defaultsAllowNonce(@Nonnull Base64Value nonce) {
-        return this.defaultsAllowNonce(nonce.value);
-    }
-
     private boolean defaultsAllowSource(@Nonnull URI source) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {

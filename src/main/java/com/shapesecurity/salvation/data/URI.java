@@ -70,12 +70,6 @@ public class URI extends SchemeHostPortTriple implements DirectiveValue {
         return h;
     }
 
-    public boolean isNetworkScheme() {
-        return this.scheme != null && (this.scheme.equalsIgnoreCase("ftp") || this.scheme.equalsIgnoreCase("http") ||
-                this.scheme.equalsIgnoreCase("https") || this.scheme.equalsIgnoreCase("ws") ||
-                this.scheme.equalsIgnoreCase("wss"));
-    }
-
     @Nonnull @Override public String show() {
         return super.show() + this.path;
     }

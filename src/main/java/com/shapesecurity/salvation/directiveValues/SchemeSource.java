@@ -18,8 +18,7 @@ public class SchemeSource implements SourceExpression, AncestorSource, MatchesSo
     }
 
     @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
-        SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
-        return this.value.matches(resource.scheme);
+        return SchemeHostPortTriple.matchesSecureScheme(this.value, resource.scheme);
     }
 
     @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {

@@ -5,7 +5,11 @@ import com.shapesecurity.salvation.data.GUID;
 import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.HashSource;
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.KeywordSource;
 import com.shapesecurity.salvation.directiveValues.MediaType;
+import com.shapesecurity.salvation.directiveValues.NonceSource;
+import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import com.shapesecurity.salvation.directives.ChildSrcDirective;
 import com.shapesecurity.salvation.directives.ConnectSrcDirective;
 import com.shapesecurity.salvation.directives.DefaultSrcDirective;
@@ -18,6 +22,8 @@ import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
+
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -388,12 +394,11 @@ public class PolicyQueryingTest extends CSPTest {
     @Test public void testStrictDynamic() {
         Policy p;
 
-        // NOTE, this behaviour will likely change, but for now presence of hash does not invalidate unsafe-inline
         p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic'", "http://example.com");
-        assertTrue(p.hasStrictDynamic());
-        assertTrue(p.hasUnsafeInlineScript());
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertFalse(p.allowsUnsafeInlineScript());
-        assertTrue(p.hasUnsafeInlineStyle());
         assertTrue(p.allowsUnsafeInlineStyle());
         assertFalse(p.allowsScriptWithNonce("123"));
         assertTrue(p.allowsStyleWithNonce("123"));
@@ -402,10 +407,9 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
 
-        // NOTE, this behaviour will likely change, but for now presence of hash does not invalidate unsafe-inline
         p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", "http://example.com");
-        assertTrue(p.hasStrictDynamic());
-        assertTrue(p.hasUnsafeInlineScript());
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertFalse(p.allowsUnsafeInlineScript());
         assertTrue(p.allowsScriptWithNonce("123"));
         assertFalse(p.allowsScriptWithNonce("345"));
@@ -413,20 +417,20 @@ public class PolicyQueryingTest extends CSPTest {
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
         assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
-        assertTrue(p.allowsUnsafeInlineStyle());
-        assertTrue(p.hasUnsafeInlineStyle());
+        assertFalse(p.allowsUnsafeInlineStyle());
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertTrue(p.allowsStyleWithNonce("123"));
-        assertTrue(p.allowsStyleWithNonce("345"));
+        assertFalse(p.allowsStyleWithNonce("345"));
         assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
         p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='; script-src;", "http://example.com");
-        assertFalse(p.hasStrictDynamic());
-        assertFalse(p.hasUnsafeInlineScript());
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertFalse(p.allowsUnsafeInlineScript());
-        assertTrue(p.hasUnsafeInlineStyle());
-        assertTrue(p.allowsUnsafeInlineStyle());
+        assertFalse(p.allowsUnsafeInlineStyle());
 
         assertFalse(p.allowsScriptWithNonce("123"));
         assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
@@ -435,12 +439,14 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsStyleWithNonce("123"));
         assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "cGl6ZGE=")));
 
         p = Parser.parse("default-src 'unsafe-inline' 'strict-dynamic' 'nonce-123' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='; style-src;", "http://example.com");
-        assertTrue(p.hasStrictDynamic());
-        assertTrue(p.hasUnsafeInlineScript());
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertFalse(p.allowsUnsafeInlineScript());
-        assertFalse(p.hasUnsafeInlineStyle());
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
         assertFalse(p.allowsUnsafeInlineStyle());
 
         assertTrue(p.allowsScriptWithNonce("123"));
@@ -451,6 +457,64 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsStyleWithNonce("123"));
         assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
                 "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        p = Parser.parse("script-src 'unsafe-inline' 'nonce-forscript' 'strict-dynamic'; style-src 'unsafe-inline' 'nonce-forstyle'", "http://example.com");
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineStyle());
+        assertFalse(p.allowsScriptWithNonce("123"));
+        assertFalse(p.allowsStyleWithNonce("123"));
+        assertFalse(p.allowsScriptWithNonce("1234"));
+        assertFalse(p.allowsStyleWithNonce("1234"));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertTrue(p.allowsScriptWithNonce("forscript"));
+        assertFalse(p.allowsStyleWithNonce("forscript"));
+        assertFalse(p.allowsScriptWithNonce("forstyle"));
+        assertTrue(p.allowsStyleWithNonce("forstyle"));
+    }
+
+    @Test public void testHashAndNonceInvalidateUnsafeInline() {
+        Policy p;
+
+        p = Parser.parse("default-src 'unsafe-inline' 'nonce-123' ", "http://example.com");
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof HashSource));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof HashSource));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(DefaultSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineStyle());
+        assertTrue(p.allowsScriptWithNonce("123"));
+        assertTrue(p.allowsStyleWithNonce("123"));
+        assertFalse(p.allowsScriptWithNonce("1234"));
+        assertFalse(p.allowsStyleWithNonce("1234"));
+
+        p = Parser.parse("default-src 'unsafe-inline' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==' ", "http://example.com");
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.allowsUnsafeInlineScript());
+        assertFalse(p.allowsUnsafeInlineStyle());
+        assertFalse(p.allowsScriptWithNonce("123"));
+        assertFalse(p.allowsStyleWithNonce("123"));
+        assertFalse(p.allowsScriptWithNonce("1234"));
+        assertFalse(p.allowsStyleWithNonce("1234"));
+        assertTrue(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertTrue(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
     }
 
     @Test public void testWildcards() {
@@ -779,7 +843,153 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsManifestFromSource(URI.parse("wss://example.com/PATH")));
         assertFalse(p.allowsManifestFromSource(new GUID("data:")));
         assertFalse(p.allowsManifestFromSource(new GUID("custom.scheme:")));
-        
+    }
+
+    @Test public void testContainsSourceExpression() {
+        Policy p;
+
+        p = Parser.parse("", "http://example.com");
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        p = Parser.parse("default-src a 'self' 'unsafe-eval' 'unsafe-redirect' 'nonce-123' 'strict-dynamic' 'unsafe-inline'", "http://example.com");
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.Self));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.Self));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.Self));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+
+        p = Parser.parse("script-src a 'self' 'unsafe-eval' 'nonce-123' 'unsafe-redirect' 'strict-dynamic' 'unsafe-inline'", "http://example.com");
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.Self));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        p = Parser.parse("style-src a 'self' 'unsafe-eval' 'unsafe-redirect' 'nonce-123' 'strict-dynamic' 'unsafe-inline'", "http://example.com");
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.Self));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x instanceof NonceSource));
+        assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(StyleSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.Self));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+
+        p = Parser.parse("upgrade-insecure-requests", "http://example.com");
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeEval));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.UnsafeRedirect));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
+        assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+    }
+
+    @Test public void testSourceExpressionStream() {
+        Policy p;
+        Stream<SourceExpression> s;
+
+        p = Parser.parse("upgrade-insecure-requests", "http://example.com");
+        s = p.getEffectiveSourceExpressions(DefaultSrcDirective.class);
+        assertEquals(0, s.count());
+
+        p = Parser.parse("script-src a b c", "http://example.com");
+        s = p.getEffectiveSourceExpressions(ScriptSrcDirective.class);
+        assertEquals(3, s.count());
+
+        p = Parser.parse("script-src https: https://a.com http://b.com", "http://example.com");
+        s = p.getEffectiveSourceExpressions(ScriptSrcDirective.class);
+        assertEquals(2, s.filter(x -> x.show().startsWith("https")).count());
+
+        p = Parser.parse("default-src https: https://a.com http://b.com", "http://example.com");
+        s = p.getEffectiveSourceExpressions(ScriptSrcDirective.class);
+        assertEquals(2, s.filter(x -> x.show().startsWith("https")).count());
     }
 
     @Test public void testEmptyPolicy() {

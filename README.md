@@ -22,7 +22,6 @@ mvn install
 Parse a policy using one of the `Parser.parse` static methods. An `Origin` or `String` may be given as the origin. The third parameter, if given, will be populated with notices.
 
 ```java
-
 ArrayList<Notice> notices = new ArrayList<>();
 Origin origin = URI.parse("http://example.com");
 String policyText = "...";
@@ -62,6 +61,14 @@ Policy p = Parser.parse("script-src a; default-src b", "http://example.com");
 p.allowsScriptFromSource(URI.parse("http://a")); // true
 p.allowsScriptFromSource(URI.parse("http://b")); // false
 p.allowsStyleFromSource(URI.parse("http://b")); // true
+```
+Perform `source-expression`-specific queries and manipulations:
+```java
+Policy p = Parser.parse("default-src *.example.com 'unsafe-inline' 'nonce-123' 'strict-dynamic'", "http://example.com");
+p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline)); // true
+p.allowsUnsafeInlineScript(); // false
+p.getEffectiveSourceExpressions(ScriptSrcDirective.class).filter(x -> x instanceof HostSource).count(); // 1
+
 ```
 ### Manipulate Policies
 

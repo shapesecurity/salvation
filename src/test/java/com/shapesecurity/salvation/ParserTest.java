@@ -216,8 +216,11 @@ public class ParserTest extends CSPTest {
         p = parse("script-src http://example.org/cpproducts/index.htm%3Bjsessionid=0C159CF2854B7519C5379634FAC36577");
         assertEquals("script-src http://example.org/cpproducts/index.htm%3Bjsessionid=0C159CF2854B7519C5379634FAC36577", p.show());
 
-        p = parse("script-src http://example.org/cpproducts/index.htm%3Bjsessionid=0C159CF2854B7519C5379634FAC36577");
-        assertEquals("script-src http://example.org/cpproducts/index.htm%3Bjsessionid=0C159CF2854B7519C5379634FAC36577", p.show());
+        p = parse("script-src http://example.org/cpproducts/index.htm,jsessionid=0C159CF2854B7519C5379634FAC36577");
+        assertEquals("script-src http://example.org/cpproducts/index.htm", p.show());
+
+        p = parse("script-src http://example.org/cpproducts/index.htm%2Cjsessionid=0C159CF2854B7519C5379634FAC36577");
+        assertEquals("script-src http://example.org/cpproducts/index.htm%2Cjsessionid=0C159CF2854B7519C5379634FAC36577", p.show());
 
     }
 

@@ -11,7 +11,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -150,23 +150,24 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 
         boolean exactMatch = pathA.endsWith("/") ? false : true;
 
-        List<String> pathListA = Arrays.asList(pathA.split("/"));
-        List<String> pathListB = Arrays.asList(pathB.split("/"));
+        List<String> pathListA = splitBySpec(pathA, '/');
+        List<String> pathListB = splitBySpec(pathB, '/');
 
-        long countA = pathA.chars().filter(ch -> ch =='/').count();
-        long countB = pathB.chars().filter(ch -> ch =='/').count();
-
-        if (pathListA.size() > pathListB.size() || countA > countB)
+        if (pathListA.size() > pathListB.size())
             return false;
 
-        if (exactMatch && (pathListA.size() != pathListB.size() || countA != countB)) {
+        if (exactMatch && pathListA.size() != pathListB.size()) {
             return false;
+        }
+
+        if (!exactMatch) {
+            pathListA.remove(pathListA.size() - 1);
         }
 
         Iterator it1 = pathListA.iterator();
         Iterator it2 = pathListB.iterator();
 
-        while (it1.hasNext() && it2.hasNext()) {
+        while (it1.hasNext()) {
             String a = decodeString((String) it1.next());
             String b = decodeString((String) it2.next());
             if (!a.equals(b)) {
@@ -182,5 +183,18 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         } catch (UnsupportedEncodingException e) {
             return s;
         }
+    }
+
+    public static List<String> splitBySpec(@Nonnull String s, char delim) {
+        int off = 0;
+        int next;
+        ArrayList<String> list = new ArrayList<>();
+        while ((next = s.indexOf(delim, off)) != -1) {
+            list.add(s.substring(off, next));
+            off = next + 1;
+        }
+
+        list.add(s.substring(off, s.length()));
+        return list;
     }
 }

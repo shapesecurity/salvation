@@ -178,7 +178,7 @@ public class Policy implements Show {
                         .filter(x -> !(x instanceof HostSource))
                         // * remove network-schemes in source list that contains *
                         .filter(x -> !(x instanceof SchemeSource) || !((SchemeSource) x).matchesNetworkScheme())
-                        // remove 'unsafe-inline' if source list contains hash or nonce
+                        // * remove 'unsafe-inline' if source list contains hash or nonce
                         .filter(x -> !((x == KeywordSource.UnsafeInline) &&
                             (sourceListDirective.containsNonceSource() || sourceListDirective.containsHashSource())))
                         .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -188,7 +188,7 @@ public class Policy implements Show {
                     this.directives.put(entry.getKey(), sourceListDirective.bind(dv -> {
                         // * replace host-sources that are equivalent to origin with 'self' keyword-source
                         if (dv instanceof HostSource &&
-                            this.origin instanceof SchemeHostPortTriple &&
+                            this.origin instanceof SchemeHostPortTriple && !((HostSource) dv).hasPath() &&
                             ((HostSource) dv).matchesOnlyOrigin((SchemeHostPortTriple) this.origin)) {
                             return Collections.singleton(KeywordSource.Self);
                         }

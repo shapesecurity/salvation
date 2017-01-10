@@ -9,7 +9,13 @@ import com.shapesecurity.salvation.interfaces.MatchesSource;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
+
 
 public class HostSource implements SourceExpression, AncestorSource, MatchesSource {
     public static final HostSource WILDCARD = new HostSource(null, "*", Constants.EMPTY_PORT, null);
@@ -23,7 +29,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         this.scheme = scheme;
         this.host = host;
         this.port = port;
-        this.path = path;
+        this.path = path != null ? path.replaceAll(";", "%3B").replaceAll(",", "%2C") : null;
     }
 
     @Override public boolean equals(@Nullable Object other) {
@@ -87,9 +93,8 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
                 (this.port == Constants.EMPTY_PORT ?
             uriUsesDefaultPort :
             (resource.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == resource.port));
-        boolean pathMatches = this.path == null || (this.path.endsWith("/") ?
-            resource.path.startsWith(this.path) :
-            this.path.equals(resource.path));
+        boolean pathMatches = pathMatches(this.path, resource.path);
+
         return schemeMatches && hostMatches && portMatches && pathMatches;
     }
 
@@ -127,5 +132,69 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
             this.host +
             (isDefaultPort ? "" : ":" + (this.port == Constants.WILDCARD_PORT ? "*" : this.port)) +
             (this.path == null ? "" : this.path);
+    }
+
+    public static boolean pathMatches(@Nullable String pathA, @Nullable String pathB) {
+
+        if (pathA == null || pathA.isEmpty()) {
+            return true;
+        }
+
+        if (pathB == null || pathB.isEmpty()) {
+            return false;
+        }
+
+        if (pathA.matches("/") && pathB.isEmpty()) {
+            return true;
+        }
+
+        boolean exactMatch = pathA.endsWith("/") ? false : true;
+
+        List<String> pathListA = splitBySpec(pathA, '/');
+        List<String> pathListB = splitBySpec(pathB, '/');
+
+        if (pathListA.size() > pathListB.size())
+            return false;
+
+        if (exactMatch && pathListA.size() != pathListB.size()) {
+            return false;
+        }
+
+        if (!exactMatch) {
+            pathListA.remove(pathListA.size() - 1);
+        }
+
+        Iterator it1 = pathListA.iterator();
+        Iterator it2 = pathListB.iterator();
+
+        while (it1.hasNext()) {
+            String a = decodeString((String) it1.next());
+            String b = decodeString((String) it2.next());
+            if (!a.equals(b)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static String decodeString(@Nonnull String s) {
+        try {
+            return URLDecoder.decode(s, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            return s;
+        }
+    }
+
+    public static List<String> splitBySpec(@Nonnull String s, char delim) {
+        int off = 0;
+        int next;
+        ArrayList<String> list = new ArrayList<>();
+        while ((next = s.indexOf(delim, off)) != -1) {
+            list.add(s.substring(off, next));
+            off = next + 1;
+        }
+
+        list.add(s.substring(off, s.length()));
+        return list;
     }
 }

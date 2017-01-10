@@ -23,6 +23,7 @@ import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
@@ -389,6 +390,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com////a")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
@@ -439,7 +441,32 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A/B/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/c")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b/C")));
+
+        p = Parser.parse("script-src example.com/a/b%3Bzzz%2Cqqq", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b%3Bzzz")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b%3Bzzz%2Cqqq")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a/b;zzz,qqq")));
+
+        p = Parser.parse("script-src example.com/%21/%24/%26/%27/%28/%29/%2A/%2C/%3A/%3B", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/!/$/&/'/(/)/*/,/:/;")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%21/%24/%26/%27/%28/%29/%2A/%2C/%3A/%3B")));
+
+        // TODO: this is valid in Chrome
+//        p = Parser.parse("script-src example.com/%GG", "http://example.com");
+//        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%GG")));
+//      // TODO: this is valid in Chrome
+//        p = Parser.parse("script-src example.com/%%GGpath", "http://example.com");
+//        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%GG")));
+
+        // TODO: we should throw on this, as it isn't valid UTF-8 percent encoding
+//        p = Parser.parse("script-src example.com/%ef", "http://example.com");
+
+        p = Parser.parse("script-src example.com/%C3%AF/", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/%EF/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%C3%AF/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%C3%AF/%65")));
     }
+
 
     @Test public void testLocalSchemes() {
         Policy p = Parser.parse("script-src *.example.com data: blob:; frame-ancestors data: about:", "http://example.com");
@@ -1060,6 +1087,34 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x instanceof NonceSource));
         assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "a", Constants.EMPTY_PORT, null))));
         assertFalse(p.containsSourceExpression(ImgSrcDirective.class, x -> x.equals(new HostSource(null, "b", Constants.EMPTY_PORT, null))));
+    }
+
+    @Test public void testDelimitersInHostSource() {
+        Policy p;
+        HostSource h;
+        ScriptSrcDirective d;
+
+        p = Parser.parse("script-src 'self'", "http://example.com");
+        h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a;jsessionid=123");
+        d = new ScriptSrcDirective(Collections.singleton(h));
+        p.unionDirective(d);
+        assertEquals("script-src 'self' example.com/a%3Bjsessionid=123", p.show());
+
+        p = Parser.parse("script-src 'self'", "http://example.com");
+        h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a,b");
+        d = new ScriptSrcDirective(Collections.singleton(h));
+        p.unionDirective(d);
+        assertEquals("script-src 'self' example.com/a%2Cb", p.show());
+
+        p = Parser.parse("script-src example.com/a%3Bjsessionid=123", "http://example.com");
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a%3Bjsessionid=123"))));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a;jsessionid=123"))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, null))));
+
+        p = Parser.parse("script-src example.com/a%2Cjsessionid=123", "http://example.com");
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a%2Cjsessionid=123"))));
+        assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a,jsessionid=123"))));
+        assertFalse(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, null))));
     }
 
     @Test public void testSourceExpressionStream() {

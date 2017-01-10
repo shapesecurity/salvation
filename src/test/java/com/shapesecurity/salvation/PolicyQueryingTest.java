@@ -449,8 +449,22 @@ public class PolicyQueryingTest extends CSPTest {
 
         p = Parser.parse("script-src example.com/%21/%24/%26/%27/%28/%29/%2A/%2C/%3A/%3B", "http://example.com");
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/!/$/&/'/(/)/*/,/:/;")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%21/%24/%26/%27/%28/%29/%2A/%2C/%3A/%3B")));
 
+        // TODO: this is valid in Chrome
+//        p = Parser.parse("script-src example.com/%GG", "http://example.com");
+//        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%GG")));
+//      // TODO: this is valid in Chrome
+//        p = Parser.parse("script-src example.com/%%GGpath", "http://example.com");
+//        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%GG")));
 
+        // TODO: we should throw on this, as it isn't valid UTF-8 percent encoding
+//        p = Parser.parse("script-src example.com/%ef", "http://example.com");
+
+        p = Parser.parse("script-src example.com/%C3%AF/", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/%EF/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%C3%AF/")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/%C3%AF/%65")));
     }
 
 

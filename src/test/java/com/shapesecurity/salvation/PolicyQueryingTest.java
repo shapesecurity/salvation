@@ -426,6 +426,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://10.10.0.1/a")));
 
         p = Parser.parse("script-src http://192.168.1.1/a", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://192.168.1.1/a")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://192.168.0.1/a")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://127.0.0.1/a")));
 

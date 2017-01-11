@@ -116,7 +116,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         }
 
         Matcher IPv4Matcher = Constants.IPv4address.matcher(hostA);
-        Matcher IPv6Matcher = Constants.IPv6address.matcher(hostA);
+        Matcher IPv6Matcher = Constants.IPv6addressWithOptionalBracket.matcher(hostA);
         Matcher IPv6LoopbackMatcher = Constants.IPV6loopback.matcher(hostA);
         if ((IPv4Matcher.find() && !hostA.equals("127.0.0.1")) || IPv6Matcher.find() || IPv6LoopbackMatcher.find()) {
             return false;

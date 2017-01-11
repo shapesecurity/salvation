@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 
 
 public class HostSource implements SourceExpression, AncestorSource, MatchesSource {
@@ -24,6 +25,10 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
     @Nonnull private final String host;
     private final int port;
     @Nullable private final String path;
+
+    public boolean hasPath() {
+        return (this.path != null) && !this.path.isEmpty();
+    }
 
     public HostSource(@Nullable String scheme, @Nonnull String host, int port, @Nullable String path) {
         this.scheme = scheme;
@@ -82,9 +87,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         } else {
             schemeMatches = SchemeHostPortTriple.matchesSecureScheme(this.scheme, resource.scheme);
         }
-        boolean hostMatches = this.host.equals("*") || (this.host.startsWith("*.") ?
-            resource.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) :
-            this.host.equalsIgnoreCase(resource.host));
+        boolean hostMatches = hostMatches(this.host, resource.host);
         boolean uriUsesDefaultPort = resource.port == Constants.EMPTY_PORT
             || SchemeHostPortTriple.defaultPortForProtocol(resource.scheme) == resource.port;
         boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT
@@ -96,6 +99,30 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
         boolean pathMatches = pathMatches(this.path, resource.path);
 
         return schemeMatches && hostMatches && portMatches && pathMatches;
+    }
+
+    public static boolean hostMatches(@Nonnull String hostA, @Nonnull String hostB) {
+        if (hostA.startsWith("*")) {
+            String remaining = hostA.substring(1);
+            if (hostB.toLowerCase().endsWith(remaining.toLowerCase())) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        if (!hostA.equalsIgnoreCase(hostB)) {
+            return false;
+        }
+
+        Matcher IPv4Matcher = Constants.IPv4address.matcher(hostA);
+        Matcher IPv6Matcher = Constants.IPv6addressWithOptionalBracket.matcher(hostA);
+        Matcher IPv6LoopbackMatcher = Constants.IPV6loopback.matcher(hostA);
+        if ((IPv4Matcher.find() && !hostA.equals("127.0.0.1")) || IPv6Matcher.find() || IPv6LoopbackMatcher.find()) {
+            return false;
+        }
+        return true;
+
     }
 
     @Override public boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource) {

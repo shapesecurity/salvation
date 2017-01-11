@@ -383,6 +383,67 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue("frame ancestor is allowed", p.allowsFrameAncestor(URI.parse("http://example.com")));
     }
 
+    @Test public void testHosts() {
+        Policy p;
+
+        p = Parser.parse("script-src http://*.example.com/a", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://A.example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.EXAMPLE.COM/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com.org/a")));
+
+        p = Parser.parse("script-src http://*.EXAMPLE.COM/a", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://A.example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.EXAMPLE.COM/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com.org/a")));
+
+        p = Parser.parse("script-src http://example.com/a", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://EXAMPLE.COM/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://a.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://A.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://a.EXAMPLE.COM/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com.org/a")));
+
+        p = Parser.parse("script-src http://EXAMPLE.COM/a", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://EXAMPLE.COM/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://a.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://A.example.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://a.EXAMPLE.COM/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com.org/a")));
+
+        p = Parser.parse("script-src http://127.0.0.1/a", "http://example.com");
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://127.0.0.1/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://127.0.0.1.com/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://127.0.0.2/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://127.0.0.1.1/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://10.10.0.1/a")));
+
+        p = Parser.parse("script-src http://192.168.1.1/a", "http://example.com");
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://192.168.1.1/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://192.168.0.1/a")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://127.0.0.1/a")));
+
+        // TODO: we can't parse below URLs now
+//        p = Parser.parse("script-src http://0:0:0:0:0:0:0:1/a", "http://example.com");
+//        assertFalse(p.allowsScriptFromSource(URI.parse("http://0:0:0:0:0:0:0:1/a")));
+
+//        p = Parser.parse("script-src http://::1/a", "http://example.com");
+//        assertFalse(p.allowsScriptFromSource(URI.parse("http://::1/a")));
+
+//        p = Parser.parse("script-src http://2001:db8:85a3:8d3:1319:8a2e:370:7348/a", "http://example.com");
+//        assertFalse(p.allowsScriptFromSource(URI.parse("http://2001:db8:85a3:8d3:1319:8a2e:370:7348/a")));
+
+//        p = Parser.parse("script-src http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443/a", "http://example.com");
+//        assertFalse(p.allowsScriptFromSource(URI.parse("http://[2001:db8:85a3:8d3:1319:8a2e:370:7348]:443/a")));
+    }
+
     @Test public void testPaths() {
         Policy p;
 
@@ -391,6 +452,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com/a")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com////a")));
+
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/A")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com/a/b")));
@@ -807,6 +869,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com/c/d")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://a.b.example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://www.example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://www.EXAMPLE.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("ws://example.com/PATH")));

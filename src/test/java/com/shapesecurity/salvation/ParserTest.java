@@ -823,49 +823,48 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("script-src a 'strict-dynamic'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src a 'strict-dynamic'", p.show());
 
         notices.clear();
         p = parseWithNotices("script-src 'strict-dynamic' a", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src 'strict-dynamic' a", p.show());
 
         notices.clear();
         p = parseWithNotices("script-src 'strict-dynamic' https:", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src 'strict-dynamic' https:", p.show());
 
         notices.clear();
         p = parseWithNotices("script-src 'strict-dynamic' 'self'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src 'strict-dynamic' 'self'", p.show());
 
         notices.clear();
         p = parseWithNotices("script-src 'strict-dynamic' 'unsafe-inline'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src 'strict-dynamic' 'unsafe-inline'", p.show());
 
         notices.clear();
         p = parseWithNotices("script-src 'strict-dynamic' 'unsafe-inline' 'self' a https:", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(4, notices.size());
-        assertTrue(notices.get(0).isWarning());
-        assertEquals("The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later" +
-                ".", notices.get(0).message);
+        assertTrue(notices.get(0).isInfo());
+        assertEquals("The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
         assertEquals("script-src 'strict-dynamic' 'unsafe-inline' 'self' a https:", p.show());
 
         notices.clear();
@@ -974,19 +973,19 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("default-src 'unsafe-inline' 'nonce-abcdef'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(1).message);
+        assertEquals("The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'Unsafe-INLINE' 'nonce-abcd'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(1).message);
+        assertEquals("The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'unsafe-inline' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(1, notices.size());
-        assertEquals("The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.", notices.get(0).message);
+        assertEquals("The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'unsafe-inline' 'unsafe-redirect'", notices);

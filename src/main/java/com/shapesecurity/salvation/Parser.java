@@ -48,9 +48,9 @@ public class Parser {
         new DirectiveValueParseException("Invalid uri-reference");
     private static final DirectiveParseException NON_EMPTY_VALUE_TOKEN_LIST =
         new DirectiveParseException("Non-empty directive-value list");
-
-    private static final String unsafeInlineWarningMessage = "The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.";
-    private static final String strictDynamicWarningMessage = "The 'strict-dynamic' keyword-source makes host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self' keyword-sources unnecessary in CSP3 and later.";
+    private static final String explanation = "Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.";
+    private static final String unsafeInlineWarningMessage = "The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. " + explanation;
+    private static final String strictDynamicWarningMessage = "The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. " + explanation;
     private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE};
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
@@ -406,20 +406,20 @@ public class Parser {
                 return None.INSTANCE;
             case "'self'":
                 if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
-                    this.warn(token, strictDynamicWarningMessage);
+                    this.info(token, strictDynamicWarningMessage);
                 }
                 return KeywordSource.Self;
             case "'strict-dynamic'":
                 if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE) || seenStates.contains(SeenStates.SEEN_HOST_OR_SCHEME_SOURCE) || seenStates.contains(SeenStates.SEEN_SELF))  {
-                    this.warn(token, strictDynamicWarningMessage);
+                    this.info(token, strictDynamicWarningMessage);
                 }
                 return KeywordSource.StrictDynamic;
             case "'unsafe-inline'":
                 if (seenStates.contains(SeenStates.SEEN_HASH) || seenStates.contains(SeenStates.SEEN_NONCE))  {
-                    this.warn(token, unsafeInlineWarningMessage);
+                    this.info(token, unsafeInlineWarningMessage);
                 }
                 if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
-                    this.warn(token, strictDynamicWarningMessage);
+                    this.info(token, strictDynamicWarningMessage);
                 }
                 return KeywordSource.UnsafeInline;
             case "'unsafe-eval'":
@@ -434,7 +434,7 @@ public class Parser {
                     NonceSource nonceSource = new NonceSource(nonce);
                     nonceSource.validationErrors().forEach(str -> this.warn(token, str));
                     if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE)) {
-                        this.warn(token, unsafeInlineWarningMessage);
+                        this.info(token, unsafeInlineWarningMessage);
                     }
                     return nonceSource;
                 } else if (token.value.toLowerCase().startsWith("'sha")) {
@@ -476,12 +476,12 @@ public class Parser {
                         throw INVALID_SOURCE_EXPR;
                     }
                     if (seenStates.contains(SeenStates.SEEN_UNSAFE_INLINE)) {
-                        this.warn(token, unsafeInlineWarningMessage);
+                        this.info(token, unsafeInlineWarningMessage);
                     }
                     return hashSource;
                 } else if (token.value.matches("^" + Constants.schemePart + ":$")) {
                     if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
-                        this.warn(token, strictDynamicWarningMessage);
+                        this.info(token, strictDynamicWarningMessage);
                     }
                     return new SchemeSource(token.value.substring(0, token.value.length() - 1));
                 } else {
@@ -498,7 +498,7 @@ public class Parser {
                             port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
                         }
                         if (seenStates.contains(SeenStates.SEEN_STRICT_DYNAMIC)) {
-                            this.warn(token, strictDynamicWarningMessage);
+                            this.info(token, strictDynamicWarningMessage);
                         }
                         String host = matcher.group("host");
                         String path = matcher.group("path");

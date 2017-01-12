@@ -472,10 +472,10 @@ public class LocationTest extends CSPTest {
             notice.toString());
         notice = notices.get(1);
         assertEquals(
-            "1:28: The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.",
+            "1:28: The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.",
             notice.show());
         assertEquals(
-            "Warning: The 'unsafe-inline' keyword-source has no effect in source lists that contain hash-source or nonce-source.",
+            "Info: The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.",
             notice.toString());
     }
 

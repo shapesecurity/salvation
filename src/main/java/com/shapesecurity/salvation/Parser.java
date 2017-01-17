@@ -253,7 +253,8 @@ public class Parser {
                     result = new PluginTypesDirective(mediaTypes);
                     break;
                 case Referrer:
-                    warnFutureDirective(token);
+                    this.warn(token,
+                            "The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.");
                     result = new ReferrerDirective(this.parseReferrerToken(token));
                     break;
                 case ReportTo:

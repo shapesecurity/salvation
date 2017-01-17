@@ -224,7 +224,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("Warning: The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).toString());
+        assertEquals("Warning: The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).toString());
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(1, notices.get(1).startLocation.column);
@@ -255,7 +255,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
+        assertEquals("The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).message);
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(22, notices.get(1).startLocation.column);

@@ -715,7 +715,7 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("referrer", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(2, notices.size());
-        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
+        assertEquals("The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).message);
         assertEquals("The referrer directive must contain exactly one referrer directive value.", notices.get(1).message);
 
         notices.clear();
@@ -957,7 +957,7 @@ public class ParserTest extends CSPTest {
         assertEquals(3, notices.size());
         assertEquals("1:1: The allow directive has been replaced with default-src and is not in the CSP specification.",
             notices.get(0).show());
-        assertEquals("1:15: The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(1).show());
+        assertEquals("1:15: The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(1).show());
         assertEquals("1:15: The referrer directive must contain exactly one referrer directive value.", notices.get(2).show());
 
         notices.clear();

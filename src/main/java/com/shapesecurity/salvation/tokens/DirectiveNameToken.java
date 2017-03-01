@@ -38,6 +38,7 @@ public class DirectiveNameToken extends Token {
         Sandbox,
         ScriptSrc,
         StyleSrc,
+        WorkerSrc,
 
         UpgradeInsecureRequests, // W3C Candidate Recommendation at https://www.w3.org/TR/upgrade-insecure-requests/#delivery as of 2015-10-08
 
@@ -89,6 +90,8 @@ public class DirectiveNameToken extends Token {
                     return StyleSrc;
                 case "upgrade-insecure-requests":
                     return UpgradeInsecureRequests;
+                case "worker-src":
+                    return WorkerSrc;
 
                 // deprecated directives
                 case "allow":

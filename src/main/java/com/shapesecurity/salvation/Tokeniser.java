@@ -132,6 +132,7 @@ public class Tokeniser {
                     case ObjectSrc:
                     case ScriptSrc:
                     case StyleSrc:
+                    case WorkerSrc:
                 // media-type-list
                     case PluginTypes:
                 // ancestor-source-list

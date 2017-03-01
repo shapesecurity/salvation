@@ -51,6 +51,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(PluginTypesDirective.class);
         register(FormActionDirective.class);
         register(UpgradeInsecureRequestsDirective.class);
+        register(WorkerSrcDirective.class);
         register(BlockAllMixedContentDirective.class);
         register(BaseUriDirective.class);
         FETCH_DIRECIVE_COUNT = fetchDirectives.size();

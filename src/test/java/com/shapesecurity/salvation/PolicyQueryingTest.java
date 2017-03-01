@@ -21,6 +21,7 @@ import com.shapesecurity.salvation.directives.ObjectSrcDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -43,6 +44,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertEquals("object-src", parse("object-src").getDirectiveByType(ObjectSrcDirective.class).show());
         assertEquals("script-src", parse("script-src").getDirectiveByType(ScriptSrcDirective.class).show());
         assertEquals("style-src", parse("style-src").getDirectiveByType(StyleSrcDirective.class).show());
+        assertEquals("worker-src", parse("worker-src").getDirectiveByType(WorkerSrcDirective.class).show());
     }
 
     @Test public void testDirectiveContains() {
@@ -105,6 +107,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("resource is not allowed", p.allowsStyleFromSource(URI.parse("ftp://www.abc.am:555")));
         assertFalse("resource is not allowed", p.allowsScriptFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsWorkerFromSource(URI.parse("https://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("https://www.def.am:555")));
 
 
@@ -116,6 +119,11 @@ public class PolicyQueryingTest extends CSPTest {
         p = Parser.parse("default-src 'none'; frame-src http:;", URI.parse("https://abc.com"));
         assertTrue("resource is allowed", p.allowsFrameFromSource(URI.parse("https://www.def.am:555")));
         assertTrue("resource is allowed", p.allowsFrameFromSource(URI.parse("http://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
+
+        p = Parser.parse("default-src 'none'; worker-src http:;", URI.parse("https://abc.com"));
+        assertTrue("resource is allowed", p.allowsWorkerFromSource(URI.parse("https://www.def.am:555")));
+        assertTrue("resource is allowed", p.allowsWorkerFromSource(URI.parse("http://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsChildFromSource(URI.parse("http://www.def.am:555")));
 
         p = Parser.parse("child-src http:;", URI.parse("https://abc.com"));
@@ -1221,5 +1229,31 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.hasSomeEffect());
         p = Parser.parse("report-to a", "http://example.com");
         assertFalse(p.hasSomeEffect());
+    }
+
+    @Test public void testAllowsChild() {
+        Policy p = Parser.parse("default-src 'none'; child-src 'self'", "http://example.com");
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse("child-src 'none'; default-src 'self'", "http://example.com");
+        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" default-src 'self'", "http://example.com");
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" child-src 'self'", "http://example.com");
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
     }
 }

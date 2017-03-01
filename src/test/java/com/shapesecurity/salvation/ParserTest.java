@@ -66,6 +66,10 @@ public class ParserTest extends CSPTest {
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, p.getDirectives().size());
 
+        p = parse("worker-src a");
+        assertNotNull("policy should not be null", p);
+        assertEquals("directive count", 1, p.getDirectives().size());
+
         p = parse("img-src a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, p.getDirectives().size());
@@ -677,12 +681,12 @@ public class ParserTest extends CSPTest {
 
     @Test public void testWarnings() {
         ArrayList<Notice> notices = new ArrayList<>();
-        Policy p1 = Parser.parse("frame-src aaa", "https://origin", notices);
+        Policy p1 = Parser.parse("child-src aaa", "https://origin", notices);
 
-        assertEquals("frame-src aaa", p1.show());
+        assertEquals("child-src aaa", p1.show());
         assertEquals(1, notices.size());
         assertEquals(
-            "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            "The child-src directive is deprecated as of CSP level 3. Authors who wish to regulate nested browsing contexts and workers SHOULD use the frame-src and worker-src directives, respectively.",
             notices.iterator().next().message);
     }
 
@@ -912,13 +916,13 @@ public class ParserTest extends CSPTest {
         assertEquals("1:36: 'unsafe-redirect' has been removed from CSP as of version 2.0.", notices.get(0).show());
 
         notices = new ArrayList<>();
-        pl = ParserWithLocation.parseMulti("script-src a, frame-src b", URI.parse("https://origin.com"), notices);
+        pl = ParserWithLocation.parseMulti("script-src a, child-src b", URI.parse("https://origin.com"), notices);
         assertEquals(2, pl.size());
         assertEquals("script-src a", pl.get(0).show());
-        assertEquals("frame-src b", pl.get(1).show());
+        assertEquals("child-src b", pl.get(1).show());
         assertEquals(1, notices.size());
         assertEquals(
-            "1:15: The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.",
+            "1:15: The child-src directive is deprecated as of CSP level 3. Authors who wish to regulate nested browsing contexts and workers SHOULD use the frame-src and worker-src directives, respectively.",
             notices.get(0).show());
 
         pl.clear();

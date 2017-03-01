@@ -29,6 +29,7 @@ import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.SourceListDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
@@ -614,7 +615,39 @@ public class Policy implements Show {
         return childSrcDirective.matchesSource(this.origin, source);
     }
 
+    public boolean allowsChildFromSource(@Nonnull GUID source) {
+        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+        if (childSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return childSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsWorkerFromSource(@Nonnull URI source) {
+        WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+        if (workerSrcDirective == null) {
+            return this.allowsChildFromSource(source);
+        }
+        return workerSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsWorkerFromSource(@Nonnull GUID source) {
+        WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+        if (workerSrcDirective == null) {
+            return this.allowsChildFromSource(source);
+        }
+        return workerSrcDirective.matchesSource(this.origin, source);
+    }
+
     public boolean allowsFrameFromSource(@Nonnull URI source) {
+        FrameSrcDirective frameSrcDirective = this.getDirectiveByType(FrameSrcDirective.class);
+        if (frameSrcDirective == null) {
+            return this.allowsChildFromSource(source);
+        }
+        return frameSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsFrameFromSource(@Nonnull GUID source) {
         FrameSrcDirective frameSrcDirective = this.getDirectiveByType(FrameSrcDirective.class);
         if (frameSrcDirective == null) {
             return this.allowsChildFromSource(source);

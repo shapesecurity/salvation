@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class WorkerSrcDirective extends FetchDirective {
+public class WorkerSrcDirective extends NestedContextDirective {
     @Nonnull private static final String NAME = "worker-src";
 
     public WorkerSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

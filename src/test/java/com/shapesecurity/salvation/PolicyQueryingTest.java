@@ -10,18 +10,7 @@ import com.shapesecurity.salvation.directiveValues.KeywordSource;
 import com.shapesecurity.salvation.directiveValues.MediaType;
 import com.shapesecurity.salvation.directiveValues.NonceSource;
 import com.shapesecurity.salvation.directiveValues.SourceExpression;
-import com.shapesecurity.salvation.directives.ChildSrcDirective;
-import com.shapesecurity.salvation.directives.ConnectSrcDirective;
-import com.shapesecurity.salvation.directives.DefaultSrcDirective;
-import com.shapesecurity.salvation.directives.DirectiveValue;
-import com.shapesecurity.salvation.directives.FontSrcDirective;
-import com.shapesecurity.salvation.directives.ImgSrcDirective;
-import com.shapesecurity.salvation.directives.MediaSrcDirective;
-import com.shapesecurity.salvation.directives.ObjectSrcDirective;
-import com.shapesecurity.salvation.directives.ReportUriDirective;
-import com.shapesecurity.salvation.directives.ScriptSrcDirective;
-import com.shapesecurity.salvation.directives.StyleSrcDirective;
-import com.shapesecurity.salvation.directives.WorkerSrcDirective;
+import com.shapesecurity.salvation.directives.*;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -44,6 +33,7 @@ public class PolicyQueryingTest extends CSPTest {
         assertEquals("object-src", parse("object-src").getDirectiveByType(ObjectSrcDirective.class).show());
         assertEquals("script-src", parse("script-src").getDirectiveByType(ScriptSrcDirective.class).show());
         assertEquals("style-src", parse("style-src").getDirectiveByType(StyleSrcDirective.class).show());
+        assertEquals("frame-src", parse("frame-src").getDirectiveByType(FrameSrcDirective.class).show());
         assertEquals("worker-src", parse("worker-src").getDirectiveByType(WorkerSrcDirective.class).show());
     }
 
@@ -1169,13 +1159,13 @@ public class PolicyQueryingTest extends CSPTest {
         h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a;jsessionid=123");
         d = new ScriptSrcDirective(Collections.singleton(h));
         p.unionDirective(d);
-        assertEquals("script-src 'self' example.com/a%3Bjsessionid=123", p.show());
+        assertEquals("script-src 'self' example.com/a%3Bjsessionid=123; worker-src 'self'", p.show());
 
         p = Parser.parse("script-src 'self'", "http://example.com");
         h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a,b");
         d = new ScriptSrcDirective(Collections.singleton(h));
         p.unionDirective(d);
-        assertEquals("script-src 'self' example.com/a%2Cb", p.show());
+        assertEquals("script-src 'self' example.com/a%2Cb; worker-src 'self'", p.show());
 
         p = Parser.parse("script-src example.com/a%3Bjsessionid=123", "http://example.com");
         assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a%3Bjsessionid=123"))));
@@ -1235,13 +1225,13 @@ public class PolicyQueryingTest extends CSPTest {
         Policy p = Parser.parse("default-src 'none'; child-src 'self'", "http://example.com");
         assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
-        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
         p = Parser.parse("child-src 'none'; default-src 'self'", "http://example.com");
         assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
         p = Parser.parse(" default-src 'self'", "http://example.com");
@@ -1253,6 +1243,32 @@ public class PolicyQueryingTest extends CSPTest {
         p = Parser.parse(" child-src 'self'", "http://example.com");
         assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+    }
+
+    @Test public void testAllowsWorker() {
+        Policy p = Parser.parse("default-src 'none'; script-src 'self'", "http://example.com");
+        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse("script-src 'none'; worker-src 'self'", "http://example.com");
+        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" default-src 'self'", "http://example.com");
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" script-src 'self'", "http://example.com");
+        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
     }

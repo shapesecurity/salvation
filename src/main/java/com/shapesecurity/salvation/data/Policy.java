@@ -378,6 +378,15 @@ public class Policy implements Show {
         return sb.toString();
     }
 
+    private boolean defaultsAllowAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+        if (!this.defaultsHaveUnsafeHashedAttributes())
+            return false;
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.matchesHash(algorithm, hashValue);
+    }
 
     private boolean defaultsAllowHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
         if (this.defaultsHaveUnsafeInline() && !this.defaultsHaveNonceSource() && !this.defaultsHaveHashSource() && !this.defaultsHaveStrictDynamic())
@@ -421,6 +430,14 @@ public class Policy implements Show {
             return false;
         }
         return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
+    }
+
+    private boolean defaultsHaveUnsafeHashedAttributes() {
+        DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
+        if (defaultSrcDirective == null) {
+            return false;
+        }
+        return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeHashedAttributes);
     }
 
     private boolean defaultsHaveNonceSource() {
@@ -539,12 +556,27 @@ public class Policy implements Show {
         return scriptSrcDirective.matchesHash(algorithm, hashValue);
     }
 
+    public boolean allowsAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+        if (!this.haveUnsafeHashedAttributes())
+            return false;
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective == null) {
+            return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
+        }
+        return scriptSrcDirective.matchesHash(algorithm, hashValue);
+    }
+
     public boolean allowsUnsafeInlineScript() {
         return containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline) &&
                 !containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof NonceSource) &&
                 !containsSourceExpression(ScriptSrcDirective.class, x -> x instanceof HashSource) &&
                 !containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic);
 
+    }
+
+    public boolean haveUnsafeHashedAttributes() {
+        return containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeHashedAttributes) ||
+                defaultsHaveUnsafeHashedAttributes();
     }
 
     public <T extends SourceListDirective> boolean containsSourceExpression(Class<T> type, @Nonnull Predicate<SourceExpression> predicate) {

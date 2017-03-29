@@ -479,6 +479,34 @@ public class LocationTest extends CSPTest {
             notice.toString());
     }
 
+    @Test public void testUnsafeHashedAttributesWarnings() {
+        ArrayList<Notice> notices = new ArrayList<>();
+        ParserWithLocation
+                .parse("script-src 'unsafe-hashed-attributes'", URI.parse("https://origin"), notices);
+        assertEquals(1, notices.size());
+        Notice notice = notices.get(0);
+        assertEquals(
+                "1:1: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+                notice.show());
+        assertEquals(
+                "Warning: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+                notice.toString());
+
+        notices.clear();
+        ParserWithLocation
+                .parse("script-src self 'unsafe-redirect' 'unsafe-hashed-attributes'", URI.parse("https://origin"), notices);
+        assertEquals(3, notices.size());
+        notice = notices.get(2);
+        // TODO implement location tracking, 1:1: below is not very presize here
+        assertEquals(
+                "1:1: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+                notice.show());
+        assertEquals(
+                "Warning: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+                notice.toString());
+
+    }
+
     @Test public void testNoticeHelpers() {
         ArrayList<Notice> notices = new ArrayList<>();
         ParserWithLocation.parse(

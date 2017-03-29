@@ -342,6 +342,34 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("unsafe inline style is not allowed", p.allowsUnsafeInlineStyle());
     }
 
+    @Test public void testAllowsAttributeWithHash() {
+        Policy p;
+
+        p = parse(
+                "script-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertTrue("attribute with hash is allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("script hash is not allowed",
+                p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+        p = parse(
+                "script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertFalse("attribute with hash is not allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+        p = parse(
+                "default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertTrue("attribute with hash is allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+        assertFalse("script hash is not allowed",
+                p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+        
+        p = parse(
+                "default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+        assertFalse("attribute with hash is not allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+                "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+    }
+
     @Test public void testAllowsConnect() {
         Policy p;
 

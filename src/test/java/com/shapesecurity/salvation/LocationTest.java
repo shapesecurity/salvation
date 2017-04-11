@@ -147,9 +147,9 @@ public class LocationTest extends CSPTest {
         assertEquals(18, tokens[2].endLocation.offset);
     }
 
-    @Test public void testWarningLocationFrameSrc() {
+    @Test public void testWarningLocationChildSrc() {
         ArrayList<Notice> notices = new ArrayList<>();
-        ParserWithLocation.parse("frame-src aaa", "https://origin", notices);
+        ParserWithLocation.parse("child-src aaa", "https://origin", notices);
         assertEquals(1, notices.size());
         Notice notice = notices.get(0);
         assertNotNull(notice);
@@ -484,12 +484,12 @@ public class LocationTest extends CSPTest {
         ParserWithLocation.parse(
             "script-src 'unsafe-redirect' aaa; manifest-src; script-src д; стайл-соурс 22; frame-src 'none'; style-src 'nonce-123'",
             URI.parse("https://origin"), notices);
-        assertEquals(6, notices.size());
+        assertEquals(5, notices.size());
         ArrayList<Notice> errors = Notice.getAllErrors(notices);
         ArrayList<Notice> warnings = Notice.getAllWarnings(notices);
         ArrayList<Notice> infos = Notice.getAllInfos(notices);
         assertEquals(2, errors.size());
-        assertEquals(4, warnings.size());
+        assertEquals(3, warnings.size());
         assertEquals(0, infos.size());
 
         notices.clear();

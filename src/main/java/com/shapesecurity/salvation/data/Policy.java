@@ -29,6 +29,7 @@ import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.SourceListDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import com.shapesecurity.salvation.interfaces.Show;
 
 import javax.annotation.Nonnull;
@@ -116,38 +117,51 @@ public class Policy implements Show {
     private void expandDefaultSrc() {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         Set<SourceExpression> defaultSources;
-        if (defaultSrcDirective == null) {
-            return;
-        } else {
+        if (defaultSrcDirective != null) {
+
             defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+
+            if (!this.directives.containsKey(ScriptSrcDirective.class)) {
+                this.unionDirectivePrivate(new ScriptSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(StyleSrcDirective.class)) {
+                this.unionDirectivePrivate(new StyleSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(ImgSrcDirective.class)) {
+                this.unionDirectivePrivate(new ImgSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(ChildSrcDirective.class)) {
+                this.unionDirectivePrivate(new ChildSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(ConnectSrcDirective.class)) {
+                this.unionDirectivePrivate(new ConnectSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(FontSrcDirective.class)) {
+                this.unionDirectivePrivate(new FontSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(MediaSrcDirective.class)) {
+                this.unionDirectivePrivate(new MediaSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(ObjectSrcDirective.class)) {
+                this.unionDirectivePrivate(new ObjectSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(ManifestSrcDirective.class)) {
+                this.unionDirectivePrivate(new ManifestSrcDirective(defaultSources));
+            }
         }
 
-        if (!this.directives.containsKey(ScriptSrcDirective.class)) {
-            this.unionDirectivePrivate(new ScriptSrcDirective(defaultSources));
+        // expand child-src
+        if (this.directives.containsKey(ChildSrcDirective.class) && !this.directives.containsKey(FrameSrcDirective.class)) {
+            ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+            Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            this.unionDirectivePrivate(new FrameSrcDirective(childSources));
         }
-        if (!this.directives.containsKey(StyleSrcDirective.class)) {
-            this.unionDirectivePrivate(new StyleSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(ImgSrcDirective.class)) {
-            this.unionDirectivePrivate(new ImgSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(ChildSrcDirective.class)) {
-            this.unionDirectivePrivate(new ChildSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(ConnectSrcDirective.class)) {
-            this.unionDirectivePrivate(new ConnectSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(FontSrcDirective.class)) {
-            this.unionDirectivePrivate(new FontSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(MediaSrcDirective.class)) {
-            this.unionDirectivePrivate(new MediaSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(ObjectSrcDirective.class)) {
-            this.unionDirectivePrivate(new ObjectSrcDirective(defaultSources));
-        }
-        if (!this.directives.containsKey(ManifestSrcDirective.class)) {
-            this.unionDirectivePrivate(new ManifestSrcDirective(defaultSources));
+
+        // expand script-src
+        if (this.directives.containsKey(ScriptSrcDirective.class) && !this.directives.containsKey(WorkerSrcDirective.class)) {
+            ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+            Set<SourceExpression> scriptSources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            this.unionDirectivePrivate(new WorkerSrcDirective(scriptSources));
         }
     }
 
@@ -201,6 +215,20 @@ public class Policy implements Show {
                     }));
                 }
             }
+        }
+
+        // * remove frame source directive if equivalent to child-src
+        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+        if (childSrcDirective != null) {
+            Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            this.eliminateRedundantSourceExpression(childSources, FrameSrcDirective.class);
+        }
+
+        // * remove worker source directive if equivalent to script-src
+        ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+        if (scriptSrcDirective != null) {
+            Set<SourceExpression> scriptSources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+            this.eliminateRedundantSourceExpression(scriptSources, WorkerSrcDirective.class);
         }
 
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
@@ -614,7 +642,39 @@ public class Policy implements Show {
         return childSrcDirective.matchesSource(this.origin, source);
     }
 
+    public boolean allowsChildFromSource(@Nonnull GUID source) {
+        ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+        if (childSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return childSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsWorkerFromSource(@Nonnull URI source) {
+        WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+        if (workerSrcDirective == null) {
+            return this.allowsScriptFromSource(source);
+        }
+        return workerSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsWorkerFromSource(@Nonnull GUID source) {
+        WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+        if (workerSrcDirective == null) {
+            return this.allowsScriptFromSource(source);
+        }
+        return workerSrcDirective.matchesSource(this.origin, source);
+    }
+
     public boolean allowsFrameFromSource(@Nonnull URI source) {
+        FrameSrcDirective frameSrcDirective = this.getDirectiveByType(FrameSrcDirective.class);
+        if (frameSrcDirective == null) {
+            return this.allowsChildFromSource(source);
+        }
+        return frameSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsFrameFromSource(@Nonnull GUID source) {
         FrameSrcDirective frameSrcDirective = this.getDirectiveByType(FrameSrcDirective.class);
         if (frameSrcDirective == null) {
             return this.allowsChildFromSource(source);

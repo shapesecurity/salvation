@@ -31,13 +31,14 @@ public class DirectiveNameToken extends Token {
         MediaSrc,
         ObjectSrc,
         PluginTypes,
-        Referrer, // in draft at http://www.w3.org/TR/2014/WD-referrer-policy-20140807/#referrer-policy-delivery as of 2015-08-27
+        Referrer, // will be removed
         ReportTo, // CSP3; in draft at http://w3c.github.io/webappsec-csp/#directive-report-to
         ReportUri, // CSP3 deprecates it
         RequireSriFor, // defined in https://w3c.github.io/webappsec-subresource-integrity/#opt-in-require-sri-for
         Sandbox,
         ScriptSrc,
         StyleSrc,
+        WorkerSrc,
 
         UpgradeInsecureRequests, // W3C Candidate Recommendation at https://www.w3.org/TR/upgrade-insecure-requests/#delivery as of 2015-10-08
 
@@ -89,6 +90,8 @@ public class DirectiveNameToken extends Token {
                     return StyleSrc;
                 case "upgrade-insecure-requests":
                     return UpgradeInsecureRequests;
+                case "worker-src":
+                    return WorkerSrc;
 
                 // deprecated directives
                 case "allow":

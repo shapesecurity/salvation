@@ -147,9 +147,9 @@ public class LocationTest extends CSPTest {
         assertEquals(18, tokens[2].endLocation.offset);
     }
 
-    @Test public void testWarningLocationFrameSrc() {
+    @Test public void testWarningLocationChildSrc() {
         ArrayList<Notice> notices = new ArrayList<>();
-        ParserWithLocation.parse("frame-src aaa", "https://origin", notices);
+        ParserWithLocation.parse("child-src aaa", "https://origin", notices);
         assertEquals(1, notices.size());
         Notice notice = notices.get(0);
         assertNotNull(notice);
@@ -224,7 +224,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("Warning: The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).toString());
+        assertEquals("Warning: The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).toString());
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(1, notices.get(1).startLocation.column);
@@ -255,7 +255,7 @@ public class LocationTest extends CSPTest {
         assertEquals(1, notices.get(0).endLocation.line);
         assertEquals(9, notices.get(0).endLocation.column);
         assertEquals(8, notices.get(0).endLocation.offset);
-        assertEquals("The referrer directive is an experimental directive that will be likely added to the CSP specification.", notices.get(0).message);
+        assertEquals("The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).message);
         assertNotNull(notices.get(1).startLocation);
         assertEquals(1, notices.get(1).startLocation.line);
         assertEquals(22, notices.get(1).startLocation.column);
@@ -512,12 +512,12 @@ public class LocationTest extends CSPTest {
         ParserWithLocation.parse(
             "script-src 'unsafe-redirect' aaa; manifest-src; script-src д; стайл-соурс 22; frame-src 'none'; style-src 'nonce-123'",
             URI.parse("https://origin"), notices);
-        assertEquals(6, notices.size());
+        assertEquals(5, notices.size());
         ArrayList<Notice> errors = Notice.getAllErrors(notices);
         ArrayList<Notice> warnings = Notice.getAllWarnings(notices);
         ArrayList<Notice> infos = Notice.getAllInfos(notices);
         assertEquals(2, errors.size());
-        assertEquals(4, warnings.size());
+        assertEquals(3, warnings.size());
         assertEquals(0, infos.size());
 
         notices.clear();

@@ -5,7 +5,7 @@ import com.shapesecurity.salvation.directiveValues.SourceExpression;
 import javax.annotation.Nonnull;
 import java.util.Set;
 
-public class FrameSrcDirective extends SourceListDirective {
+public class FrameSrcDirective extends NestedContextDirective {
     @Nonnull private static final String name = "frame-src";
 
     public FrameSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {

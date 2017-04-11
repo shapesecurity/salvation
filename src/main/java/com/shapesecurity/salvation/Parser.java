@@ -215,6 +215,8 @@ public class Parser {
                     result = new BlockAllMixedContentDirective();
                     break;
                 case ChildSrc:
+                    this.warn(token,
+                            "The child-src directive is deprecated as of CSP level 3. Authors who wish to regulate nested browsing contexts and workers SHOULD use the frame-src and worker-src directives, respectively.");
                     result = new ChildSrcDirective(this.parseSourceList());
                     break;
                 case ConnectSrc:
@@ -254,7 +256,8 @@ public class Parser {
                     result = new PluginTypesDirective(mediaTypes);
                     break;
                 case Referrer:
-                    warnFutureDirective(token);
+                    this.warn(token,
+                            "The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.");
                     result = new ReferrerDirective(this.parseReferrerToken(token));
                     break;
                 case ReportTo:
@@ -288,14 +291,15 @@ public class Parser {
                     this.enforceMissingDirectiveValue(token);
                     result = new UpgradeInsecureRequestsDirective();
                     break;
+                case WorkerSrc:
+                    result = new WorkerSrcDirective(this.parseSourceList());
+                    break;
                 case Allow:
                     this.error(token,
                         "The allow directive has been replaced with default-src and is not in the CSP specification.");
                     this.eat(DirectiveValueToken.class);
                     throw INVALID_DIRECTIVE_NAME;
                 case FrameSrc:
-                    this.warn(token,
-                        "The frame-src directive is deprecated as of CSP version 1.1. Authors who wish to govern nested browsing contexts SHOULD use the child-src directive instead.");
                     result = new FrameSrcDirective(this.parseSourceList());
                     break;
                 case Options:

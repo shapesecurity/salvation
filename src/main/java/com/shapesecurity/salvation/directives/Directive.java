@@ -20,11 +20,20 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         return fetchDirectives;
     }
 
+    public static List<Class<? extends Directive>> getNestedContextDirectives() {
+        return nestedContextDirectives;
+    }
+
     static List<Class<? extends Directive>> fetchDirectives = new ArrayList<>();
+    static List<Class<? extends Directive>> nestedContextDirectives = new ArrayList<>();
+
     static public final int FETCH_DIRECIVE_COUNT;
+    static public final int NESTED_CONTEXT_DIRECTIVE_COUNT;
 
     static void register(Class<? extends Directive> directiveClass) {
-        if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class) {
+        if (NestedContextDirective.class.isAssignableFrom(directiveClass)) {
+            nestedContextDirectives.add(directiveClass);
+        } else if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class && directiveClass != FrameSrcDirective.class && directiveClass != WorkerSrcDirective.class) {
             fetchDirectives.add(directiveClass);
         }
     }
@@ -51,10 +60,11 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(PluginTypesDirective.class);
         register(FormActionDirective.class);
         register(UpgradeInsecureRequestsDirective.class);
+        register(WorkerSrcDirective.class);
         register(BlockAllMixedContentDirective.class);
         register(BaseUriDirective.class);
         FETCH_DIRECIVE_COUNT = fetchDirectives.size();
-
+        NESTED_CONTEXT_DIRECTIVE_COUNT = nestedContextDirectives.size();
     }
 
     Directive(@Nonnull String name, @Nonnull Set<Value> values) {

@@ -450,4 +450,74 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("default-src 'self' http://abc/a", p.show());
     }
 
+    @Test public void testUnionChildSrc(){
+        Policy p = parse("child-src 'self' example.org; ");
+        Policy q = parse("child-src 'self' EXAMPLE.ORG; ");
+        p.union(q);
+        assertEquals("child-src 'self' example.org", p.show());
+
+        p = parse("child-src 'self' EXAMPLE.ORG; ");
+        q = parse("child-src 'self' example.org; ");
+        p.union(q);
+        assertEquals("child-src 'self' EXAMPLE.ORG", p.show());
+
+        p = parse("child-src a; ");
+        q = parse("worker-src a");
+        p.union(q);
+        p.postProcessOptimisation();
+        assertEquals("child-src a; worker-src a", p.show());
+
+        p = parse("child-src a; ");
+        q = parse("worker-src a ");
+        p.union(q);
+        p.postProcessOptimisation();
+        assertEquals("child-src a; worker-src a", p.show());
+
+        p = parse("child-src a b");
+        q = parse("child-src; worker-src x; frame-src y");
+        p.union(q);
+        p.postProcessOptimisation();
+        assertEquals("child-src a b; frame-src a b y; worker-src x", p.show());
+
+        p = parse("child-src *; worker-src");
+        q = parse("child-src; worker-src b");
+        p.union(q);
+        assertEquals("child-src *; worker-src b", p.show());
+
+        p = parse("child-src *; frame-src");
+        q = parse("child-src; frame-src b");
+        p.union(q);
+        assertEquals("child-src *; frame-src b", p.show());
+
+        p = parse("child-src a");
+        q = parse("child-src; worker-src b");
+        p.union(q);
+        assertEquals("child-src a; worker-src b", p.show());
+
+        p = parse("child-src a; worker-src b");
+        q = parse("child-src; worker-src c");
+        p.union(q);
+        assertEquals("child-src a; worker-src b c", p.show());
+
+        p = parse("child-src; worker-src a; frame-src b");
+        q = parse("child-src c");
+        p.union(q);
+        assertEquals("child-src c; worker-src a; frame-src b c", p.show());
+
+        p = parse("child-src a; worker-src b");
+        q = parse("child-src c; frame-src d");
+        p.union(q);
+        assertEquals("child-src a c; worker-src b; frame-src a d", p.show());
+
+        p = parse("child-src b; worker-src a");
+        q = parse("child-src a");
+        p.union(q);
+        assertEquals("child-src b a; worker-src a", p.show());
+
+        p = parse("default-src a");
+        q = parse("worker-src b; frame-src b;");
+        p.union(q);
+        assertEquals("default-src a; frame-src a b; worker-src a b", p.show());
+    }
+
 }

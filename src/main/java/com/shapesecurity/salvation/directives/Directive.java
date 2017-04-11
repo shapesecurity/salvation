@@ -33,8 +33,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
     static void register(Class<? extends Directive> directiveClass) {
         if (NestedContextDirective.class.isAssignableFrom(directiveClass)) {
             nestedContextDirectives.add(directiveClass);
-        }
-        if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class && directiveClass != FrameSrcDirective.class && directiveClass != WorkerSrcDirective.class) {
+        } else if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class && directiveClass != FrameSrcDirective.class && directiveClass != WorkerSrcDirective.class) {
             fetchDirectives.add(directiveClass);
         }
     }

@@ -14,6 +14,7 @@ public class KeywordSource implements SourceExpression, AncestorSource, MatchesS
     @Nonnull public static final KeywordSource UnsafeEval = new KeywordSource("unsafe-eval");
     @Nonnull public static final KeywordSource UnsafeRedirect = new KeywordSource("unsafe-redirect");
     @Nonnull public static final KeywordSource StrictDynamic = new KeywordSource("strict-dynamic");
+    @Nonnull public static final KeywordSource UnsafeHashedAttributes = new KeywordSource("unsafe-hashed-attributes");
     @Nonnull private final String value;
 
     private KeywordSource(@Nonnull String value) {

@@ -6,6 +6,9 @@ import com.shapesecurity.salvation.tokens.Token;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -532,5 +535,19 @@ public class LocationTest extends CSPTest {
         assertEquals(0, errors.size());
         assertEquals(0, warnings.size());
         assertEquals(0, infos.size());
+
+        notices.clear();
+        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa", URI.parse("https://origin"), notices);
+        Stream<Notice> s = Notice.getAllWarningsAsStream(notices.stream());
+        assertEquals(1, s.count());
+
+        notices.clear();
+        ParserWithLocation.parse("script-src 'unsafe-redirect' aaa; frame-src ' none'; style-src self; сдсд ", URI.parse("https://origin"), notices);
+        s = Notice.getAllWarningsAsStream(notices.stream());
+        assertEquals(3, s.count());
+        s = Notice.getAllErrorsAsStream(notices.stream());
+        assertEquals(3, s.count());
+        s = Notice.getAllInfosAsStream(notices.stream());
+        assertEquals(0, s.count());
     }
 }

@@ -6,6 +6,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Notice implements Show {
 
@@ -39,6 +40,18 @@ public class Notice implements Show {
             return new ArrayList<>();
         }
         return notices.stream().filter(Notice::isInfo).collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Nonnull public static Stream<Notice> getAllErrorsAsStream(@Nonnull Stream<Notice> notices) {
+        return notices.filter(Notice::isError);
+    }
+
+    @Nonnull public static Stream<Notice> getAllWarningsAsStream(@Nonnull Stream<Notice> notices) {
+        return notices.filter(Notice::isWarning);
+    }
+
+    @Nonnull public static Stream<Notice> getAllInfosAsStream(@Nonnull Stream<Notice> notices) {
+        return notices.filter(Notice::isInfo);
     }
 
     @Override public String toString() {

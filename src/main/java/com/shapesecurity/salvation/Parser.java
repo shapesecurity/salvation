@@ -252,6 +252,8 @@ public class Parser {
                     if (mediaTypes.isEmpty()) {
                         this.error(token, "The media-type-list must contain at least one media-type.");
                         throw INVALID_MEDIA_TYPE_LIST;
+                    } else if (mediaTypes.stream().anyMatch(x -> x.type.equals("*") || x.subtype.equals("*"))) {
+                        this.warn(token,"Media types can only be matched literally. Make sure using `*` is not an oversight.");
                     }
                     result = new PluginTypesDirective(mediaTypes);
                     break;

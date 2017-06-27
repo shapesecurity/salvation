@@ -316,6 +316,11 @@ public class ParserTest extends CSPTest {
         assertEquals("The media-type-list must contain at least one media-type.", notices.get(0).message);
 
         notices.clear();
+        parseWithNotices("plugin-types */* a/a", notices);
+        assertEquals(1, notices.size());
+        assertEquals("Media types can only be matched literally. Make sure using `*` is not an oversight.", notices.get(0).message);
+
+        notices.clear();
         // XXX: technically allowed via ietf-token if an RFC introduces a type/subtype that is empty
         parseWithNotices("plugin-types /", notices);
         assertEquals(1, notices.size());

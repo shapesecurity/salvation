@@ -52,7 +52,7 @@ public class Parser {
     private static final String unsafeInlineWarningMessage = "The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. " + explanation;
     private static final String strictDynamicWarningMessage = "The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. " + explanation;
     private static final String unsafeHashedWithoutHashWarningMessage = "The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.";
-    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR};
+    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE};
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
     protected int index = 0;
@@ -391,6 +391,8 @@ public class Parser {
                     seenStates.add(SeenStates.SEEN_HOST_OR_SCHEME_SOURCE);
                 } else if (se == KeywordSource.UnsafeHashedAttributes) {
                     seenStates.add(SeenStates.SEEN_UNSAFE_HASHED_ATTR);
+                } else if (se == KeywordSource.ReportSample) {
+                    seenStates.add(SeenStates.SEEN_REPORT_SAMPLE);
                 }
                 sourceExpressions.add(se);
             } catch (DirectiveValueParseException e) {
@@ -441,6 +443,8 @@ public class Parser {
                 return KeywordSource.UnsafeRedirect;
             case "'unsafe-hashed-attributes'":
                 return KeywordSource.UnsafeHashedAttributes;
+            case "'report-sample'":
+                return KeywordSource.ReportSample;
             default:
                 checkForUnquotedKeyword(token);
                 if (token.value.startsWith("'nonce-")) {

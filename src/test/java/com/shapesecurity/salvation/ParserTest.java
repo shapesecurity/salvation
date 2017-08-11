@@ -1050,4 +1050,28 @@ public class ParserTest extends CSPTest {
         assertEquals(1, p.getDirectives().size());
         assertEquals(0, notices.size());
     }
+
+    @Test public void testReportSample() {
+        Policy p;
+        ArrayList<Notice> notices = new ArrayList<>();
+        p = parseWithNotices("default-src 'report-sample'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("script-src 'report-sample' 'report-sample'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals("script-src 'report-sample'", p.getDirectiveByType(ScriptSrcDirective.class).show());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("default-src 'strict-dynamic' 'report-sample'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = parseWithNotices("img-src 'report-sample'", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+    }
 }

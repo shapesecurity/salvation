@@ -394,7 +394,9 @@ public class Parser {
                 } else if (se == KeywordSource.ReportSample) {
                     seenStates.add(SeenStates.SEEN_REPORT_SAMPLE);
                 }
-                sourceExpressions.add(se);
+                if (!sourceExpressions.add(se)) {
+                    this.warn(this.tokens[this.index - 1],"Source list contains duplicate source expression \"" + se.show() + "\". All but the first instance will be ignored.");
+                }
             } catch (DirectiveValueParseException e) {
                 parseException = true;
             }

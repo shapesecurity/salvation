@@ -1024,20 +1024,26 @@ public class ParserTest extends CSPTest {
         notices.clear();
         p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes'", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(1, notices.size());
-        assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(0).message);
+        assertEquals(3, notices.size());
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+        assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(2).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'nonce-123'", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(2, notices.size());
-        assertEquals("Invalid base64-value (should be multiple of 4 bytes: 3).", notices.get(0).message);
-        assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(1).message);
+        assertEquals(4, notices.size());
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+        assertEquals("Invalid base64-value (should be multiple of 4 bytes: 3).", notices.get(2).message);
+        assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
         assertEquals(1, p.getDirectives().size());
-        assertEquals(0, notices.size());
+        assertEquals(2, notices.size());
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
+        assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
 
         notices.clear();
         p = parseWithNotices("default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
@@ -1062,7 +1068,8 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("script-src 'report-sample' 'report-sample'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals("script-src 'report-sample'", p.getDirectiveByType(ScriptSrcDirective.class).show());
-        assertEquals(0, notices.size());
+        assertEquals(1, notices.size());
+        assertEquals("Source list contains duplicate source expression \"'report-sample'\". All but the first instance will be ignored.", notices.get(0).show());
 
         notices.clear();
         p = parseWithNotices("default-src 'strict-dynamic' 'report-sample'", notices);
@@ -1073,5 +1080,53 @@ public class ParserTest extends CSPTest {
         p = parseWithNotices("img-src 'report-sample'", notices);
         assertEquals(1, p.getDirectives().size());
         assertEquals(0, notices.size());
+    }
+
+    @Test public void testDuplicateSourceExpressions() {
+        Policy p;
+        ArrayList<Notice> notices = new ArrayList<>();
+        p = ParserWithLocation.parse("script-src 'unsafe-inline' 'unsafe-inline'", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("1:28: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(0).show());
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src 'unsafe-inline' 'unsafe-inline' 'unsafe-inline'", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("1:28: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(0).show());
+        assertEquals("1:44: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(1).show());
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src 'unsafe-inline' a b 'unsafe-INLINE' 'unsafe-inline';", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("1:32: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(0).show());
+        assertEquals("1:48: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(1).show());
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src 'unsafe-inline' a 'unsafe-INLINE'; style-src 'unsafe-inline' 'unsafe-INLINE' b;", "https://origin.com", notices);
+        assertEquals(2, p.getDirectives().size());
+        assertEquals(2, notices.size());
+        assertEquals("1:30: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(0).show());
+        assertEquals("1:73: Source list contains duplicate source expression \"'unsafe-inline'\". All but the first instance will be ignored.", notices.get(1).show());
+
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src a A ;", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(1, notices.size());
+        assertEquals("1:14: Source list contains duplicate source expression \"A\". All but the first instance will be ignored.", notices.get(0).show());
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src http: HTTP: ;", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
+        notices.clear();
+        p = ParserWithLocation.parse("script-src http://example.com/a http://example.com/A ;", "https://origin.com", notices);
+        assertEquals(1, p.getDirectives().size());
+        assertEquals(0, notices.size());
+
     }
 }

@@ -1,5 +1,22 @@
 package com.shapesecurity.salvation.data;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import com.shapesecurity.salvation.directiveValues.HashSource;
 import com.shapesecurity.salvation.directiveValues.HashSource.HashAlgorithm;
 import com.shapesecurity.salvation.directiveValues.HostSource;
@@ -31,22 +48,6 @@ import com.shapesecurity.salvation.directives.SourceListDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import com.shapesecurity.salvation.interfaces.Show;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Policy implements Show {
 
@@ -292,7 +293,7 @@ public class Policy implements Show {
         }
 
         // remove all fetch directives and replace with default-src
-        if (fetchDirectiveCount == Directive.FETCH_DIRECIVE_COUNT && isfetchSourceListIdentical) {
+        if (prevDirective != null && fetchDirectiveCount == Directive.FETCH_DIRECIVE_COUNT && isfetchSourceListIdentical) {
             Set<SourceExpression> combinedSources = prevDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
             defaultSrcDirective = new DefaultSrcDirective(combinedSources);
             Directive.getFetchDirectives().forEach(x -> this.directives.remove(x));

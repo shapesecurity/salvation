@@ -1,15 +1,21 @@
 package com.shapesecurity.salvation.directives;
 
-import com.shapesecurity.salvation.directiveValues.HostSource;
-import com.shapesecurity.salvation.directiveValues.None;
-import com.shapesecurity.salvation.interfaces.Show;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.None;
+import com.shapesecurity.salvation.interfaces.Show;
 
 public abstract class Directive<Value extends DirectiveValue> implements Show {
     @Nonnull public final String name;
@@ -63,6 +69,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(WorkerSrcDirective.class);
         register(BlockAllMixedContentDirective.class);
         register(BaseUriDirective.class);
+        register(PrefetchSrcDirective.class);
         FETCH_DIRECIVE_COUNT = fetchDirectives.size();
         NESTED_CONTEXT_DIRECTIVE_COUNT = nestedContextDirectives.size();
     }

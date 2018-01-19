@@ -31,6 +31,7 @@ public class DirectiveNameToken extends Token {
         MediaSrc,
         ObjectSrc,
         PluginTypes,
+        PrefetchSrc, // CSP3; in editor's draft at https://w3c.github.io/webappsec-csp/#directive-prefetch-src
         Referrer, // will be removed
         ReportTo, // CSP3; in draft at http://w3c.github.io/webappsec-csp/#directive-report-to
         ReportUri, // CSP3 deprecates it
@@ -76,6 +77,8 @@ public class DirectiveNameToken extends Token {
                     return ObjectSrc;
                 case "plugin-types":
                     return PluginTypes;
+                case "prefetch-src":
+                    return PrefetchSrc;
                 case "referrer":
                     return Referrer;
                 case "report-to":

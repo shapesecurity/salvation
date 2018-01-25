@@ -47,7 +47,6 @@ import com.shapesecurity.salvation.directives.NavigateToDirective;
 import com.shapesecurity.salvation.directives.ObjectSrcDirective;
 import com.shapesecurity.salvation.directives.PluginTypesDirective;
 import com.shapesecurity.salvation.directives.PrefetchSrcDirective;
-
 import com.shapesecurity.salvation.directives.ReferrerDirective;
 import com.shapesecurity.salvation.directives.ReportToDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;

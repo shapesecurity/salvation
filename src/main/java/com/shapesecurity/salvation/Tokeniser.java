@@ -1,15 +1,22 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.data.Location;
-import com.shapesecurity.salvation.tokens.*;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.shapesecurity.salvation.data.Location;
+import com.shapesecurity.salvation.tokens.DirectiveNameToken;
+import com.shapesecurity.salvation.tokens.DirectiveSeparatorToken;
+import com.shapesecurity.salvation.tokens.DirectiveValueToken;
+import com.shapesecurity.salvation.tokens.PolicySeparatorToken;
+import com.shapesecurity.salvation.tokens.SubDirectiveValueToken;
+import com.shapesecurity.salvation.tokens.Token;
+import com.shapesecurity.salvation.tokens.UnknownToken;
 
 public class Tokeniser {
     private static final Pattern WSP = Pattern.compile("[ \t]+");
@@ -129,6 +136,7 @@ public class Tokeniser {
                     case ImgSrc:
                     case ManifestSrc:
                     case MediaSrc:
+                    case NavigationTo:
                     case ObjectSrc:
                     case ScriptSrc:
                     case StyleSrc:

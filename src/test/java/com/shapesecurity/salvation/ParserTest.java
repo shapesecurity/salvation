@@ -1,20 +1,30 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.data.Notice;
-import com.shapesecurity.salvation.data.Policy;
-import com.shapesecurity.salvation.data.URI;
-import com.shapesecurity.salvation.directives.*;
-import com.shapesecurity.salvation.tokens.DirectiveNameToken;
-import com.shapesecurity.salvation.tokens.DirectiveValueToken;
-import com.shapesecurity.salvation.tokens.Token;
-import org.junit.Test;
-
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import static org.junit.Assert.*;
+import com.shapesecurity.salvation.data.Notice;
+import com.shapesecurity.salvation.data.Policy;
+import com.shapesecurity.salvation.data.URI;
+import com.shapesecurity.salvation.directives.Directive;
+import com.shapesecurity.salvation.directives.FrameAncestorsDirective;
+import com.shapesecurity.salvation.directives.ImgSrcDirective;
+import com.shapesecurity.salvation.directives.PluginTypesDirective;
+import com.shapesecurity.salvation.directives.ReportUriDirective;
+import com.shapesecurity.salvation.directives.SandboxDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.tokens.DirectiveNameToken;
+import com.shapesecurity.salvation.tokens.DirectiveValueToken;
+import com.shapesecurity.salvation.tokens.Token;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class ParserTest extends CSPTest {
 
@@ -59,6 +69,10 @@ public class ParserTest extends CSPTest {
         assertEquals("directive count", 1, p.getDirectives().size());
 
         p = parse("frame-ancestors 'none'");
+        assertNotNull("policy should not be null", p);
+        assertEquals("directive count", 1, p.getDirectives().size());
+
+        p = parse("navigate-to a");
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, p.getDirectives().size());
 
@@ -203,6 +217,8 @@ public class ParserTest extends CSPTest {
         assertEquals("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
         p = parse("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
         assertEquals("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
+        p = parse("navigate-to a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
+        assertEquals("navigate-to a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
         p = parse("script-src 'nonce-1234'; style-src 'nonce-1234'");
         assertEquals("script-src 'nonce-1234'; style-src 'nonce-1234'", p.show());
         p = parse("script-src 'nonce-abcd'; style-src 'nonce-1234'");

@@ -1,5 +1,9 @@
 package com.shapesecurity.salvation;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.HostSource;
@@ -9,11 +13,6 @@ import com.shapesecurity.salvation.directives.DefaultSrcDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
-
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -34,6 +33,24 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals(
             "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b",
             p1.show());
+    }
+
+    @Test public void testUnionNonFetchDirectives() {
+        Policy p1, p2;
+
+        p1 = Parser.parse("form-action aaa; frame-ancestors bbb; navigate-to ccc", "https://origin1.com");
+        p2 = Parser.parse("form-action 'self'; frame-ancestors 'self'; navigate-to 'self'", "https://origin2.com");
+        p1.union(p2);
+        // TODO expand 'self' for ancestor-source-list
+        assertEquals("form-action aaa https://origin2.com; frame-ancestors bbb 'self'; navigate-to ccc https://origin2.com", p1.show());
+
+        p1 = Parser.parse("default-src a ", "https://origin1.com");
+        p2 = Parser
+                .parse("default-src; form-action a; frame-ancestors b; navigate-to c", "https://origin2.com");
+        p1.union(p2);
+        assertEquals(
+                "default-src a; form-action a; frame-ancestors b; navigate-to c",
+                p1.show());
     }
 
     @Test public void testUnionDefaultSrc() {
@@ -206,6 +223,55 @@ public class PolicyMergeTest extends CSPTest {
         } catch (IllegalArgumentException e1) {
             assertEquals("Cannot merge policies if either policy contains a report-to directive.", e1.getMessage());
         }
+    }
+
+    @Test public void testIntersectNonFetchDirectives() {
+        Policy p1, p2;
+
+        p1 = parse("form-action 'none';");
+        p2 = parse("form-action *;");
+        p1.intersect(p2);
+        assertEquals("form-action", p1.show());
+
+        p1 = parse("frame-ancestors 'none';");
+        p2 = parse("frame-ancestors *;");
+        p1.intersect(p2);
+        assertEquals("frame-ancestors", p1.show());
+
+        p1 = parse("navigate-to 'none';");
+        p2 = parse("navigate-to *;");
+        p1.intersect(p2);
+        assertEquals("navigate-to", p1.show());
+
+        p1 = parse("form-action a;");
+        p2 = parse("form-action a;");
+        p1.intersect(p2);
+        assertEquals("form-action a", p1.show());
+
+        p1 = parse("frame-ancestors a;");
+        p2 = parse("frame-ancestors a;");
+        p1.intersect(p2);
+        assertEquals("frame-ancestors a", p1.show());
+
+        p1 = parse("navigate-to a;");
+        p2 = parse("navigate-to a;");
+        p1.intersect(p2);
+        assertEquals("navigate-to a", p1.show());
+
+        p1 = parse("form-action a b c;");
+        p2 = parse("form-action a;");
+        p1.intersect(p2);
+        assertEquals("form-action a", p1.show());
+
+        p1 = parse("frame-ancestors a b c;");
+        p2 = parse("frame-ancestors a;");
+        p1.intersect(p2);
+        assertEquals("frame-ancestors a", p1.show());
+
+        p1 = parse("navigate-to a b c;");
+        p2 = parse("navigate-to a;");
+        p1.intersect(p2);
+        assertEquals("navigate-to a", p1.show());
     }
 
     @Test public void testNone() {

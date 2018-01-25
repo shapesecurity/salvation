@@ -1,14 +1,67 @@
 package com.shapesecurity.salvation;
 
-import com.shapesecurity.salvation.data.*;
-import com.shapesecurity.salvation.directiveValues.*;
-import com.shapesecurity.salvation.directives.*;
-import com.shapesecurity.salvation.tokens.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
-import java.util.regex.Matcher;
+
+import com.shapesecurity.salvation.data.Base64Value;
+import com.shapesecurity.salvation.data.Location;
+import com.shapesecurity.salvation.data.Notice;
+import com.shapesecurity.salvation.data.Origin;
+import com.shapesecurity.salvation.data.Policy;
+import com.shapesecurity.salvation.data.SchemeHostPortTriple;
+import com.shapesecurity.salvation.data.URI;
+import com.shapesecurity.salvation.directiveValues.AncestorSource;
+import com.shapesecurity.salvation.directiveValues.HashSource;
+import com.shapesecurity.salvation.directiveValues.HostSource;
+import com.shapesecurity.salvation.directiveValues.KeywordSource;
+import com.shapesecurity.salvation.directiveValues.MediaType;
+import com.shapesecurity.salvation.directiveValues.NonceSource;
+import com.shapesecurity.salvation.directiveValues.None;
+import com.shapesecurity.salvation.directiveValues.RFC7230Token;
+import com.shapesecurity.salvation.directiveValues.ReportToValue;
+import com.shapesecurity.salvation.directiveValues.SchemeSource;
+import com.shapesecurity.salvation.directiveValues.SourceExpression;
+import com.shapesecurity.salvation.directives.BaseUriDirective;
+import com.shapesecurity.salvation.directives.BlockAllMixedContentDirective;
+import com.shapesecurity.salvation.directives.ChildSrcDirective;
+import com.shapesecurity.salvation.directives.ConnectSrcDirective;
+import com.shapesecurity.salvation.directives.DefaultSrcDirective;
+import com.shapesecurity.salvation.directives.Directive;
+import com.shapesecurity.salvation.directives.DirectiveValue;
+import com.shapesecurity.salvation.directives.FontSrcDirective;
+import com.shapesecurity.salvation.directives.FormActionDirective;
+import com.shapesecurity.salvation.directives.FrameAncestorsDirective;
+import com.shapesecurity.salvation.directives.FrameSrcDirective;
+import com.shapesecurity.salvation.directives.ImgSrcDirective;
+import com.shapesecurity.salvation.directives.ManifestSrcDirective;
+import com.shapesecurity.salvation.directives.MediaSrcDirective;
+import com.shapesecurity.salvation.directives.NavigateToDirective;
+import com.shapesecurity.salvation.directives.ObjectSrcDirective;
+import com.shapesecurity.salvation.directives.PluginTypesDirective;
+import com.shapesecurity.salvation.directives.ReferrerDirective;
+import com.shapesecurity.salvation.directives.ReportToDirective;
+import com.shapesecurity.salvation.directives.ReportUriDirective;
+import com.shapesecurity.salvation.directives.RequireSriForDirective;
+import com.shapesecurity.salvation.directives.SandboxDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.UpgradeInsecureRequestsDirective;
+import com.shapesecurity.salvation.directives.WorkerSrcDirective;
+import com.shapesecurity.salvation.tokens.DirectiveNameToken;
+import com.shapesecurity.salvation.tokens.DirectiveSeparatorToken;
+import com.shapesecurity.salvation.tokens.DirectiveValueToken;
+import com.shapesecurity.salvation.tokens.PolicySeparatorToken;
+import com.shapesecurity.salvation.tokens.SubDirectiveValueToken;
+import com.shapesecurity.salvation.tokens.Token;
+import com.shapesecurity.salvation.tokens.UnknownToken;
 
 public class Parser {
 
@@ -52,7 +105,8 @@ public class Parser {
     private static final String unsafeInlineWarningMessage = "The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. " + explanation;
     private static final String strictDynamicWarningMessage = "The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. " + explanation;
     private static final String unsafeHashedWithoutHashWarningMessage = "The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.";
-    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE};
+    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE}
+
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
     protected int index = 0;
@@ -243,6 +297,9 @@ public class Parser {
                     break;
                 case MediaSrc:
                     result = new MediaSrcDirective(this.parseSourceList());
+                    break;
+                case NavigationTo:
+                    result = new NavigateToDirective(this.parseSourceList());
                     break;
                 case ObjectSrc:
                     result = new ObjectSrcDirective(this.parseSourceList());

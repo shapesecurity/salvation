@@ -40,6 +40,7 @@ import com.shapesecurity.salvation.directives.ManifestSrcDirective;
 import com.shapesecurity.salvation.directives.MediaSrcDirective;
 import com.shapesecurity.salvation.directives.ObjectSrcDirective;
 import com.shapesecurity.salvation.directives.PluginTypesDirective;
+import com.shapesecurity.salvation.directives.PrefetchSrcDirective;
 import com.shapesecurity.salvation.directives.ReferrerDirective;
 import com.shapesecurity.salvation.directives.ReportToDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
@@ -148,6 +149,9 @@ public class Policy implements Show {
             }
             if (!this.directives.containsKey(ManifestSrcDirective.class)) {
                 this.unionDirectivePrivate(new ManifestSrcDirective(defaultSources));
+            }
+            if (!this.directives.containsKey(PrefetchSrcDirective.class)) {
+                this.unionDirectivePrivate(new PrefetchSrcDirective(defaultSources));
             }
         }
 
@@ -515,6 +519,22 @@ public class Policy implements Show {
             return this.defaultsAllowSource(source);
         }
         return imgSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsPrefetchFromSource(@Nonnull URI source) {
+        PrefetchSrcDirective prefetchSrcDirective = this.getDirectiveByType(PrefetchSrcDirective.class);
+        if (prefetchSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return prefetchSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsPrefetchFromSource(@Nonnull GUID source) {
+        PrefetchSrcDirective PrefetchSrcDirective = this.getDirectiveByType(PrefetchSrcDirective.class);
+        if (PrefetchSrcDirective == null) {
+            return this.defaultsAllowSource(source);
+        }
+        return PrefetchSrcDirective.matchesSource(this.origin, source);
     }
 
     public boolean allowsScriptFromSource(@Nonnull URI source) {

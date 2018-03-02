@@ -46,6 +46,8 @@ import com.shapesecurity.salvation.directives.MediaSrcDirective;
 import com.shapesecurity.salvation.directives.NavigateToDirective;
 import com.shapesecurity.salvation.directives.ObjectSrcDirective;
 import com.shapesecurity.salvation.directives.PluginTypesDirective;
+import com.shapesecurity.salvation.directives.PrefetchSrcDirective;
+
 import com.shapesecurity.salvation.directives.ReferrerDirective;
 import com.shapesecurity.salvation.directives.ReportToDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
@@ -313,6 +315,9 @@ public class Parser {
                         this.warn(token,"Media types can only be matched literally. Make sure using `*` is not an oversight.");
                     }
                     result = new PluginTypesDirective(mediaTypes);
+                    break;
+                case PrefetchSrc:
+                    result = new PrefetchSrcDirective(this.parseSourceList());
                     break;
                 case Referrer:
                     this.warn(token,

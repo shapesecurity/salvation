@@ -1,5 +1,8 @@
 package com.shapesecurity.salvation;
 
+import java.util.Collections;
+import java.util.stream.Stream;
+
 import com.shapesecurity.salvation.data.Base64Value;
 import com.shapesecurity.salvation.data.GUID;
 import com.shapesecurity.salvation.data.Policy;
@@ -10,12 +13,20 @@ import com.shapesecurity.salvation.directiveValues.KeywordSource;
 import com.shapesecurity.salvation.directiveValues.MediaType;
 import com.shapesecurity.salvation.directiveValues.NonceSource;
 import com.shapesecurity.salvation.directiveValues.SourceExpression;
-import com.shapesecurity.salvation.directives.*;
+import com.shapesecurity.salvation.directives.ChildSrcDirective;
+import com.shapesecurity.salvation.directives.ConnectSrcDirective;
+import com.shapesecurity.salvation.directives.DefaultSrcDirective;
+import com.shapesecurity.salvation.directives.DirectiveValue;
+import com.shapesecurity.salvation.directives.FontSrcDirective;
+import com.shapesecurity.salvation.directives.FrameSrcDirective;
+import com.shapesecurity.salvation.directives.ImgSrcDirective;
+import com.shapesecurity.salvation.directives.MediaSrcDirective;
+import com.shapesecurity.salvation.directives.ObjectSrcDirective;
+import com.shapesecurity.salvation.directives.ReportUriDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import org.junit.Test;
-
-import java.util.Collections;
-import java.util.stream.Stream;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -151,6 +162,12 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse("resource is not allowed", p.allowsManifestFromSource(URI.parse("https://manifest.com:555")));
         assertFalse("resource is not allowed", p.allowsManifestFromSource(URI.parse("http://www.def.am:555")));
         assertFalse("resource is not allowed", p.allowsManifestFromSource(URI.parse("https://someco.net")));
+
+        p = Parser.parse("prefetch-src https://prefetchy.com http://prefetchy.org", URI.parse("https://abc.com"));
+        assertTrue("resource is allowed", p.allowsPrefetchFromSource(URI.parse("https://prefetchy.com")));
+        assertFalse("resource is not allowed", p.allowsPrefetchFromSource(URI.parse("https://prefetchy.com:555")));
+        assertFalse("resource is not allowed", p.allowsPrefetchFromSource(URI.parse("http://www.def.am:555")));
+        assertFalse("resource is not allowed", p.allowsPrefetchFromSource(URI.parse("https://someco.net")));
         
     }
 

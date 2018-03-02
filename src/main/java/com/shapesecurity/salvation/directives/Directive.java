@@ -70,6 +70,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(WorkerSrcDirective.class);
         register(BlockAllMixedContentDirective.class);
         register(BaseUriDirective.class);
+        register(PrefetchSrcDirective.class);
         FETCH_DIRECIVE_COUNT = fetchDirectives.size();
         NESTED_CONTEXT_DIRECTIVE_COUNT = nestedContextDirectives.size();
     }

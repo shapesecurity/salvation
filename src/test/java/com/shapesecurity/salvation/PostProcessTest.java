@@ -39,15 +39,15 @@ public class PostProcessTest extends CSPTest {
     }
 
     @Test public void testFetchDirectiveReduce() {
-        Policy p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
+        Policy p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a; prefetch-src a ");
         p.postProcessOptimisation();
         assertEquals("default-src a", p.show());
 
-        p = parse("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
+        p = parse("form-action a; script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a; prefetch-src a ");
         p.postProcessOptimisation();
         assertEquals("form-action a; default-src a", p.show());
 
-        p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; base-uri a; font-src a; media-src a; object-src a; manifest-src a ");
+        p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; base-uri a; font-src a; media-src a; object-src a; manifest-src a; prefetch-src a ");
         p.postProcessOptimisation();
         assertEquals("base-uri a; default-src a", p.show());
     }

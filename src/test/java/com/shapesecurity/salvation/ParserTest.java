@@ -120,6 +120,14 @@ public class ParserTest extends CSPTest {
         assertNotNull("policy should not be null", p);
         assertEquals("directive count", 1, p.getDirectives().size());
 
+        p = parse("prefetch-src http://*.example.com:*");
+        assertNotNull("policy should not be null", p);
+        assertEquals("directive count", 1, p.getDirectives().size());
+
+        p = parse("prefetch-src samba://*.example.com");
+        assertNotNull("policy should not be null", p);
+        assertEquals("directive count", 1, p.getDirectives().size());
+
         p = parseWithNotices("abc", notices);
         assertEquals(0, p.getDirectives().size());
         assertEquals(1, notices.size());

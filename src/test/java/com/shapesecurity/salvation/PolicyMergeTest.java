@@ -1,5 +1,9 @@
 package com.shapesecurity.salvation;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.shapesecurity.salvation.data.Policy;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.directiveValues.HostSource;
@@ -9,11 +13,6 @@ import com.shapesecurity.salvation.directives.DefaultSrcDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
-
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -29,10 +28,10 @@ public class PolicyMergeTest extends CSPTest {
 
         p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a; ", "https://origin1.com");
         p2 = Parser
-            .parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b; manifest-src b;", "https://origin2.com");
+            .parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b; manifest-src b; prefetch-src b;", "https://origin2.com");
         p1.union(p2);
         assertEquals(
-            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b",
+            "connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b; prefetch-src d b",
             p1.show());
     }
 
@@ -147,6 +146,16 @@ public class PolicyMergeTest extends CSPTest {
         p2 = parse("default-src *; script-src *; style-src *:80");
         p1.intersect(p2);
         assertEquals("default-src 'self' 'strict-dynamic'; script-src a; style-src", p1.show());
+
+        p1 = parse("prefetch-src a");
+        p2 = parse("script-src a; style-src b");
+        p1.intersect(p2);
+        assertEquals("prefetch-src a; script-src a; style-src b", p1.show());
+
+        p1 = parse("prefetch-src a");
+        p2 = parse("prefetch-src a; style-src b");
+        p1.intersect(p2);
+        assertEquals("prefetch-src a; style-src b", p1.show());
 
         p1 = ParserWithLocation.parse("script-src a", URI.parse("https://origin"));
         p2 = parse("script-src b; report-uri /x");

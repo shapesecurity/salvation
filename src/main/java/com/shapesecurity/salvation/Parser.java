@@ -107,7 +107,7 @@ public class Parser {
     private static final String unsafeInlineWarningMessage = "The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. " + explanation;
     private static final String strictDynamicWarningMessage = "The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. " + explanation;
     private static final String unsafeHashedWithoutHashWarningMessage = "The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.";
-    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE}
+    private enum SeenStates {SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE, SEEN_UNSAFE_ALLOW_REDIRECTS}
 
     @Nonnull protected final Token[] tokens;
     @Nonnull private final Origin origin;
@@ -455,6 +455,8 @@ public class Parser {
                     seenStates.add(SeenStates.SEEN_UNSAFE_HASHED_ATTR);
                 } else if (se == KeywordSource.ReportSample) {
                     seenStates.add(SeenStates.SEEN_REPORT_SAMPLE);
+                } else if (se == KeywordSource.UnsafeAllowRedirects) {
+                    seenStates.add(SeenStates.SEEN_UNSAFE_ALLOW_REDIRECTS);
                 }
                 if (!sourceExpressions.add(se)) {
                     this.warn(this.tokens[this.index - 1],"Source list contains duplicate source expression \"" + se.show() + "\". All but the first instance will be ignored.");
@@ -509,6 +511,8 @@ public class Parser {
                 return KeywordSource.UnsafeHashedAttributes;
             case "'report-sample'":
                 return KeywordSource.ReportSample;
+            case "'unsafe-allow-redirects'":
+                return KeywordSource.UnsafeAllowRedirects;
             default:
                 checkForUnquotedKeyword(token);
                 if (token.value.startsWith("'nonce-")) {

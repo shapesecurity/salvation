@@ -136,7 +136,7 @@ public class Tokeniser {
                     case ImgSrc:
                     case ManifestSrc:
                     case MediaSrc:
-                    case NavigationTo:
+                    case NavigateTo:
                     case ObjectSrc:
                     case PrefetchSrc:
                     case ScriptSrc:

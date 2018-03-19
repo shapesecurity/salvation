@@ -300,7 +300,7 @@ public class Parser {
                 case MediaSrc:
                     result = new MediaSrcDirective(this.parseSourceList());
                     break;
-                case NavigationTo:
+                case NavigateTo:
                     result = new NavigateToDirective(this.parseSourceList());
                     break;
                 case ObjectSrc:

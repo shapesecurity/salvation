@@ -529,4 +529,65 @@ public class PolicyMergeTest extends CSPTest {
         assertEquals("default-src a; frame-src a b; worker-src a b", p.show());
     }
 
+    @Test public void testUnionNone() {
+        Policy p = parse("frame-ancestors 'none'");
+        Policy q = parse("frame-ancestors 'self'");
+        p.union(q);
+        assertEquals("frame-ancestors 'self'", p.show());
+
+        p = parse("frame-ancestors 'none' 'none'");
+        q = parse("frame-ancestors 'self'");
+        p.union(q);
+        assertEquals("frame-ancestors 'self'", p.show());
+
+        p = parse("frame-ancestors 'self'");
+        q = parse("frame-ancestors 'none'");
+        p.union(q);
+        assertEquals("frame-ancestors 'self'", p.show());
+
+        p = parse("frame-ancestors a b c");
+        q = parse("frame-ancestors 'none'");
+        p.union(q);
+        assertEquals("frame-ancestors a b c", p.show());
+
+        p = parse("frame-ancestors 'none'");
+        q = parse("frame-ancestors 'none'");
+        p.union(q);
+        assertEquals("frame-ancestors", p.show());
+
+        p = parse("frame-ancestors *");
+        q = parse("frame-ancestors 'none'");
+        p.union(q);
+        assertEquals("frame-ancestors *", p.show());
+
+        p = parse("script-src 'none'");
+        q = parse("script-src 'self'");
+        p.union(q);
+        assertEquals("script-src 'self'", p.show());
+
+        p = parse("script-src 'none' 'none'");
+        q = parse("script-src 'self'");
+        p.union(q);
+        assertEquals("script-src 'self'", p.show());
+
+        p = parse("script-src 'self'");
+        q = parse("script-src 'none'");
+        p.union(q);
+        assertEquals("script-src 'self'", p.show());
+
+        p = parse("script-src a b c");
+        q = parse("script-src 'none'");
+        p.union(q);
+        assertEquals("script-src a b c", p.show());
+
+        p = parse("script-src 'none'");
+        q = parse("script-src 'none'");
+        p.union(q);
+        assertEquals("script-src", p.show());
+
+        p = parse("script-src *");
+        q = parse("script-src 'none'");
+        p.union(q);
+        assertEquals("script-src *", p.show());
+    }
 }

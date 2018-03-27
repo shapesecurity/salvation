@@ -29,7 +29,7 @@ public class DirectiveNameToken extends Token {
         ImgSrc,
         ManifestSrc, // CSP3; in draft at http://w3c.github.io/webappsec-csp/#directive-manifest-src as of 2014-10-26
         MediaSrc,
-        NavigateTo, // CSP3; WIP at https://w3c.github.io/webappsec-csp/#directive-navigate-to as of 2018-1-24
+        NavigateTo,
         ObjectSrc,
         PluginTypes,
         PrefetchSrc, // CSP3; in editor's draft at https://w3c.github.io/webappsec-csp/#directive-prefetch-src

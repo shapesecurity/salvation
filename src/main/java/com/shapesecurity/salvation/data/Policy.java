@@ -26,28 +26,7 @@ import com.shapesecurity.salvation.directiveValues.NonceSource;
 import com.shapesecurity.salvation.directiveValues.None;
 import com.shapesecurity.salvation.directiveValues.SchemeSource;
 import com.shapesecurity.salvation.directiveValues.SourceExpression;
-import com.shapesecurity.salvation.directives.ChildSrcDirective;
-import com.shapesecurity.salvation.directives.ConnectSrcDirective;
-import com.shapesecurity.salvation.directives.DefaultSrcDirective;
-import com.shapesecurity.salvation.directives.Directive;
-import com.shapesecurity.salvation.directives.DirectiveValue;
-import com.shapesecurity.salvation.directives.FetchDirective;
-import com.shapesecurity.salvation.directives.FontSrcDirective;
-import com.shapesecurity.salvation.directives.FrameAncestorsDirective;
-import com.shapesecurity.salvation.directives.FrameSrcDirective;
-import com.shapesecurity.salvation.directives.ImgSrcDirective;
-import com.shapesecurity.salvation.directives.ManifestSrcDirective;
-import com.shapesecurity.salvation.directives.MediaSrcDirective;
-import com.shapesecurity.salvation.directives.ObjectSrcDirective;
-import com.shapesecurity.salvation.directives.PluginTypesDirective;
-import com.shapesecurity.salvation.directives.PrefetchSrcDirective;
-import com.shapesecurity.salvation.directives.ReferrerDirective;
-import com.shapesecurity.salvation.directives.ReportToDirective;
-import com.shapesecurity.salvation.directives.ReportUriDirective;
-import com.shapesecurity.salvation.directives.ScriptSrcDirective;
-import com.shapesecurity.salvation.directives.SourceListDirective;
-import com.shapesecurity.salvation.directives.StyleSrcDirective;
-import com.shapesecurity.salvation.directives.WorkerSrcDirective;
+import com.shapesecurity.salvation.directives.*;
 import com.shapesecurity.salvation.interfaces.Show;
 
 public class Policy implements Show {
@@ -813,6 +792,38 @@ public class Policy implements Show {
             return this.defaultsAllowSource(source);
         }
         return manifestSrcDirective.matchesSource(this.origin, source);
+    }
+
+    public boolean allowsNavigation(@Nonnull URI destination) {
+        NavigateToDirective navigateToDirective = this.getDirectiveByType(NavigateToDirective.class);
+        if (navigateToDirective == null) {
+            return true;
+        }
+        return navigateToDirective.matchesSource(origin, destination);
+    }
+
+    public boolean allowsNavigation(@Nonnull GUID destination) {
+        NavigateToDirective navigateToDirective = this.getDirectiveByType(NavigateToDirective.class);
+        if (navigateToDirective == null) {
+            return true;
+        }
+        return navigateToDirective.matchesSource(origin, destination);
+    }
+
+    public boolean allowsFormAction(@Nonnull URI destination) {
+        FormActionDirective formActionDirective = this.getDirectiveByType(FormActionDirective.class);
+        if (formActionDirective == null) {
+            return this.allowsNavigation(destination);
+        }
+        return formActionDirective.matchesSource(this.origin, destination);
+    }
+
+    public boolean allowsFormAction(@Nonnull GUID destination) {
+        FormActionDirective formActionDirective = this.getDirectiveByType(FormActionDirective.class);
+        if (formActionDirective == null) {
+            return this.allowsNavigation(destination);
+        }
+        return formActionDirective.matchesSource(this.origin, destination);
     }
     
     public boolean hasSomeEffect() {

@@ -1290,6 +1290,10 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" child-src blob:", "http://example.com");
+        assertTrue(p.allowsChildFromSource(new GUID("blob:")));
+        assertFalse(p.allowsChildFromSource(new GUID("data:")));
     }
 
     @Test public void testAllowsWorker() {
@@ -1316,5 +1320,48 @@ public class PolicyQueryingTest extends CSPTest {
         assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+
+        p = Parser.parse(" worker-src blob:", "http://example.com");
+        assertTrue(p.allowsWorkerFromSource(new GUID("blob:")));
+        assertFalse(p.allowsWorkerFromSource(new GUID("data:")));
+    }
+
+    @Test public void testAllowNavigationTo() {
+        Policy p = Parser.parse("navigate-to blob:", "http://example.com");
+        assertTrue(p.allowsNavigation(new GUID("blob:")));
+        assertFalse(p.allowsNavigation(new GUID("data:")));
+        assertTrue(p.allowsFormAction(new GUID("blob:")));
+        assertFalse(p.allowsFormAction(new GUID("data:")));
+
+        p = Parser.parse("navigate-to blob:; form-action data:", "http://example.com");
+        assertTrue(p.allowsNavigation(new GUID("blob:")));
+        assertFalse(p.allowsNavigation(new GUID("data:")));
+        assertTrue(p.allowsFormAction(new GUID("data:")));
+        assertFalse(p.allowsFormAction(new GUID("blob:")));
+
+        p = Parser.parse("form-action data:", "http://example.com");
+        assertTrue(p.allowsNavigation(new GUID("blob:")));
+        assertTrue(p.allowsNavigation(new GUID("data:")));
+        assertTrue(p.allowsFormAction(new GUID("data:")));
+        assertFalse(p.allowsFormAction(new GUID("blob:")));
+
+
+        p = Parser.parse("navigate-to a", "http://example.com");
+        assertTrue(p.allowsNavigation(URI.parse("http://a")));
+        assertFalse(p.allowsNavigation(URI.parse("http://b")));
+        assertTrue(p.allowsFormAction(URI.parse("http://a")));
+        assertFalse(p.allowsFormAction(URI.parse("http://b")));
+
+        p = Parser.parse("navigate-to a; form-action b", "http://example.com");
+        assertTrue(p.allowsNavigation(URI.parse("http://a")));
+        assertFalse(p.allowsNavigation(URI.parse("http://b")));
+        assertTrue(p.allowsFormAction(URI.parse("http://b")));
+        assertFalse(p.allowsFormAction(URI.parse("http://a")));
+
+        p = Parser.parse("form-action a", "http://example.com");
+        assertTrue(p.allowsNavigation(URI.parse("http://a")));
+        assertTrue(p.allowsNavigation(URI.parse("http://b")));
+        assertTrue(p.allowsFormAction(URI.parse("http://a")));
+        assertFalse(p.allowsFormAction(URI.parse("http://b")));
     }
 }

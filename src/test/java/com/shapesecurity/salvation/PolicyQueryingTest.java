@@ -1248,13 +1248,13 @@ public class PolicyQueryingTest extends CSPTest {
         Policy p;
 
         p = Parser.parse("", "http://example.com");
-        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsScriptFromSource(URI.parse("wss://example.com")));
-        assertFalse(p.allowsScriptWithNonce(new Base64Value("1234")));
-        assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("wss://example.com")));
+        assertTrue(p.allowsScriptWithNonce(new Base64Value("1234")));
+        assertTrue(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
             "vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
-        assertFalse(p.allowsScriptFromSource(new GUID("custom.scheme:")));
-        assertFalse(p.allowsScriptFromSource(new GUID("data:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("custom.scheme:")));
+        assertTrue(p.allowsScriptFromSource(new GUID("data:")));
     }
 
     @Test public void testHasSomeEffect() {
@@ -1288,8 +1288,8 @@ public class PolicyQueryingTest extends CSPTest {
         p = Parser.parse(" child-src 'self'", "http://example.com");
         assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsWorkerFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
         p = Parser.parse(" child-src blob:", "http://example.com");
         assertTrue(p.allowsChildFromSource(new GUID("blob:")));
@@ -1304,8 +1304,8 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
         p = Parser.parse("script-src 'none'; worker-src 'self'", "http://example.com");
-        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertFalse(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
@@ -1316,8 +1316,8 @@ public class PolicyQueryingTest extends CSPTest {
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
 
         p = Parser.parse(" script-src 'self'", "http://example.com");
-        assertFalse(p.allowsChildFromSource(URI.parse("http://example.com")));
-        assertFalse(p.allowsFrameFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsChildFromSource(URI.parse("http://example.com")));
+        assertTrue(p.allowsFrameFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsWorkerFromSource(URI.parse("http://example.com")));
         assertTrue(p.allowsScriptFromSource(URI.parse("http://example.com")));
 

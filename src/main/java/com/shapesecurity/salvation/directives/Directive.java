@@ -65,6 +65,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
         register(SandboxDirective.class);
         register(PluginTypesDirective.class);
         register(FormActionDirective.class);
+        register(NavigateToDirective.class);
         register(UpgradeInsecureRequestsDirective.class);
         register(WorkerSrcDirective.class);
         register(BlockAllMixedContentDirective.class);

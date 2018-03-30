@@ -395,7 +395,7 @@ public class Policy implements Show {
             return false;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return false;
+            return true;
         }
         return defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
@@ -405,7 +405,7 @@ public class Policy implements Show {
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return false;
+            return true;
         }
         return defaultSrcDirective.matchesHash(algorithm, hashValue);
     }
@@ -415,7 +415,7 @@ public class Policy implements Show {
             return true;
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return false;
+            return true;
         }
         return defaultSrcDirective.matchesNonce(nonce);
     }
@@ -423,7 +423,7 @@ public class Policy implements Show {
     private boolean defaultsAllowSource(@Nonnull URI source) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return false;
+            return true;
         }
         return defaultSrcDirective.matchesSource(this.origin, source);
     }
@@ -431,7 +431,7 @@ public class Policy implements Show {
     private boolean defaultsAllowSource(@Nonnull GUID source) {
         DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
         if (defaultSrcDirective == null) {
-            return false;
+            return true;
         }
         return defaultSrcDirective.matchesSource(this.origin, source);
     }

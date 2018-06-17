@@ -6,13 +6,16 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class SandboxDirective extends Directive<RFC7230Token> {
-    @Nonnull private static final String NAME = "sandbox";
+	@Nonnull
+	private static final String NAME = "sandbox";
 
-    public SandboxDirective(@Nonnull Set<RFC7230Token> values) {
-        super(SandboxDirective.NAME, values);
-    }
+	public SandboxDirective(@Nonnull Set<RFC7230Token> values) {
+		super(SandboxDirective.NAME, values);
+	}
 
-    @Nonnull @Override public Directive<RFC7230Token> construct(Set<RFC7230Token> newValues) {
-        return new SandboxDirective(newValues);
-    }
+	@Nonnull
+	@Override
+	public Directive<RFC7230Token> construct(Set<RFC7230Token> newValues) {
+		return new SandboxDirective(newValues);
+	}
 }

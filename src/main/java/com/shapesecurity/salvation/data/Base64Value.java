@@ -9,75 +9,81 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class Base64Value implements Show {
-    @Nonnull public final String value;
+	@Nonnull
+	public final String value;
 
-    @Nonnull private final byte[] decoded;
+	@Nonnull
+	private final byte[] decoded;
 
-    public Base64Value(@Nonnull String value) {
-        Base64Value.validate(value);
-        this.value = value;
-        this.decoded = Base64.getDecoder().decode(value);
-    }
+	public Base64Value(@Nonnull String value) {
+		Base64Value.validate(value);
+		this.value = value;
+		this.decoded = Base64.getDecoder().decode(value);
+	}
 
-    public static void validate(String value) throws IllegalArgumentException {
-        byte[] chars = value.getBytes(StandardCharsets.US_ASCII);
+	public static void validate(String value) throws IllegalArgumentException {
+		byte[] chars = value.getBytes(StandardCharsets.US_ASCII);
 
-        if (chars.length % 4 != 0) {
-            throw new IllegalArgumentException("Invalid base64-value (should be multiple of 4 bytes: " + chars.length
-                + ").");
-        }
+		if (chars.length % 4 != 0) {
+			throw new IllegalArgumentException("Invalid base64-value (should be multiple of 4 bytes: " + chars.length
+					+ ").");
+		}
 
-        int i;
-        for (i = 0; i < chars.length; i++) {
-            if (chars[i] == '=') {
-                break;
-            }
-            if (!isBase64Char(chars[i])) {
-                throw new IllegalArgumentException(
-                    "Invalid base64-value (characters are not in the base64-value grammar).");
-            }
-        }
-        if (i < chars.length - 2) {
-            throw new IllegalArgumentException(
-                "Invalid base64-value (bad padding).");
-        }
-        for (; i < chars.length; i++) {
-            if (chars[i] != '=') {
-                throw new IllegalArgumentException(
-                    "Invalid base64-value padding (illegal characters).");
-            }
-        }
+		int i;
+		for (i = 0; i < chars.length; i++) {
+			if (chars[i] == '=') {
+				break;
+			}
+			if (!isBase64Char(chars[i])) {
+				throw new IllegalArgumentException(
+						"Invalid base64-value (characters are not in the base64-value grammar).");
+			}
+		}
+		if (i < chars.length - 2) {
+			throw new IllegalArgumentException(
+					"Invalid base64-value (bad padding).");
+		}
+		for (; i < chars.length; i++) {
+			if (chars[i] != '=') {
+				throw new IllegalArgumentException(
+						"Invalid base64-value padding (illegal characters).");
+			}
+		}
 
-        if (chars.length < 4) {
-            throw new IllegalArgumentException("Invalid base64-value (too short: " + chars.length + ").");
-        }
-    }
+		if (chars.length < 4) {
+			throw new IllegalArgumentException("Invalid base64-value (too short: " + chars.length + ").");
+		}
+	}
 
-    public static boolean isBase64Char(byte ch) {
-        return '0' <= ch && ch <= '9' ||
-            'A' <= ch && ch <= 'Z' ||
-            'a' <= ch && ch <= 'z' ||
-            ch == '+' || ch == '/' ||
-            ch == '-' || ch == '_';
-    }
+	public static boolean isBase64Char(byte ch) {
+		return '0' <= ch && ch <= '9' ||
+				'A' <= ch && ch <= 'Z' ||
+				'a' <= ch && ch <= 'z' ||
+				ch == '+' || ch == '/' ||
+				ch == '-' || ch == '_';
+	}
 
-    public int size() {
-        return this.decoded.length;
-    }
+	public int size() {
+		return this.decoded.length;
+	}
 
-    public ByteBuffer decodedBytes() {
-        return ByteBuffer.wrap(this.decoded).asReadOnlyBuffer();
-    }
+	public ByteBuffer decodedBytes() {
+		return ByteBuffer.wrap(this.decoded).asReadOnlyBuffer();
+	}
 
-    @Override public boolean equals(@Nullable Object other) {
-        return !(other == null || !(other instanceof Base64Value)) && this.value.equals(((Base64Value) other).value);
-    }
+	@Override
+	public boolean equals(@Nullable Object other) {
+		return !(other == null || !(other instanceof Base64Value)) && this.value.equals(((Base64Value) other).value);
+	}
 
-    @Override public int hashCode() {
-        return this.value.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return this.value.hashCode();
+	}
 
-    @Nonnull @Override public String show() {
-        return this.value;
-    }
+	@Nonnull
+	@Override
+	public String show() {
+		return this.value;
+	}
 }

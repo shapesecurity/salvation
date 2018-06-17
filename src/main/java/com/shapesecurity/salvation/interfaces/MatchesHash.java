@@ -6,5 +6,5 @@ import com.shapesecurity.salvation.directiveValues.HashSource.HashAlgorithm;
 import javax.annotation.Nonnull;
 
 public interface MatchesHash {
-    boolean matchesHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue);
+	boolean matchesHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue);
 }

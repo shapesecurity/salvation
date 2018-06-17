@@ -6,13 +6,16 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class ManifestSrcDirective extends FetchDirective {
-    @Nonnull private static final String name = "manifest-src";
+	@Nonnull
+	private static final String name = "manifest-src";
 
-    public ManifestSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
-        super(ManifestSrcDirective.name, sourceExpressions);
-    }
+	public ManifestSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
+		super(ManifestSrcDirective.name, sourceExpressions);
+	}
 
-    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
-        return new ManifestSrcDirective(newValues);
-    }
+	@Nonnull
+	@Override
+	public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+		return new ManifestSrcDirective(newValues);
+	}
 }

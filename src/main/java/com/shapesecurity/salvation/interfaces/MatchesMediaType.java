@@ -5,5 +5,5 @@ import com.shapesecurity.salvation.directiveValues.MediaType;
 import javax.annotation.Nonnull;
 
 public interface MatchesMediaType {
-    boolean matchesMediaType(@Nonnull MediaType mediaType);
+	boolean matchesMediaType(@Nonnull MediaType mediaType);
 }

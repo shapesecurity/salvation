@@ -7,7 +7,7 @@ import com.shapesecurity.salvation.data.URI;
 import javax.annotation.Nonnull;
 
 public interface MatchesSource {
-    boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource);
+	boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource);
 
-    boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource);
+	boolean matchesSource(@Nonnull Origin origin, @Nonnull GUID resource);
 }

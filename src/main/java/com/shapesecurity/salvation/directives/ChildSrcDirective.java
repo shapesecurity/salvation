@@ -6,13 +6,16 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class ChildSrcDirective extends FetchDirective {
-    @Nonnull private static final String NAME = "child-src";
+	@Nonnull
+	private static final String NAME = "child-src";
 
-    public ChildSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
-        super(ChildSrcDirective.NAME, sourceExpressions);
-    }
+	public ChildSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
+		super(ChildSrcDirective.NAME, sourceExpressions);
+	}
 
-    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
-        return new ChildSrcDirective(newValues);
-    }
+	@Nonnull
+	@Override
+	public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+		return new ChildSrcDirective(newValues);
+	}
 }

@@ -6,13 +6,16 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class StyleSrcDirective extends FetchDirective {
-    @Nonnull private static final String NAME = "style-src";
+	@Nonnull
+	private static final String NAME = "style-src";
 
-    public StyleSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
-        super(StyleSrcDirective.NAME, sourceExpressions);
-    }
+	public StyleSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
+		super(StyleSrcDirective.NAME, sourceExpressions);
+	}
 
-    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
-        return new StyleSrcDirective(newValues);
-    }
+	@Nonnull
+	@Override
+	public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+		return new StyleSrcDirective(newValues);
+	}
 }

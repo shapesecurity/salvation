@@ -3,11 +3,13 @@ package com.shapesecurity.salvation.tokens;
 import javax.annotation.Nonnull;
 
 public class PolicySeparatorToken extends Token {
-    public PolicySeparatorToken(@Nonnull String value) {
-        super(value);
-    }
+	public PolicySeparatorToken(@Nonnull String value) {
+		super(value);
+	}
 
-    @Nonnull @Override public String toJSON() {
-        return super.toJSON("PolicySeparator");
-    }
+	@Nonnull
+	@Override
+	public String toJSON() {
+		return super.toJSON("PolicySeparator");
+	}
 }

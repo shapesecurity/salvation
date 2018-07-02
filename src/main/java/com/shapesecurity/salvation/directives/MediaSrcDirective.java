@@ -6,13 +6,16 @@ import javax.annotation.Nonnull;
 import java.util.Set;
 
 public class MediaSrcDirective extends FetchDirective {
-    @Nonnull private static final String name = "media-src";
+	@Nonnull
+	private static final String name = "media-src";
 
-    public MediaSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
-        super(MediaSrcDirective.name, sourceExpressions);
-    }
+	public MediaSrcDirective(@Nonnull Set<SourceExpression> sourceExpressions) {
+		super(MediaSrcDirective.name, sourceExpressions);
+	}
 
-    @Nonnull @Override public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
-        return new MediaSrcDirective(newValues);
-    }
+	@Nonnull
+	@Override
+	public Directive<SourceExpression> construct(Set<SourceExpression> newValues) {
+		return new MediaSrcDirective(newValues);
+	}
 }

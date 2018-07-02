@@ -7,7 +7,7 @@ import java.util.Set;
 
 public abstract class FetchDirective extends SourceListDirective {
 
-    public FetchDirective(@Nonnull String name, @Nonnull Set<SourceExpression> sourceExpressions) {
-        super(name, sourceExpressions);
-    }
+	public FetchDirective(@Nonnull String name, @Nonnull Set<SourceExpression> sourceExpressions) {
+		super(name, sourceExpressions);
+	}
 }

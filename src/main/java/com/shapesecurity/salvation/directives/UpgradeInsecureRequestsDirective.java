@@ -5,13 +5,16 @@ import java.util.Collections;
 import java.util.Set;
 
 public class UpgradeInsecureRequestsDirective extends Directive<DirectiveValue> {
-    @Nonnull private static final String NAME = "upgrade-insecure-requests";
+	@Nonnull
+	private static final String NAME = "upgrade-insecure-requests";
 
-    public UpgradeInsecureRequestsDirective() {
-        super(UpgradeInsecureRequestsDirective.NAME, Collections.emptySet());
-    }
+	public UpgradeInsecureRequestsDirective() {
+		super(UpgradeInsecureRequestsDirective.NAME, Collections.emptySet());
+	}
 
-    @Nonnull @Override public Directive<DirectiveValue> construct(Set<DirectiveValue> newValues) {
-        return new UpgradeInsecureRequestsDirective();
-    }
+	@Nonnull
+	@Override
+	public Directive<DirectiveValue> construct(Set<DirectiveValue> newValues) {
+		return new UpgradeInsecureRequestsDirective();
+	}
 }

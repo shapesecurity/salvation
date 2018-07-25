@@ -21,7 +21,7 @@ public class Base64ValueTest {
 				notices.get(0).show());
 
 		notices.clear();
-		Parser.parse("script-src 'self' 'sha256-K7gNU3sdo-OL0wNhqoVWhr3g6s1xYv72ol_pe_Unols=' https://example.com",
+		Parser.parse("script-src 'self' 'sha256-YWFmMzU3YWU0ZDYzM2IzYWEzZTIzOTg2Yjk1ZGFjYWQ2Yzg_ZDdhZDM4MTAyZWUwMjNmZjk5M2IwNW-zN2RkOA==' https://example.com",
 				"https://origin", notices);
 		assertEquals(1, notices.size());
 		assertEquals(

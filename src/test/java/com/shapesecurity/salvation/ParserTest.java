@@ -232,8 +232,8 @@ public class ParserTest extends CSPTest {
 		assertEquals("optimisation with mixed schemes", "script-src custom: blob: *", parseAndShow("script-src 'self' * custom: ftp: blob:"));
 		assertEquals("optimisation", "script-src 'unsafe-inline' *", parseAndShow("script-src example.com * 'unsafe-inline'"));
 		assertEquals("optimisation", "script-src 'nonce-123' *", parseAndShow("script-src example.com * 'unsafe-inline' 'nonce-123'"));
-		assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' *", parseAndShow("script-src example.com * 'unsafe-inline' 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='"));
-		assertEquals("optimisation", "script-src 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' *", parseAndShow("script-src example.com * 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=' 'nonce-123' 'unsafe-inline'"));
+		assertEquals("optimisation", "script-src 'sha256-OWY4NmQwODE4ODRjN2Q2NTlhMmZlYWEwYzU1YWQwMTVhM2JmNGYxYjJiMGI4MjJjZDE1ZDZjMTViMGYwMGEwOA==' *", parseAndShow("script-src example.com * 'unsafe-inline' 'sha256-OWY4NmQwODE4ODRjN2Q2NTlhMmZlYWEwYzU1YWQwMTVhM2JmNGYxYjJiMGI4MjJjZDE1ZDZjMTViMGYwMGEwOA=='"));
+		assertEquals("optimisation", "script-src 'sha256-OWY4NmQwODE4ODRjN2Q2NTlhMmZlYWEwYzU1YWQwMTVhM2JmNGYxYjJiMGI4MjJjZDE1ZDZjMTViMGYwMGEwOA==' 'nonce-123' *", parseAndShow("script-src example.com * 'sha256-OWY4NmQwODE4ODRjN2Q2NTlhMmZlYWEwYzU1YWQwMTVhM2JmNGYxYjJiMGI4MjJjZDE1ZDZjMTViMGYwMGEwOA==' 'nonce-123' 'unsafe-inline'"));
 
 		p = parse("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a ");
 		assertEquals("script-src a; style-src a; img-src a; child-src a; connect-src a; font-src a; media-src a; object-src a; manifest-src a", p.show());
@@ -564,23 +564,23 @@ public class ParserTest extends CSPTest {
 				notices.get(0).message);
 
 		assertEquals("directive-name, directive-value",
-				"script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='",
-				parse("script-src 'self' https://example.com 'sha256-K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols='")
+				"script-src 'self' https://example.com 'sha256-YWFmMzU3YWU0ZDYzM2IzYWEzZTIzOTg2Yjk1ZGFjYWQ2YzgyZDdhZDM4MTAyZWUwMjNmZjk5M2IwNWUzN2RkOA=='",
+				parse("script-src 'self' https://example.com 'sha256-YWFmMzU3YWU0ZDYzM2IzYWEzZTIzOTg2Yjk1ZGFjYWQ2YzgyZDdhZDM4MTAyZWUwMjNmZjk5M2IwNWUzN2RkOA=='")
 						.getDirectiveByType(ScriptSrcDirective.class).show());
 		assertEquals("directive-name, directive-value",
-				"script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'",
+				"script-src 'self' https://example.com 'sha384-NzY4NDEyMzIwZjdiMGFhNTgxMmZjZTQyOGRjNDcwNmIzY2FlNTBlMDJhNjRjYWExNmE3ODIyNDliZmU4ZWZjNGI3ZWYxY2NiMTI2MjU1ZDE5NjA0N2RmZWRmMTdhMGE5'",
 				parse(
-						"script-src 'self' https://example.com 'sha384-QXIS/RyLxYlv79jbWK+CRUXoWw0FRkCTZqMK73Jp+uJYFzvRhfsmLIbzu4b7oENo'")
+						"script-src 'self' https://example.com 'sha384-NzY4NDEyMzIwZjdiMGFhNTgxMmZjZTQyOGRjNDcwNmIzY2FlNTBlMDJhNjRjYWExNmE3ODIyNDliZmU4ZWZjNGI3ZWYxY2NiMTI2MjU1ZDE5NjA0N2RmZWRmMTdhMGE5'")
 						.getDirectiveByType(ScriptSrcDirective.class).show());
 		assertEquals("directive-name, directive-value",
-				"script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='",
+				"script-src 'self' https://example.com 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='",
 				parse(
-						"script-src 'self' https://example.com 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='")
+						"script-src 'self' https://example.com 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='")
 						.getDirectiveByType(ScriptSrcDirective.class).show());
 		p = parse(
-				"script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+				"script-src 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='");
 		Policy q = parse(
-				"script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+				"script-src 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='");
 		assertEquals("hash-source hashcode equality", p.hashCode(), q.hashCode());
 		ScriptSrcDirective d = p.getDirectiveByType(ScriptSrcDirective.class);
 		assertTrue("hash-source equals", d.equals(q.getDirectiveByType(ScriptSrcDirective.class)));
@@ -1051,7 +1051,7 @@ public class ParserTest extends CSPTest {
 		assertEquals("The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(1).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-inline' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'unsafe-inline' 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals("The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.", notices.get(0).message);
@@ -1072,7 +1072,7 @@ public class ParserTest extends CSPTest {
 	public void testUnsafeHashedAttributes() {
 		Policy p;
 		ArrayList<Notice> notices = new ArrayList<>();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 
@@ -1100,20 +1100,20 @@ public class ParserTest extends CSPTest {
 		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(2, notices.size());
 		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
 		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 
 		// while grammar allows this, I am open to throw warnings about directives that don't make sense with 'usnafe-hashed-attributes'
 		notices.clear();
-		p = parseWithNotices("img-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("img-src 'unsafe-hashed-attributes' 'sha512-ZWUyNmIwZGQ0YWY3ZTc0OWFhMWE4ZWUzYzEwYWU5OTIzZjYxODk4MDc3MmU0NzNmODgxOWE1ZDQ5NDBlMGRiMjdhYzE4NWY4YTBlMWQ1Zjg0Zjg4YmM4ODdmZDY3YjE0MzczMmMzMDRjYzVmYTlhZDhlNmY1N2Y1MDAyOGE4ZmY='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 	}

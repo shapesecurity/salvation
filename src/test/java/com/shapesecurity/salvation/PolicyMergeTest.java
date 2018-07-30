@@ -672,4 +672,13 @@ public class PolicyMergeTest extends CSPTest {
 		p.union(q);
 		assertEquals("script-src *", p.show());
 	}
+
+	@Test
+	public void testUnionWildcard() {
+		Policy p = parse("default-src http://*.atest.com 'self'");
+		Policy q = parse("default-src http://b.c.atest.com 'self'");
+		// assertEquals(true, p.allowsScriptFromSource(URI.parse("http://b.c.atest.com")));
+		p.union(q);
+		assertEquals("default-src http://*.atest.com 'self'", p.show());
+	}
 }

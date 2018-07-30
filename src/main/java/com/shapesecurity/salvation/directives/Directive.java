@@ -130,6 +130,8 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
 		set.remove(None.INSTANCE);
 
+		set.removeIf(x -> x instanceof HostSource && set.stream().filter(y -> y instanceof HostSource).anyMatch(z -> !z.equals(x) && ((HostSource) z).matchesHostPortPath((HostSource)x)));
+
 		Optional<T> star = set.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard()).findAny();
 		if (star.isPresent()) {
 			set.removeIf(y -> y instanceof HostSource);

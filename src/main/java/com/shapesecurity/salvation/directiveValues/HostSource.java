@@ -117,6 +117,21 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 		}
 	}
 
+	public boolean matchesHostPortPath(@Nonnull HostSource other) {
+		boolean hostMatches = hostMatches(this.host, other.host);
+		boolean uriUsesDefaultPort = other.port == Constants.EMPTY_PORT
+				|| SchemeHostPortTriple.defaultPortForProtocol(other.scheme) == other.port;
+		boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT
+				|| SchemeHostPortTriple.defaultPortForProtocol(this.scheme) == this.port);
+		boolean portMatches = this.port == Constants.WILDCARD_PORT || (thisUsesDefaultPort && uriUsesDefaultPort) ||
+				(this.port == Constants.EMPTY_PORT ?
+						uriUsesDefaultPort :
+						(other.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == other.port));
+		boolean pathMatches = pathMatches(this.path, other.path);
+
+		return hostMatches && portMatches && pathMatches;
+	}
+
 	@Override
 	public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
 		if (origin instanceof GUID) {
@@ -135,18 +150,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 		} else {
 			schemeMatches = SchemeHostPortTriple.matchesSecureScheme(this.scheme, resource.scheme);
 		}
-		boolean hostMatches = hostMatches(this.host, resource.host);
-		boolean uriUsesDefaultPort = resource.port == Constants.EMPTY_PORT
-				|| SchemeHostPortTriple.defaultPortForProtocol(resource.scheme) == resource.port;
-		boolean thisUsesDefaultPort = this.scheme != null && (this.port == Constants.EMPTY_PORT
-				|| SchemeHostPortTriple.defaultPortForProtocol(this.scheme) == this.port);
-		boolean portMatches = this.port == Constants.WILDCARD_PORT || (thisUsesDefaultPort && uriUsesDefaultPort) ||
-				(this.port == Constants.EMPTY_PORT ?
-						uriUsesDefaultPort :
-						(resource.port == Constants.EMPTY_PORT ? thisUsesDefaultPort : this.port == resource.port));
-		boolean pathMatches = pathMatches(this.path, resource.path);
-
-		return schemeMatches && hostMatches && portMatches && pathMatches;
+		return schemeMatches && matchesHostPortPath(new HostSource(null, host, port, path));
 	}
 
 	public boolean matchesOnlyOrigin(@Nonnull SchemeHostPortTriple origin) {

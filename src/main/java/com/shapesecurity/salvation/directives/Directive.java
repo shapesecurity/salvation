@@ -130,11 +130,9 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 
 		set.remove(None.INSTANCE);
 
-		Optional<T> star = set.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard()).findAny();
-		if (star.isPresent()) {
-			set.removeIf(y -> y instanceof HostSource);
-			set.add(star.get());
-		}
+		set.stream().filter(x -> x instanceof HostSource).collect(Collectors.toList()).forEach(x -> {
+			set.removeIf(y -> y != x && y instanceof HostSource && ((HostSource) x).subsumes((HostSource) y));
+		});
 
 		return set;
 	}
@@ -159,14 +157,14 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 			return set;
 		}
 
-		Optional<T> star = b.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard()).findAny();
+		Optional<T> star = b.stream().filter(x -> x instanceof HostSource && ((HostSource) x).isTLDWildcard()).findAny();
 		if (star.isPresent()) {
 			set.addAll(a);
 			return set;
 		}
 
 		for (T x : a) {
-			if (x instanceof HostSource && ((HostSource) x).isWildcard()) {
+			if (x instanceof HostSource && ((HostSource) x).isTLDWildcard()) {
 				set.clear();
 				set.addAll(b);
 				return set;

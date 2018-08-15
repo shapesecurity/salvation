@@ -1,14 +1,5 @@
 package com.shapesecurity.salvation.directiveValues;
 
-import com.shapesecurity.salvation.Constants;
-import com.shapesecurity.salvation.data.GUID;
-import com.shapesecurity.salvation.data.Origin;
-import com.shapesecurity.salvation.data.SchemeHostPortTriple;
-import com.shapesecurity.salvation.data.URI;
-import com.shapesecurity.salvation.interfaces.MatchesSource;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -16,6 +7,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.shapesecurity.salvation.Constants;
+import com.shapesecurity.salvation.data.GUID;
+import com.shapesecurity.salvation.data.Origin;
+import com.shapesecurity.salvation.data.SchemeHostPortTriple;
+import com.shapesecurity.salvation.data.URI;
+import com.shapesecurity.salvation.interfaces.MatchesSource;
 
 
 public class HostSource implements SourceExpression, AncestorSource, MatchesSource {
@@ -46,7 +47,7 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 			return false;
 		}
 		HostSource otherPrime = (HostSource) other;
-		if (this.isWildcard() && otherPrime.isWildcard()) {
+		if (this.isTLDWildcard() && otherPrime.isTLDWildcard()) {
 			return true;
 		}
 
@@ -75,8 +76,24 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 		return h;
 	}
 
-	public boolean isWildcard() {
+	public boolean isTLDWildcard() {
 		return this.host.equals("*") && this.scheme == null && this.port == Constants.EMPTY_PORT && this.path == null;
+	}
+
+	public boolean isSubdomainWildcard() {
+		return this.host.startsWith("*.");
+	}
+
+	public boolean subsumes(@Nonnull HostSource other) {
+		if (this.isTLDWildcard()) return true;
+		if (this.isSubdomainWildcard() && !other.isTLDWildcard() && !other.isSubdomainWildcard()) {
+			return Objects.equals(this.scheme != null ? this.scheme.toLowerCase() : null,
+					other.scheme != null ? other.scheme.toLowerCase() : null) &&
+				other.host.toLowerCase().endsWith(this.host.substring(1).toLowerCase()) &&
+				this.port == other.port &&
+				Objects.equals(this.path, other.path);
+		}
+		return this.equals(other);
 	}
 
 	public static boolean hostMatches(@Nonnull String hostA, @Nonnull String hostB) {
@@ -121,12 +138,12 @@ public class HostSource implements SourceExpression, AncestorSource, MatchesSour
 	public boolean matchesSource(@Nonnull Origin origin, @Nonnull URI resource) {
 		if (origin instanceof GUID) {
 			// wildcard matches a network scheme
-			return this.isWildcard() && resource.isNetworkScheme();
+			return this.isTLDWildcard() && resource.isNetworkScheme();
 		} else if (!(origin instanceof SchemeHostPortTriple)) {
 			return false;
 		}
 		SchemeHostPortTriple shpOrigin = (SchemeHostPortTriple) origin;
-		if (this.isWildcard()) {
+		if (this.isTLDWildcard()) {
 			return resource.isNetworkScheme() || shpOrigin.scheme.matches(resource.scheme);
 		}
 		boolean schemeMatches;

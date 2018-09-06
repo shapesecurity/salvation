@@ -54,6 +54,21 @@ public class PolicyMergeTest extends CSPTest {
 		assertEquals(
 				"default-src a; form-action a; frame-ancestors b; navigate-to c",
 				p1.show());
+
+		p1 = Parser.parse("form-action aaa; frame-ancestors bbb; navigate-to ccc", "https://origin1.com");
+		p2 = Parser.parse("script-src a", "https://origin1.com");
+		p1.union(p2);
+		assertEquals("form-action aaa; frame-ancestors bbb; navigate-to ccc", p1.show());
+
+		p1 = Parser.parse("frame-ancestors bbb;", "https://origin1.com");
+		p2 = Parser.parse("script-src a", "https://origin1.com");
+		p1.union(p2);
+		assertEquals("frame-ancestors bbb", p1.show());
+
+		p1 = Parser.parse("", "https://origin1.com");
+		p2 = Parser.parse("script-src a", "https://origin1.com");
+		p1.union(p2);
+		assertEquals("", p1.show());
 	}
 
 	@Test
@@ -288,6 +303,16 @@ public class PolicyMergeTest extends CSPTest {
 		p2 = parse("navigate-to a;");
 		p1.intersect(p2);
 		assertEquals("navigate-to a", p1.show());
+
+		p1 = parse("navigate-to a b c;");
+		p2 = parse("script-src zzz");
+		p1.intersect(p2);
+		assertEquals("navigate-to a b c; script-src zzz", p1.show());
+
+		p1 = Parser.parse("", "https://origin1.com");
+		p2 = Parser.parse("script-src a", "https://origin1.com");
+		p1.intersect(p2);
+		assertEquals("script-src a", p1.show());
 	}
 
 	@Test
@@ -425,7 +450,7 @@ public class PolicyMergeTest extends CSPTest {
 
 		p.unionDirective(scriptSrcDirective);
 		p.unionDirective(styleSrcDirective);
-		assertEquals("script-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'; style-src 'nonce-Q-ecAIccSGatv6lJrCBVARPr'",
+		assertEquals("",
 				p.show());
 	}
 
@@ -647,10 +672,10 @@ public class PolicyMergeTest extends CSPTest {
 		p.union(q);
 		assertEquals("script-src 'self'", p.show());
 
-		p = parse("script-src 'none' 'none'");
+		p = parse("");
 		q = parse("script-src 'self'");
 		p.union(q);
-		assertEquals("script-src 'self'", p.show());
+		assertEquals("", p.show());
 
 		p = parse("script-src 'self'");
 		q = parse("script-src 'none'");

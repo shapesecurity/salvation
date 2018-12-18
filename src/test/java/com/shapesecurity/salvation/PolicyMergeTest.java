@@ -15,6 +15,7 @@ import com.shapesecurity.salvation.directives.StyleSrcDirective;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class PolicyMergeTest extends CSPTest {
@@ -52,18 +53,18 @@ public class PolicyMergeTest extends CSPTest {
 				.parse("default-src; form-action a; frame-ancestors b; navigate-to c", "https://origin2.com");
 		p1.union(p2);
 		assertEquals(
-				"default-src a; form-action a; frame-ancestors b; navigate-to c",
+				"default-src a",
 				p1.show());
 
 		p1 = Parser.parse("form-action aaa; frame-ancestors bbb; navigate-to ccc", "https://origin1.com");
 		p2 = Parser.parse("script-src a", "https://origin1.com");
 		p1.union(p2);
-		assertEquals("form-action aaa; frame-ancestors bbb; navigate-to ccc", p1.show());
+		assertEquals("", p1.show());
 
 		p1 = Parser.parse("frame-ancestors bbb;", "https://origin1.com");
 		p2 = Parser.parse("script-src a", "https://origin1.com");
 		p1.union(p2);
-		assertEquals("frame-ancestors bbb", p1.show());
+		assertEquals("", p1.show());
 
 		p1 = Parser.parse("", "https://origin1.com");
 		p2 = Parser.parse("script-src a", "https://origin1.com");
@@ -580,19 +581,19 @@ public class PolicyMergeTest extends CSPTest {
 		q = parse("worker-src a");
 		p.union(q);
 		p.postProcessOptimisation();
-		assertEquals("child-src a; worker-src a", p.show());
+		assertEquals("", p.show());
 
 		p = parse("child-src a; ");
-		q = parse("worker-src a ");
+		q = parse("frame-src a ");
 		p.union(q);
 		p.postProcessOptimisation();
-		assertEquals("child-src a; worker-src a", p.show());
+		assertEquals("frame-src a", p.show());
 
 		p = parse("child-src a b");
 		q = parse("child-src; worker-src x; frame-src y");
 		p.union(q);
 		p.postProcessOptimisation();
-		assertEquals("child-src a b; frame-src a b y; worker-src x", p.show());
+		assertEquals("child-src a b; frame-src a b y", p.show());
 
 		p = parse("child-src *; worker-src");
 		q = parse("child-src; worker-src b");
@@ -607,7 +608,7 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("child-src a");
 		q = parse("child-src; worker-src b");
 		p.union(q);
-		assertEquals("child-src a; worker-src b", p.show());
+		assertEquals("child-src a", p.show());
 
 		p = parse("child-src a; worker-src b");
 		q = parse("child-src; worker-src c");
@@ -617,26 +618,36 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("child-src; worker-src a; frame-src b");
 		q = parse("child-src c");
 		p.union(q);
-		assertEquals("child-src c; worker-src a; frame-src b c", p.show());
+		assertEquals("child-src c; frame-src b c", p.show());
 
 		p = parse("child-src a; worker-src b");
 		q = parse("child-src c; frame-src d");
 		p.union(q);
-		assertEquals("child-src a c; worker-src b; frame-src a d", p.show());
+		assertEquals("child-src a c; frame-src a d", p.show());
 
 		p = parse("child-src b; worker-src a");
 		q = parse("child-src a");
 		p.union(q);
-		assertEquals("child-src b a; worker-src a", p.show());
+		assertEquals("child-src b a", p.show());
 
 		p = parse("default-src a");
 		q = parse("worker-src b; frame-src b;");
 		p.union(q);
-		assertEquals("default-src a; frame-src a b; worker-src a b", p.show());
+		assertEquals("frame-src a b; worker-src a b", p.show());
 	}
 
 	@Test
 	public void testUnionNone() {
+		Policy x = Parser.parse("frame-ancestors https://foo.bar", "http://example.com");
+		Policy y = Parser.parse("default-src 'none'", "http://example.com");
+		x.union(y);
+		assertEquals("", x.show());
+
+		x = Parser.parse("frame-ancestors https://foo.bar", "http://example.com");
+		y = Parser.parse("default-src 'none'; frame-ancestors;", "http://example.com");
+		x.union(y);
+		assertEquals("frame-ancestors https://foo.bar", x.show());
+
 		Policy p = parse("frame-ancestors 'none'");
 		Policy q = parse("frame-ancestors 'self'");
 		p.union(q);
@@ -645,7 +656,7 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("frame-ancestors 'none' 'none'");
 		q = parse("frame-ancestors 'self'");
 		p.union(q);
-		assertEquals("frame-ancestors 'self'", p.show());
+		assertEquals("", p.show());
 
 		p = parse("frame-ancestors 'self'");
 		q = parse("frame-ancestors 'none'");
@@ -696,5 +707,54 @@ public class PolicyMergeTest extends CSPTest {
 		q = parse("script-src 'none'");
 		p.union(q);
 		assertEquals("script-src *", p.show());
+	}
+
+	@Test
+	public void testMergeCommutativity() {
+		String[] policies = new String[] {
+			"script-src 'self'",
+			"script-src 'none'",
+			"script-src a",
+			"script-src a custom:",
+			"style-src 'self'",
+			"style-src 'none'",
+			"style-src a",
+			"style-src a custom:",
+			"default-src 'none'",
+			"default-src a",
+			"default-src custom:",
+			"plugin-types a/b",
+			"frame-ancestors 'self'",
+			"frame-ancestors 'none'",
+			"frame-ancestors a",
+			"frame-ancestors a custom:",
+			"frame-ancestors custom:",
+			"upgrade-insecure-requests",
+			"script-src a; frame-ancestors b"
+		};
+
+		for (int i = 0; i < policies.length; i++) {
+			for (int k = 0; k < policies.length; k++) {
+				Policy pq = parse(policies[i]);
+				pq.union(parse(policies[k]));
+
+				Policy qp = parse(policies[k]);
+				qp.union(parse(policies[i]));
+
+				assertTrue(pq.show() + " ≠ " + qp.show(), pq.equals(qp));
+			}
+		}
+
+		for (int i = 0; i < policies.length; i++) {
+			for (int k = 0; k < policies.length; k++) {
+				Policy pq = parse(policies[i]);
+				pq.intersect(parse(policies[k]));
+
+				Policy qp = parse(policies[k]);
+				qp.intersect(parse(policies[i]));
+
+				assertTrue(pq.show() + " ≠ " + qp.show(), pq.equals(qp));
+			}
+		}
 	}
 }

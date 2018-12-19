@@ -254,6 +254,10 @@ public class Policy implements Show {
 		return true;
 	}
 
+	public boolean containsFetchDirective() {
+		return directives.values().stream().anyMatch(x -> x instanceof FetchDirective);
+	}
+
 	public void postProcessOptimisation() {
 
 		DefaultSrcDirective defaultSrcDirective;
@@ -335,7 +339,9 @@ public class Policy implements Show {
 		if (oldDirective != null) {
 			oldDirective.union(directive);
 		} else {
-			this.directives.put(directive.getClass(), directive);
+			if (!(directive instanceof FetchDirective) || this.containsFetchDirective()) {
+				this.directives.put(directive.getClass(), directive);
+			}
 		}
 	}
 

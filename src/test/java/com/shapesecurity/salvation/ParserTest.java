@@ -264,6 +264,14 @@ public class ParserTest extends CSPTest {
 		p = parse("script-src http://example.org/cpproducts/index.htm%2Cjsessionid=0C159CF2854B7519C5379634FAC36577");
 		assertEquals("script-src http://example.org/cpproducts/index.htm%2Cjsessionid=0C159CF2854B7519C5379634FAC36577", p.show());
 
+		p = parse("script-src 'none' 'none'");
+		assertEquals("", p.show());
+
+		p = parse("script-src 'self' 'self'");
+		assertEquals("script-src 'self'", p.show());
+
+		p = parse("script-src 'self' 'none'");
+		assertEquals("", p.show());
 	}
 
 	@Test

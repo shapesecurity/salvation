@@ -52,8 +52,12 @@ import com.shapesecurity.salvation.directives.ReportToDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.RequireSriForDirective;
 import com.shapesecurity.salvation.directives.SandboxDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcAttrDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcElemDirective;
+import com.shapesecurity.salvation.directives.StyleSrcAttrDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcElemDirective;
 import com.shapesecurity.salvation.directives.UpgradeInsecureRequestsDirective;
 import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import com.shapesecurity.salvation.tokens.DirectiveNameToken;
@@ -368,8 +372,20 @@ public class Parser {
 				case ScriptSrc:
 					result = new ScriptSrcDirective(this.parseSourceList());
 					break;
+				case ScriptSrcElem:
+					result = new ScriptSrcElemDirective(this.parseSourceList());
+					break;
+				case ScriptSrcAttr:
+					result = new ScriptSrcAttrDirective(this.parseSourceList());
+					break;
 				case StyleSrc:
 					result = new StyleSrcDirective(this.parseSourceList());
+					break;
+				case StyleSrcElem:
+					result = new StyleSrcElemDirective(this.parseSourceList());
+					break;
+				case StyleSrcAttr:
+					result = new StyleSrcAttrDirective(this.parseSourceList());
 					break;
 				case UpgradeInsecureRequests:
 					warnFutureDirective(token);

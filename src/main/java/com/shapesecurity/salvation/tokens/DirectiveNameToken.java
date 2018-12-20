@@ -42,7 +42,11 @@ public class DirectiveNameToken extends Token {
 		RequireSriFor, // defined in https://w3c.github.io/webappsec-subresource-integrity/#opt-in-require-sri-for
 		Sandbox,
 		ScriptSrc,
+		ScriptSrcElem,
+		ScriptSrcAttr,
 		StyleSrc,
+		StyleSrcElem,
+		StyleSrcAttr,
 		WorkerSrc,
 
 		UpgradeInsecureRequests, // W3C Candidate Recommendation at https://www.w3.org/TR/upgrade-insecure-requests/#delivery as of 2015-10-08
@@ -96,8 +100,16 @@ public class DirectiveNameToken extends Token {
 					return Sandbox;
 				case "script-src":
 					return ScriptSrc;
+				case "script-src-elem":
+					return ScriptSrcElem;
+				case "script-src-attr":
+					return ScriptSrcAttr;
 				case "style-src":
 					return StyleSrc;
+				case "style-src-elem":
+					return StyleSrcElem;
+				case "style-src-Attr":
+					return StyleSrcAttr;
 				case "upgrade-insecure-requests":
 					return UpgradeInsecureRequests;
 				case "worker-src":

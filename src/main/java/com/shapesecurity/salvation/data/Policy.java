@@ -542,35 +542,52 @@ public class Policy implements Show {
 	}
 
 	public boolean allowsScriptFromSource(@Nonnull URI source) {
-		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-		if (scriptSrcDirective == null) {
-			return this.defaultsAllowSource(source);
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		if (scriptSrcElemDirective == null) {
+			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+			if (scriptSrcDirective == null) {
+				return this.defaultsAllowSource(source);
+			}
+			return scriptSrcDirective.matchesSource(this.origin, source);
 		}
-		return scriptSrcDirective.matchesSource(this.origin, source);
+		return scriptSrcElemDirective.matchesSource(this.origin, source);
 	}
 
 	public boolean allowsScriptFromSource(@Nonnull GUID source) {
-		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-		if (scriptSrcDirective == null) {
-			return this.defaultsAllowSource(source);
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		if (scriptSrcElemDirective == null) {
+			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+			if (scriptSrcDirective == null) {
+				return this.defaultsAllowSource(source);
+			}
+			return scriptSrcDirective.matchesSource(this.origin, source);
 		}
-		return scriptSrcDirective.matchesSource(this.origin, source);
+
+		return scriptSrcElemDirective.matchesSource(this.origin, source);
 	}
 
 	public boolean allowsStyleFromSource(@Nonnull URI source) {
-		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-		if (styleSrcDirective == null) {
-			return this.defaultsAllowSource(source);
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		if (styleSrcElemDirective == null) {
+			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+			if (styleSrcDirective == null) {
+				return this.defaultsAllowSource(source);
+			}
+			return styleSrcDirective.matchesSource(this.origin, source);
 		}
-		return styleSrcDirective.matchesSource(this.origin, source);
+		return styleSrcElemDirective.matchesSource(this.origin, source);
 	}
 
 	public boolean allowsStyleFromSource(@Nonnull GUID source) {
-		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-		if (styleSrcDirective == null) {
-			return this.defaultsAllowSource(source);
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		if (styleSrcElemDirective == null) {
+			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+			if (styleSrcDirective == null) {
+				return this.defaultsAllowSource(source);
+			}
+			return styleSrcDirective.matchesSource(this.origin, source);
 		}
-		return styleSrcDirective.matchesSource(this.origin, source);
+		return styleSrcElemDirective.matchesSource(this.origin, source);
 	}
 
 	public boolean allowsConnectTo(@Nonnull URI source) {

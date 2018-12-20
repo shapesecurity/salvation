@@ -49,7 +49,11 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 	static {
 		// NOTE: new directive types must be registered here
 		register(ScriptSrcDirective.class);
+		register(ScriptSrcElemDirective.class);
+		register(ScriptSrcAttrDirective.class);
 		register(StyleSrcDirective.class);
+		register(StyleSrcElemDirective.class);
+		register(StyleSrcAttrDirective.class);
 		register(ImgSrcDirective.class);
 		register(ChildSrcDirective.class);
 		register(ConnectSrcDirective.class);

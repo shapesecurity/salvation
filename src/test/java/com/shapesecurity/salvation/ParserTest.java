@@ -117,11 +117,35 @@ public class ParserTest extends CSPTest {
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
+		p = parse("script-src-elem a");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("script-src-attr a");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
 		p = parse("style-src http://*.example.com:*");
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
+		p = parse("style-src-elem http://*.example.com:*");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-attr http://*.example.com:*");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
 		p = parse("style-src samba://*.example.com");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-elem samba://*.example.com");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-attr samba://*.example.com");
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
@@ -947,6 +971,30 @@ public class ParserTest extends CSPTest {
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 		assertEquals("script-src 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("script-src-elem 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("script-src-elem 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("script-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("script-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("style-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("style-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("style-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("style-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
 	}
 
 	@Test
@@ -1081,38 +1129,45 @@ public class ParserTest extends CSPTest {
 		Policy p;
 		ArrayList<Notice> notices = new ArrayList<>();
 		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		assertEquals(0, p.getDirectives().size());
+		assertEquals(2, notices.size());
+		assertEquals("CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes'.", notices.get(0).message);
+		assertEquals("Expecting source-expression but found \"'unsafe-hashed-attributes'\".", notices.get(1).message);
+
+		notices.clear();
+		p = parseWithNotices("default-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(1, notices.size());
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(0).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(0).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(3, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(2).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(2).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'nonce-123'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes' 'nonce-123'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(4, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
 		assertEquals("Invalid base64-value (should be multiple of 4 bytes: 3).", notices.get(2).message);
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(2, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
 
 		notices.clear();
 		p = parseWithNotices("default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
@@ -1121,7 +1176,7 @@ public class ParserTest extends CSPTest {
 
 		// while grammar allows this, I am open to throw warnings about directives that don't make sense with 'usnafe-hashed-attributes'
 		notices.clear();
-		p = parseWithNotices("img-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("img-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 	}

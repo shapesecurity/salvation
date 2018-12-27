@@ -148,7 +148,11 @@ public class Tokeniser {
 					case ObjectSrc:
 					case PrefetchSrc:
 					case ScriptSrc:
+					case ScriptSrcElem:
+					case ScriptSrcAttr:
 					case StyleSrc:
+					case StyleSrcElem:
+					case StyleSrcAttr:
 					case WorkerSrc:
 						// media-type-list
 					case PluginTypes:

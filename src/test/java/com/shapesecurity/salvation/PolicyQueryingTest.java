@@ -24,7 +24,9 @@ import com.shapesecurity.salvation.directives.MediaSrcDirective;
 import com.shapesecurity.salvation.directives.ObjectSrcDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcElemDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcElemDirective;
 import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import org.junit.Test;
 
@@ -373,27 +375,53 @@ public class PolicyQueryingTest extends CSPTest {
 		Policy p;
 
 		p = parse(
-				"script-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-		assertTrue("attribute with hash is allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"script-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertTrue("attribute with hash is allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
 				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
 		assertFalse("script hash is not allowed",
-				p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+				p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+		p = parse(
+				"script-src-attr 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertTrue("attribute with hash is allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+		assertFalse("script hash is not allowed",
+				p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+		p = parse(
+				"script-src-elem 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertFalse("attribute with hash is allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+		assertFalse("script hash is not allowed",
+				p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
 		p = parse(
 				"script-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-		assertFalse("attribute with hash is not allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+		assertFalse("attribute with hash is not allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
 				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
 
 		p = parse(
-				"default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-		assertTrue("attribute with hash is allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"default-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertTrue("attribute with hash is allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
 				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
 		assertFalse("script hash is not allowed",
-				p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+				p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+
+		p = parse(
+				"script-src-attr 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertTrue("attribute with hash is allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+		assertFalse("script hash is not allowed",
+				p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
 
 		p = parse(
 				"default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
-		assertFalse("attribute with hash is not allowed", p.allowsAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+		assertFalse("attribute with hash is not allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+
+		p = parse(
+				"script-src-attr 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='");
+		assertFalse("attribute with hash is not allowed", p.allowsScriptAttributeWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
 				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
 	}
 
@@ -703,6 +731,27 @@ public class PolicyQueryingTest extends CSPTest {
 		assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.StrictDynamic));
 		assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
 		assertTrue(p.containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeInline));
+		assertFalse(p.allowsUnsafeInlineScript());
+		assertFalse(p.allowsUnsafeInlineStyle());
+		assertFalse(p.allowsScriptWithNonce("123"));
+		assertFalse(p.allowsStyleWithNonce("123"));
+		assertFalse(p.allowsScriptWithNonce("1234"));
+		assertFalse(p.allowsStyleWithNonce("1234"));
+		assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+		assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value(
+				"vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg==")));
+		assertFalse(p.allowsScriptWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+		assertFalse(p.allowsStyleWithHash(HashSource.HashAlgorithm.SHA512, new Base64Value("cGl6ZGE=")));
+		assertTrue(p.allowsScriptWithNonce("forscript"));
+		assertFalse(p.allowsStyleWithNonce("forscript"));
+		assertFalse(p.allowsScriptWithNonce("forstyle"));
+		assertTrue(p.allowsStyleWithNonce("forstyle"));
+
+		p = Parser.parse("script-src-elem 'unsafe-inline' 'nonce-forscript' 'strict-dynamic'; style-src-elem 'unsafe-inline' 'nonce-forstyle'", "http://example.com");
+		assertTrue(p.containsSourceExpression(ScriptSrcElemDirective.class, x -> x == KeywordSource.StrictDynamic));
+		assertTrue(p.containsSourceExpression(ScriptSrcElemDirective.class, x -> x == KeywordSource.UnsafeInline));
+		assertTrue(p.containsSourceExpression(StyleSrcElemDirective.class, x -> x == KeywordSource.UnsafeInline));
 		assertFalse(p.allowsUnsafeInlineScript());
 		assertFalse(p.allowsUnsafeInlineStyle());
 		assertFalse(p.allowsScriptWithNonce("123"));
@@ -1226,13 +1275,13 @@ public class PolicyQueryingTest extends CSPTest {
 		h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a;jsessionid=123");
 		d = new ScriptSrcDirective(Collections.singleton(h));
 		p.unionDirective(d);
-		assertEquals("script-src 'self' example.com/a%3Bjsessionid=123; worker-src 'self'", p.show());
+		assertEquals("script-src 'self' example.com/a%3Bjsessionid=123", p.show());
 
 		p = Parser.parse("script-src 'self'", "http://example.com");
 		h = new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a,b");
 		d = new ScriptSrcDirective(Collections.singleton(h));
 		p.unionDirective(d);
-		assertEquals("script-src 'self' example.com/a%2Cb; worker-src 'self'", p.show());
+		assertEquals("script-src 'self' example.com/a%2Cb", p.show());
 
 		p = Parser.parse("script-src example.com/a%3Bjsessionid=123", "http://example.com");
 		assertTrue(p.containsSourceExpression(ScriptSrcDirective.class, x -> x.equals(new HostSource(null, "example.com", Constants.EMPTY_PORT, "/a%3Bjsessionid=123"))));

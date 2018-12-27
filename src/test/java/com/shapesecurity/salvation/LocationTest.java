@@ -1,11 +1,12 @@
 package com.shapesecurity.salvation;
 
+import java.util.ArrayList;
+
 import com.shapesecurity.salvation.data.Notice;
 import com.shapesecurity.salvation.data.URI;
 import com.shapesecurity.salvation.tokens.Token;
-import org.junit.Test;
 
-import java.util.ArrayList;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -451,9 +452,9 @@ public class LocationTest extends CSPTest {
 	public void testPotentialTyposWarnings() {
 		ArrayList<Notice> notices = new ArrayList<>();
 		ParserWithLocation
-				.parse("script-src unsafe-redirect self none unsafe-inline unsafe-eval unsafe-allow-redirects", URI.parse("https://origin"),
+				.parse("script-src unsafe-redirect self none unsafe-inline unsafe-eval unsafe-allow-redirects unsafe-hashes", URI.parse("https://origin"),
 						notices);
-		assertEquals(6, notices.size());
+		assertEquals(7, notices.size());
 		Notice notice = notices.get(0);
 		assertEquals(
 				"1:12: This host name is unusual, and likely meant to be a keyword that is missing the required quotes: 'unsafe-redirect'.",
@@ -499,27 +500,27 @@ public class LocationTest extends CSPTest {
 	public void testUnsafeHashedAttributesWarnings() {
 		ArrayList<Notice> notices = new ArrayList<>();
 		ParserWithLocation
-				.parse("script-src 'unsafe-hashed-attributes'", URI.parse("https://origin"), notices);
+				.parse("script-src 'unsafe-hashes'", URI.parse("https://origin"), notices);
 		assertEquals(1, notices.size());
 		Notice notice = notices.get(0);
 		assertEquals(
-				"1:1: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+				"1:1: The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
 				notice.show());
 		assertEquals(
-				"Warning: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+				"Warning: The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
 				notice.toString());
 
 		notices.clear();
 		ParserWithLocation
-				.parse("script-src self 'unsafe-redirect' 'unsafe-hashed-attributes'", URI.parse("https://origin"), notices);
+				.parse("script-src self 'unsafe-redirect' 'unsafe-hashes'", URI.parse("https://origin"), notices);
 		assertEquals(3, notices.size());
 		notice = notices.get(2);
 		// TODO implement location tracking, 1:1: below is not very presize here
 		assertEquals(
-				"1:1: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+				"1:1: The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
 				notice.show());
 		assertEquals(
-				"Warning: The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
+				"Warning: The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.",
 				notice.toString());
 
 	}

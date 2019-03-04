@@ -381,6 +381,90 @@ public class ParserTest extends CSPTest {
 	}
 
 	@Test()
+	public void testScriptSrcElemAndAttrPolicies() {
+		Policy p = parse("script-src-elem a; script-src-attr a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src-elem a; script-src-elem a");
+		assertEquals("script-src-elem a", p.show());
+
+		p = parse("script-src-attr a; script-src-attr a");
+		assertEquals("script-src-attr a", p.show());
+
+		p = parse("script-src a; script-src-elem a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src a; script-src-attr a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src b; script-src-elem a; script-src-attr a");
+		assertEquals("script-src a b; worker-src b", p.show());
+
+		p = parse("script-src b; worker-src a; script-src-elem a; script-src-attr a");
+		assertEquals("script-src a b", p.show());
+
+		p = parse("script-src; worker-src; script-src-elem; script-src-attr");
+		assertEquals("script-src", p.show());
+
+		p = parse("worker-src; script-src-elem; script-src-attr");
+		assertEquals("script-src", p.show());
+
+		p = parse("worker-src; script-src-elem a; script-src-attr b");
+		assertEquals("worker-src; script-src-elem a; script-src-attr b", p.show());
+
+		p = parse("script-src a; worker-src b; script-src-elem c; script-src-attr d");
+		assertEquals("script-src a; worker-src b a; script-src-elem c a; script-src-attr d a", p.show());
+
+		p = parse("default-src a; script-src-elem c; script-src-attr d");
+		assertEquals("default-src a; script-src-elem c a; script-src-attr d a", p.show());
+
+		p = parse("default-src a; script-src-elem a; script-src-attr a");
+		assertEquals("default-src a", p.show());
+	}
+
+	@Test()
+	public void testStyleSrcElemAndAttrPolicies() {
+		Policy p = parse("style-src-elem a; style-src-attr a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src-elem a; style-src-elem a");
+		assertEquals("style-src-elem a", p.show());
+
+		p = parse("style-src-attr a; style-src-attr a");
+		assertEquals("style-src-attr a", p.show());
+
+		p = parse("style-src a; style-src-elem a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src a; style-src-attr a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src b; style-src-elem a; style-src-attr a");
+		assertEquals("style-src a b", p.show());
+
+		p = parse("style-src b; style-src-elem a; style-src-attr a");
+		assertEquals("style-src a b", p.show());
+
+		p = parse("style-src; style-src-elem; style-src-attr");
+		assertEquals("style-src", p.show());
+
+		p = parse("style-src-elem; style-src-attr");
+		assertEquals("style-src", p.show());
+
+		p = parse("style-src-elem a; style-src-attr b");
+		assertEquals("style-src-elem a; style-src-attr b", p.show());
+
+		p = parse("style-src a; style-src-elem c; style-src-attr d");
+		assertEquals("style-src a; style-src-elem c a; style-src-attr d a", p.show());
+
+		p = parse("default-src a; style-src-elem c; style-src-attr d");
+		assertEquals("default-src a; style-src-elem c a; style-src-attr d a", p.show());
+
+		p = parse("default-src a; style-src-elem a; style-src-attr a");
+		assertEquals("default-src a", p.show());
+	}
+	
+	@Test()
 	public void testPluginTypesParsing() {
 		ArrayList<Notice> notices = new ArrayList<>();
 

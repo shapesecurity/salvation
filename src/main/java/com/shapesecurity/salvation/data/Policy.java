@@ -224,6 +224,44 @@ public class Policy implements Show {
 			}
 		}
 
+		// merge into script-src if script-src-elem and script-src-attr are identical
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		ScriptSrcAttrDirective scriptSrcAttrDirective = this.getDirectiveByType(ScriptSrcAttrDirective.class);
+		if (scriptSrcElemDirective != null && scriptSrcAttrDirective != null) {
+			Set<SourceExpression> a = scriptSrcElemDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			Set<SourceExpression> b = scriptSrcAttrDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			if (a.equals(b)) {
+				ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+				Set<SourceExpression> scriptSources = a;
+				if (scriptSrcDirective != null) {
+					scriptSources.addAll(scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)));
+				}
+				scriptSrcDirective = new ScriptSrcDirective(scriptSources);
+				this.directives.put(ScriptSrcDirective.class, scriptSrcDirective);
+				this.directives.remove(ScriptSrcElemDirective.class);
+				this.directives.remove(ScriptSrcAttrDirective.class);
+			}
+		}
+
+		// merge into style-src if style-src-elem and style-src-attr are identical
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		StyleSrcAttrDirective styleSrcAttrDirective = this.getDirectiveByType(StyleSrcAttrDirective.class);
+		if (styleSrcElemDirective != null && styleSrcAttrDirective != null) {
+			Set<SourceExpression> a = styleSrcElemDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			Set<SourceExpression> b = styleSrcAttrDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			if (a.equals(b)) {
+				StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+				Set<SourceExpression> styleSources = a;
+				if (styleSrcDirective != null) {
+					styleSources.addAll(styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)));
+				}
+				styleSrcDirective = new StyleSrcDirective(styleSources);
+				this.directives.put(StyleSrcDirective.class, styleSrcDirective);
+				this.directives.remove(StyleSrcElemDirective.class);
+				this.directives.remove(StyleSrcAttrDirective.class);
+			}
+		}
+
 		// * remove frame source directive if equivalent to child-src
 		ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
 		if (childSrcDirective != null) {
@@ -248,6 +286,8 @@ public class Policy implements Show {
 			this.eliminateRedundantSourceExpression(styleSources, StyleSrcElemDirective.class);
 			this.eliminateRedundantSourceExpression(styleSources, StyleSrcAttrDirective.class);
 		}
+
+
 
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 
@@ -766,14 +806,15 @@ public class Policy implements Show {
 			return true;
 		}
 		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
-		if (scriptSrcElemDirective == null) {
-			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-			if (scriptSrcDirective == null) {
-				return this.defaultsAllowNonce(nonce);
-			}
+		if (scriptSrcElemDirective != null) {
+			return scriptSrcElemDirective.matchesNonce(nonce);
+		}
+
+		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+		if (scriptSrcDirective != null) {
 			return scriptSrcDirective.matchesNonce(nonce);
 		}
-		return scriptSrcElemDirective.matchesNonce(nonce);
+		return this.defaultsAllowNonce(nonce);
 	}
 
 	public boolean allowsScriptWithNonce(@Nonnull Base64Value nonce) {
@@ -785,14 +826,15 @@ public class Policy implements Show {
 			return true;
 		}
 		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
-		if (styleSrcElemDirective == null) {
-			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-			if (styleSrcDirective == null) {
-				return this.defaultsAllowNonce(nonce);
-			}
+		if (styleSrcElemDirective != null) {
+			return styleSrcElemDirective.matchesNonce(nonce);
+		}
+
+		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+		if (styleSrcDirective != null) {
 			return styleSrcDirective.matchesNonce(nonce);
 		}
-		return styleSrcElemDirective.matchesNonce(nonce);
+		return this.defaultsAllowNonce(nonce);
 	}
 
 	public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {

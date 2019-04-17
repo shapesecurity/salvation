@@ -502,18 +502,7 @@ public class Policy implements Show {
 		return sb.toString();
 	}
 
-	private boolean defaultsAllowScriptAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-		if (!this.defaultsHaveUnsafeHashedAttributes()) {
-			return false;
-		}
-		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
-		if (defaultSrcDirective == null) {
-			return true;
-		}
-		return defaultSrcDirective.matchesHash(algorithm, hashValue);
-	}
-
-	private boolean defaultsAllowStyleAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+	private boolean defaultsAllowAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
 		if (!this.defaultsHaveUnsafeHashedAttributes()) {
 			return false;
 		}
@@ -694,15 +683,19 @@ public class Policy implements Show {
 		if (this.allowsUnsafeInlineStyle()) {
 			return true;
 		}
+
 		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
-		if (styleSrcElemDirective == null) {
-			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-			if (styleSrcDirective == null) {
-				return this.defaultsAllowHash(algorithm, hashValue);
-			}
+		if (styleSrcElemDirective != null) {
+			return styleSrcElemDirective.matchesHash(algorithm, hashValue);
+		}
+
+		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+		if (styleSrcDirective != null) {
 			return styleSrcDirective.matchesHash(algorithm, hashValue);
 		}
-		return styleSrcElemDirective.matchesHash(algorithm, hashValue);
+
+		return this.defaultsAllowHash(algorithm, hashValue);
+
 	}
 
 	public boolean allowsScriptWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
@@ -710,14 +703,16 @@ public class Policy implements Show {
 			return true;
 		}
 		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
-		if (scriptSrcElemDirective == null) {
-			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-			if (scriptSrcDirective == null) {
-				return this.defaultsAllowHash(algorithm, hashValue);
-			}
+		if (scriptSrcElemDirective != null) {
+			return scriptSrcElemDirective.matchesHash(algorithm, hashValue);
+		}
+
+		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+		if (scriptSrcDirective != null) {
 			return scriptSrcDirective.matchesHash(algorithm, hashValue);
 		}
-		return scriptSrcElemDirective.matchesHash(algorithm, hashValue);
+
+		return this.defaultsAllowHash(algorithm, hashValue);
 	}
 
 	public boolean allowsScriptAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
@@ -728,7 +723,7 @@ public class Policy implements Show {
 		if (scriptSrcAttrDirective == null) {
 			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
 			if (scriptSrcDirective == null) {
-				return this.defaultsAllowScriptAttributeWithHash(algorithm, hashValue);
+				return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
 			}
 			return scriptSrcDirective.matchesHash(algorithm, hashValue);
 		}
@@ -743,7 +738,7 @@ public class Policy implements Show {
 		if (styleSrcAttrDirective == null) {
 			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
 			if (styleSrcDirective == null) {
-				return this.defaultsAllowScriptAttributeWithHash(algorithm, hashValue);
+				return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
 			}
 			return styleSrcDirective.matchesHash(algorithm, hashValue);
 		}

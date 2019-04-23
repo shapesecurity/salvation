@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -52,31 +51,8 @@ public class Policy implements Show {
 	}
 
 	public void intersect(@Nonnull Policy other) {
-		this.mergeUsingStrategy(other, this::intersectDirectivePrivate);
-	}
-
-	public void union(@Nonnull Policy other) {
-		this.mergeUsingStrategy(other, this::unionDirectivePrivate);
-	}
-
-	private void mergeUsingStrategy(@Nonnull Policy other, Consumer<Directive<? extends DirectiveValue>> strategy) {
-		if (this.directives.containsKey(ReportUriDirective.class) || other.directives
-				.containsKey(ReportUriDirective.class)) {
-			throw new IllegalArgumentException(
-					"Cannot merge policies if either policy contains a report-uri directive.");
-		}
-
-		if (this.directives.containsKey(ReportToDirective.class) || other.directives
-				.containsKey(ReportToDirective.class)) {
-			throw new IllegalArgumentException(
-					"Cannot merge policies if either policy contains a report-to directive.");
-		}
-
-		if (this.directives.containsKey(ReferrerDirective.class) || other.directives
-				.containsKey(ReferrerDirective.class)) {
-			throw new IllegalArgumentException(
-					"Cannot merge policies if either policy contains a referrer directive.");
-		}
+		this.checkForMergeValidity();
+		other.checkForMergeValidity();
 
 		this.resolveSelf();
 		other.resolveSelf();
@@ -84,9 +60,45 @@ public class Policy implements Show {
 		this.expandDefaultSrc();
 		other.expandDefaultSrc();
 
-		other.getDirectives().forEach(strategy);
+		for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : other.directives.entrySet()) {
+			this.intersectDirectivePrivate(entry.getValue());
+		}
 
 		this.optimise();
+		other.optimise();
+	}
+
+	public void union(@Nonnull Policy other) {
+		this.checkForMergeValidity();
+		other.checkForMergeValidity();
+
+		this.resolveSelf();
+		other.resolveSelf();
+
+		this.expandDefaultSrc();
+		other.expandDefaultSrc();
+
+		for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : other.directives.entrySet()) {
+			this.unionDirectivePrivate(entry.getValue());
+		}
+		this.directives.entrySet().removeIf(entry -> !other.directives.containsKey(entry.getKey()));
+
+		this.optimise();
+		other.optimise();
+	}
+
+	private void checkForMergeValidity() {
+		if (this.directives.containsKey(ReportUriDirective.class)) {
+			throw new IllegalArgumentException("Cannot merge policies if either policy contains a report-uri directive.");
+		}
+
+		if (this.directives.containsKey(ReportToDirective.class)) {
+			throw new IllegalArgumentException("Cannot merge policies if either policy contains a report-to directive.");
+		}
+
+		if (this.directives.containsKey(ReferrerDirective.class)) {
+			throw new IllegalArgumentException("Cannot merge policies if either policy contains a referrer directive.");
+		}
 	}
 
 	private void resolveSelf() {
@@ -106,34 +118,34 @@ public class Policy implements Show {
 			defaultSources = defaultSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
 
 			if (!this.directives.containsKey(ScriptSrcDirective.class)) {
-				this.unionDirectivePrivate(new ScriptSrcDirective(defaultSources));
+				this.directives.put(ScriptSrcDirective.class, new ScriptSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(StyleSrcDirective.class)) {
-				this.unionDirectivePrivate(new StyleSrcDirective(defaultSources));
+				this.directives.put(StyleSrcDirective.class, new StyleSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(ImgSrcDirective.class)) {
-				this.unionDirectivePrivate(new ImgSrcDirective(defaultSources));
+				this.directives.put(ImgSrcDirective.class, new ImgSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(ChildSrcDirective.class)) {
-				this.unionDirectivePrivate(new ChildSrcDirective(defaultSources));
+				this.directives.put(ChildSrcDirective.class, new ChildSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(ConnectSrcDirective.class)) {
-				this.unionDirectivePrivate(new ConnectSrcDirective(defaultSources));
+				this.directives.put(ConnectSrcDirective.class, new ConnectSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(FontSrcDirective.class)) {
-				this.unionDirectivePrivate(new FontSrcDirective(defaultSources));
+				this.directives.put(FontSrcDirective.class, new FontSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(MediaSrcDirective.class)) {
-				this.unionDirectivePrivate(new MediaSrcDirective(defaultSources));
+				this.directives.put(MediaSrcDirective.class, new MediaSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(ObjectSrcDirective.class)) {
-				this.unionDirectivePrivate(new ObjectSrcDirective(defaultSources));
+				this.directives.put(ObjectSrcDirective.class, new ObjectSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(ManifestSrcDirective.class)) {
-				this.unionDirectivePrivate(new ManifestSrcDirective(defaultSources));
+				this.directives.put(ManifestSrcDirective.class, new ManifestSrcDirective(defaultSources));
 			}
 			if (!this.directives.containsKey(PrefetchSrcDirective.class)) {
-				this.unionDirectivePrivate(new PrefetchSrcDirective(defaultSources));
+				this.directives.put(PrefetchSrcDirective.class, new PrefetchSrcDirective(defaultSources));
 			}
 		}
 
@@ -141,14 +153,14 @@ public class Policy implements Show {
 		if (this.directives.containsKey(ChildSrcDirective.class) && !this.directives.containsKey(FrameSrcDirective.class)) {
 			ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
 			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-			this.unionDirectivePrivate(new FrameSrcDirective(childSources));
+			this.directives.put(FrameSrcDirective.class, new FrameSrcDirective(childSources));
 		}
 
 		// expand script-src
 		if (this.directives.containsKey(ScriptSrcDirective.class) && !this.directives.containsKey(WorkerSrcDirective.class)) {
 			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
 			Set<SourceExpression> scriptSources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-			this.unionDirectivePrivate(new WorkerSrcDirective(scriptSources));
+			this.directives.put(WorkerSrcDirective.class, new WorkerSrcDirective(scriptSources));
 		}
 	}
 
@@ -338,10 +350,6 @@ public class Policy implements Show {
 		@SuppressWarnings("unchecked") T oldDirective = (T) this.directives.get(directive.getClass());
 		if (oldDirective != null) {
 			oldDirective.union(directive);
-		} else {
-			if (!(directive instanceof FetchDirective) || this.containsFetchDirective()) {
-				this.directives.put(directive.getClass(), directive);
-			}
 		}
 	}
 

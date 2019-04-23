@@ -346,11 +346,11 @@ public class ParserTest extends CSPTest {
 
 		Policy c = parse("script-src *");
 		b.union(c);
-		assertEquals("policy union", "style-src *; script-src *", b.show());
+		assertEquals("policy union", "", b.show());
 
 		Policy d = parse("script-src abc");
 		b.union(d);
-		assertEquals("policy union", "style-src *; script-src *", b.show());
+		assertEquals("policy union", "", b.show());
 
 		a.setOrigin(URI.parse("http://qwe.zz:80"));
 		assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());

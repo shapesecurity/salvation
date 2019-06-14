@@ -503,7 +503,7 @@ public class Policy implements Show {
 	}
 
 	private boolean defaultsAllowAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-		if (!this.defaultsHaveUnsafeHashedAttributes()) {
+		if (!this.defaultsHaveUnsafeHashes()) {
 			return false;
 		}
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
@@ -559,7 +559,7 @@ public class Policy implements Show {
 		return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
 	}
 
-	private boolean defaultsHaveUnsafeHashedAttributes() {
+	private boolean defaultsHaveUnsafeHashes() {
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 		if (defaultSrcDirective == null) {
 			return false;
@@ -756,13 +756,13 @@ public class Policy implements Show {
 	public boolean haveUnsafeScriptHashes() {
 		return containsSourceExpression(ScriptSrcAttrDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
 				containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
-				defaultsHaveUnsafeHashedAttributes();
+				defaultsHaveUnsafeHashes();
 	}
 
 	public boolean haveUnsafeStyleHashes() {
 		return containsSourceExpression(StyleSrcAttrDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
 				containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
-				defaultsHaveUnsafeHashedAttributes();
+				defaultsHaveUnsafeHashes();
 	}
 
 	public <T extends SourceListDirective> boolean containsSourceExpression(Class<T> type, @Nonnull Predicate<SourceExpression> predicate) {

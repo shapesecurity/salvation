@@ -1215,7 +1215,7 @@ public class ParserTest extends CSPTest {
 		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(2, notices.size());
-		assertEquals("CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes'.", notices.get(0).message);
+		assertEquals("The CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes' (June 2018).", notices.get(0).message);
 		assertEquals("Expecting source-expression but found \"'unsafe-hashed-attributes'\".", notices.get(1).message);
 
 		notices.clear();

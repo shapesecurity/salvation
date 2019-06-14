@@ -612,7 +612,7 @@ public class Parser {
 					}
 					return new SchemeSource(token.value.substring(0, token.value.length() - 1));
 				} else if (token.value.equalsIgnoreCase("'unsafe-hashed-attributes'")) {
-					this.warn(token, "CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes'.");
+					this.warn(token, "The CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes' (June 2018).");
 				} else {
 					Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
 					if (matcher.find()) {

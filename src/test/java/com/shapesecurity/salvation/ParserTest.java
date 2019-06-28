@@ -385,6 +385,9 @@ public class ParserTest extends CSPTest {
 		Policy p = parse("script-src-elem a; script-src-attr a");
 		assertEquals("script-src-elem a; script-src-attr a", p.show());
 
+		p = parse("script-src-elem a; script-src-attr a; worker-src a; script-src b");
+		assertEquals("script-src a", p.show());
+
 		p = parse("script-src-elem a; script-src-attr a; worker-src a");
 		assertEquals("script-src a", p.show());
 
@@ -407,10 +410,10 @@ public class ParserTest extends CSPTest {
 		assertEquals("script-src a", p.show());
 
 		p = parse("script-src b; script-src-elem a; script-src-attr a");
-		assertEquals("script-src a b; worker-src b", p.show());
+		assertEquals("script-src a; worker-src b", p.show());
 
 		p = parse("script-src b; worker-src a; script-src-elem a; script-src-attr a");
-		assertEquals("script-src a b", p.show());
+		assertEquals("script-src a", p.show());
 
 		p = parse("script-src; worker-src; script-src-elem; script-src-attr");
 		assertEquals("script-src", p.show());
@@ -422,10 +425,10 @@ public class ParserTest extends CSPTest {
 		assertEquals("worker-src; script-src-elem a; script-src-attr b", p.show());
 
 		p = parse("script-src a; worker-src b; script-src-elem c; script-src-attr d");
-		assertEquals("script-src a; worker-src b a; script-src-elem c a; script-src-attr d a", p.show());
+		assertEquals("script-src a; worker-src b; script-src-elem c; script-src-attr d", p.show());
 
 		p = parse("default-src a; script-src-elem c; script-src-attr d");
-		assertEquals("default-src a; script-src-elem c a; script-src-attr d a", p.show());
+		assertEquals("default-src a; script-src-elem c; script-src-attr d", p.show());
 
 		p = parse("default-src a; script-src-elem a; script-src-attr a");
 		assertEquals("default-src a", p.show());
@@ -470,10 +473,10 @@ public class ParserTest extends CSPTest {
 		assertEquals("style-src-elem a; style-src-attr b", p.show());
 
 		p = parse("style-src a; style-src-elem c; style-src-attr d");
-		assertEquals("style-src a; style-src-elem c a; style-src-attr d a", p.show());
+		assertEquals("style-src a; style-src-elem c; style-src-attr d", p.show());
 
 		p = parse("default-src a; style-src-elem c; style-src-attr d");
-		assertEquals("default-src a; style-src-elem c a; style-src-attr d a", p.show());
+		assertEquals("default-src a; style-src-elem c; style-src-attr d", p.show());
 
 		p = parse("default-src a; style-src-elem a; style-src-attr a");
 		assertEquals("default-src a", p.show());
@@ -1304,6 +1307,12 @@ public class ParserTest extends CSPTest {
 		p = parseWithNotices("img-src 'report-sample'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
+	}
+
+	@Test
+	public void testExpand() {
+		Policy p = Parser.parse("default-src a; child-src b;", "https://origin.com");
+		assertEquals("default-src a; child-src b", p.show());
 	}
 
 	@Test

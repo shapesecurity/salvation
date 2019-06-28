@@ -185,7 +185,7 @@ public class Policy implements Show {
 		}
 	}
 
-	private void optimise() {
+	public void optimise() {
 		for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
 			Directive<? extends DirectiveValue> directive = entry.getValue();
 			if (directive instanceof SourceListDirective) {
@@ -234,8 +234,10 @@ public class Policy implements Show {
 			if (a.equals(b)) {
 				ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
 				Set<SourceExpression> scriptSources = a;
-				if (scriptSrcDirective != null) {
-					scriptSources.addAll(scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)));
+				if (scriptSrcDirective != null && scriptSrcDirective.contains(KeywordSource.UnsafeEval)) {
+					// unsafe-eval only applies when in script-src, not script-src-elem or script-src-attr.
+					// but if both of those and worker-src are present, script-src has no other effect.
+					scriptSources.add(KeywordSource.UnsafeEval);
 				}
 				scriptSrcDirective = new ScriptSrcDirective(scriptSources);
 				this.directives.put(ScriptSrcDirective.class, scriptSrcDirective);
@@ -263,16 +265,12 @@ public class Policy implements Show {
 			}
 		}
 
-		// * remove worker source directive if equivalent to child-src
 		ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
 		if (childSrcDirective != null) {
 			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			// * remove worker source directive if equivalent to child-src
 			this.eliminateRedundantSourceExpression(childSources, WorkerSrcDirective.class);
-		}
-
-		// * remove frame source directive if equivalent to child-src
-		if (childSrcDirective != null) {
-			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			// * remove frame source directive if equivalent to child-src
 			this.eliminateRedundantSourceExpression(childSources, FrameSrcDirective.class);
 		}
 
@@ -295,7 +293,6 @@ public class Policy implements Show {
 		}
 
 
-
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 
 		Set<SourceExpression> defaultSources;
@@ -315,6 +312,7 @@ public class Policy implements Show {
 				defaultSrcDirective = new DefaultSrcDirective(defaultSources);
 				this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
 			}
+
 
 			// * remove unnecessary default-src directives if all source directives exist
 			if (all(Directive.getFetchDirectives(), this.directives::containsKey)) {
@@ -423,6 +421,7 @@ public class Policy implements Show {
 		Set<SourceExpression> sources = stream.collect(Collectors.toCollection(LinkedHashSet::new));
 		if (directive instanceof ChildSrcDirective) {
 			directives.add(new FrameSrcDirective(sources));
+			directives.add(new WorkerSrcDirective(sources));
 		} else if (directive instanceof ScriptSrcDirective) {
 			directives.add(new ScriptSrcElemDirective(sources));
 			directives.add(new ScriptSrcAttrDirective(sources));
@@ -460,6 +459,16 @@ public class Policy implements Show {
 			this.resolveSelf();
 			this.optimise();
 		}
+	}
+
+	// differs from the above in that it will override things
+	public void addDirectives(@Nonnull Iterable<Directive<? extends DirectiveValue>> directives) {
+		for (Directive<? extends DirectiveValue> d : directives) {
+			this.directives.put(d.getClass(), d);
+		}
+		this.expandDefaultSrc();
+		this.resolveSelf();
+		this.optimise();
 	}
 
 	@Nonnull
@@ -1017,8 +1026,6 @@ public class Policy implements Show {
 	private void insert(@Nonnull Directive x) {
 		if (this.getDirectiveByType(x.getClass()) == null) {
 			this.directives.put(x.getClass(), x);
-		} else {
-			this.unionDirectivePrivate(x);
 		}
 	}
 }

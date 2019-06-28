@@ -3,6 +3,7 @@ package com.shapesecurity.salvation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -223,6 +224,7 @@ public class Parser {
 	@Nonnull
 	protected Policy parsePolicy() {
 		Policy policy = new Policy(this.origin);
+		LinkedHashMap<Class<? extends Directive>, Directive<? extends DirectiveValue>> directives = new LinkedHashMap<>();
 		while (this.hasNext()) {
 			if (this.hasNext(PolicySeparatorToken.class)) {
 				break;
@@ -233,14 +235,15 @@ public class Parser {
 			try {
 				Directive<? extends DirectiveValue> directive = this.parseDirective();
 				// only add a directive if it doesn't exist; used for handling duplicate directives in CSP headers
-				if (policy.getDirectiveByType(directive.getClass()) == null) {
-					policy.addDirective(directive);
+				if (!directives.containsKey(directive.getClass())) {
+					directives.put(directive.getClass(), directive);
 				} else {
 					this.warn(this.tokens[this.index - 2], "Policy contains more than one " + directive.name + " directive. All but the first instance will be ignored.");
 				}
 			} catch (DirectiveParseException ignored) {
 			}
 		}
+		policy.addDirectives(directives.values());
 		return policy;
 	}
 

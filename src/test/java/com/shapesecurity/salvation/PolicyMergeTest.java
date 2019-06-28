@@ -592,7 +592,7 @@ public class PolicyMergeTest extends CSPTest {
 		q = parse("worker-src a");
 		p.union(q);
 		p.postProcessOptimisation();
-		assertEquals("", p.show());
+		assertEquals("worker-src a", p.show());
 
 		p = parse("child-src a; ");
 		q = parse("frame-src a ");
@@ -604,7 +604,7 @@ public class PolicyMergeTest extends CSPTest {
 		q = parse("child-src; worker-src x; frame-src y");
 		p.union(q);
 		p.postProcessOptimisation();
-		assertEquals("child-src a b; frame-src a b y", p.show());
+		assertEquals("child-src a b; frame-src a b y; worker-src a b x", p.show());
 
 		p = parse("child-src *; worker-src");
 		q = parse("child-src; worker-src b");
@@ -619,7 +619,7 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("child-src a");
 		q = parse("child-src; worker-src b");
 		p.union(q);
-		assertEquals("child-src a", p.show());
+		assertEquals("child-src a; worker-src a b", p.show());
 
 		p = parse("child-src a; worker-src b");
 		q = parse("child-src; worker-src c");
@@ -629,7 +629,7 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("child-src; worker-src a; frame-src b");
 		q = parse("child-src c");
 		p.union(q);
-		assertEquals("child-src c; frame-src b c", p.show());
+		assertEquals("child-src c; worker-src a c; frame-src b c", p.show());
 
 		p = parse("child-src a; worker-src b");
 		q = parse("child-src c; frame-src d");
@@ -639,7 +639,7 @@ public class PolicyMergeTest extends CSPTest {
 		p = parse("child-src b; worker-src a");
 		q = parse("child-src a");
 		p.union(q);
-		assertEquals("child-src b a", p.show());
+		assertEquals("child-src b a; worker-src a", p.show());
 
 		p = parse("default-src a");
 		q = parse("worker-src b; frame-src b;");

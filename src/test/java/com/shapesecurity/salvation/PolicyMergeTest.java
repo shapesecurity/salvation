@@ -61,8 +61,7 @@ public class PolicyMergeTest extends CSPTest {
 		p1.union(p2);
 		assertEquals("", p1.show());
 
-		p1 = Parser.parse("frame-ancestors bbb;", "https:" +
-				"//origin1.com");
+		p1 = Parser.parse("frame-ancestors bbb;", "https:" + "//origin1.com");
 		p2 = Parser.parse("script-src a", "https://origin1.com");
 		p1.union(p2);
 		assertEquals("", p1.show());

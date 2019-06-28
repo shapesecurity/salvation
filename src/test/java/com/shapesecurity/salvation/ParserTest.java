@@ -397,6 +397,9 @@ public class ParserTest extends CSPTest {
 		p = parse("script-src-elem a 'unsafe-eval'; script-src-attr a 'unsafe-eval'; worker-src a");
 		assertEquals("script-src a", p.show());
 
+		p = parse("script-src a 'unsafe-eval'; script-src-attr b; script-src-elem b; worker-src c");
+		assertEquals("script-src b 'unsafe-eval'; worker-src c", p.show());
+
 		p = parse("script-src-elem a; script-src-elem a");
 		assertEquals("script-src-elem a", p.show());
 

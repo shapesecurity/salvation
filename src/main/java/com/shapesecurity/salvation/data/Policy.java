@@ -224,12 +224,13 @@ public class Policy implements Show {
 			}
 		}
 
-		// merge into script-src if script-src-elem and script-src-attr are identical
+		// merge into script-src if script-src-elem and script-src-attr are identical and worker-src is present
 		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
 		ScriptSrcAttrDirective scriptSrcAttrDirective = this.getDirectiveByType(ScriptSrcAttrDirective.class);
-		if (scriptSrcElemDirective != null && scriptSrcAttrDirective != null) {
-			Set<SourceExpression> a = scriptSrcElemDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-			Set<SourceExpression> b = scriptSrcAttrDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+		WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+		if (scriptSrcElemDirective != null && scriptSrcAttrDirective != null && workerSrcDirective != null) {
+			Set<SourceExpression> a = scriptSrcElemDirective.values().filter(x -> x != KeywordSource.UnsafeEval).collect(Collectors.toCollection(LinkedHashSet::new));
+			Set<SourceExpression> b = scriptSrcAttrDirective.values().filter(x -> x != KeywordSource.UnsafeEval).collect(Collectors.toCollection(LinkedHashSet::new));
 			if (a.equals(b)) {
 				ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
 				Set<SourceExpression> scriptSources = a;
@@ -262,8 +263,14 @@ public class Policy implements Show {
 			}
 		}
 
-		// * remove frame source directive if equivalent to child-src
+		// * remove worker source directive if equivalent to child-src
 		ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
+		if (childSrcDirective != null) {
+			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			this.eliminateRedundantSourceExpression(childSources, WorkerSrcDirective.class);
+		}
+
+		// * remove frame source directive if equivalent to child-src
 		if (childSrcDirective != null) {
 			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
 			this.eliminateRedundantSourceExpression(childSources, FrameSrcDirective.class);

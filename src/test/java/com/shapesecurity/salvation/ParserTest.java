@@ -383,6 +383,15 @@ public class ParserTest extends CSPTest {
 	@Test()
 	public void testScriptSrcElemAndAttrPolicies() {
 		Policy p = parse("script-src-elem a; script-src-attr a");
+		assertEquals("script-src-elem a; script-src-attr a", p.show());
+
+		p = parse("script-src-elem a; script-src-attr a; worker-src a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src-elem a 'unsafe-inline'; script-src-attr a 'unsafe-inline'; worker-src a");
+		assertEquals("worker-src a; script-src a 'unsafe-inline'", p.show());
+
+		p = parse("script-src-elem a 'unsafe-eval'; script-src-attr a 'unsafe-eval'; worker-src a");
 		assertEquals("script-src a", p.show());
 
 		p = parse("script-src-elem a; script-src-elem a");
@@ -420,6 +429,12 @@ public class ParserTest extends CSPTest {
 
 		p = parse("default-src a; script-src-elem a; script-src-attr a");
 		assertEquals("default-src a", p.show());
+	}
+
+	@Test()
+	public void testWorkerSrcOptimisation() {
+		Policy p = parse("worker-src a; child-src a");
+		assertEquals("child-src a", p.show());
 	}
 
 	@Test()

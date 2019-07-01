@@ -41,7 +41,7 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 	static void register(Class<? extends Directive> directiveClass) {
 		if (NestedContextDirective.class.isAssignableFrom(directiveClass)) {
 			nestedContextDirectives.add(directiveClass);
-		} else if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class && directiveClass != FrameSrcDirective.class && directiveClass != WorkerSrcDirective.class) {
+		} else if (FetchDirective.class.isAssignableFrom(directiveClass) && directiveClass != DefaultSrcDirective.class && directiveClass != FrameSrcDirective.class && directiveClass != WorkerSrcDirective.class && directiveClass != ScriptSrcElemDirective.class && directiveClass != ScriptSrcAttrDirective.class && directiveClass != StyleSrcElemDirective.class && directiveClass != StyleSrcAttrDirective.class) {
 			fetchDirectives.add(directiveClass);
 		}
 	}
@@ -49,7 +49,11 @@ public abstract class Directive<Value extends DirectiveValue> implements Show {
 	static {
 		// NOTE: new directive types must be registered here
 		register(ScriptSrcDirective.class);
+		register(ScriptSrcElemDirective.class);
+		register(ScriptSrcAttrDirective.class);
 		register(StyleSrcDirective.class);
+		register(StyleSrcElemDirective.class);
+		register(StyleSrcAttrDirective.class);
 		register(ImgSrcDirective.class);
 		register(ChildSrcDirective.class);
 		register(ConnectSrcDirective.class);

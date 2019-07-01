@@ -3,6 +3,7 @@ package com.shapesecurity.salvation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,8 +53,12 @@ import com.shapesecurity.salvation.directives.ReportToDirective;
 import com.shapesecurity.salvation.directives.ReportUriDirective;
 import com.shapesecurity.salvation.directives.RequireSriForDirective;
 import com.shapesecurity.salvation.directives.SandboxDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcAttrDirective;
 import com.shapesecurity.salvation.directives.ScriptSrcDirective;
+import com.shapesecurity.salvation.directives.ScriptSrcElemDirective;
+import com.shapesecurity.salvation.directives.StyleSrcAttrDirective;
 import com.shapesecurity.salvation.directives.StyleSrcDirective;
+import com.shapesecurity.salvation.directives.StyleSrcElemDirective;
 import com.shapesecurity.salvation.directives.UpgradeInsecureRequestsDirective;
 import com.shapesecurity.salvation.directives.WorkerSrcDirective;
 import com.shapesecurity.salvation.tokens.DirectiveNameToken;
@@ -105,9 +110,9 @@ public class Parser {
 	private static final String explanation = "Ensure that this pattern is only used for backwards compatibility with older CSP implementations and is not an oversight.";
 	private static final String unsafeInlineWarningMessage = "The \"'unsafe-inline'\" keyword-source has no effect in source lists that contain hash-source or nonce-source in CSP2 and later. " + explanation;
 	private static final String strictDynamicWarningMessage = "The host-source and scheme-source expressions, as well as the \"'unsafe-inline'\" and \"'self'\" keyword-sources have no effect in source lists that contain \"'strict-dynamic'\" in CSP3 and later. " + explanation;
-	private static final String unsafeHashedWithoutHashWarningMessage = "The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.";
+	private static final String unsafeHashesWithoutHashWarningMessage = "The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.";
 
-	private enum SeenStates { SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHED_ATTR, SEEN_REPORT_SAMPLE, SEEN_UNSAFE_ALLOW_REDIRECTS }
+	private enum SeenStates { SEEN_HASH, SEEN_HOST_OR_SCHEME_SOURCE, SEEN_NONE, SEEN_NONCE, SEEN_SELF, SEEN_STRICT_DYNAMIC, SEEN_UNSAFE_EVAL, SEEN_UNSAFE_INLINE, SEEN_UNSAFE_HASHES, SEEN_REPORT_SAMPLE, SEEN_UNSAFE_ALLOW_REDIRECTS }
 
 	@Nonnull
 	protected final Token[] tokens;
@@ -219,6 +224,7 @@ public class Parser {
 	@Nonnull
 	protected Policy parsePolicy() {
 		Policy policy = new Policy(this.origin);
+		LinkedHashMap<Class<? extends Directive>, Directive<? extends DirectiveValue>> directives = new LinkedHashMap<>();
 		while (this.hasNext()) {
 			if (this.hasNext(PolicySeparatorToken.class)) {
 				break;
@@ -229,14 +235,15 @@ public class Parser {
 			try {
 				Directive<? extends DirectiveValue> directive = this.parseDirective();
 				// only add a directive if it doesn't exist; used for handling duplicate directives in CSP headers
-				if (policy.getDirectiveByType(directive.getClass()) == null) {
-					policy.addDirective(directive);
+				if (!directives.containsKey(directive.getClass())) {
+					directives.put(directive.getClass(), directive);
 				} else {
 					this.warn(this.tokens[this.index - 2], "Policy contains more than one " + directive.name + " directive. All but the first instance will be ignored.");
 				}
 			} catch (DirectiveParseException ignored) {
 			}
 		}
+		policy.addDirectives(directives.values());
 		return policy;
 	}
 
@@ -368,8 +375,20 @@ public class Parser {
 				case ScriptSrc:
 					result = new ScriptSrcDirective(this.parseSourceList());
 					break;
+				case ScriptSrcElem:
+					result = new ScriptSrcElemDirective(this.parseSourceList());
+					break;
+				case ScriptSrcAttr:
+					result = new ScriptSrcAttrDirective(this.parseSourceList());
+					break;
 				case StyleSrc:
 					result = new StyleSrcDirective(this.parseSourceList());
+					break;
+				case StyleSrcElem:
+					result = new StyleSrcElemDirective(this.parseSourceList());
+					break;
+				case StyleSrcAttr:
+					result = new StyleSrcAttrDirective(this.parseSourceList());
 					break;
 				case UpgradeInsecureRequests:
 					warnFutureDirective(token);
@@ -475,8 +494,8 @@ public class Parser {
 					seenStates.add(SeenStates.SEEN_STRICT_DYNAMIC);
 				} else if (se instanceof HostSource || se instanceof SchemeSource) {
 					seenStates.add(SeenStates.SEEN_HOST_OR_SCHEME_SOURCE);
-				} else if (se == KeywordSource.UnsafeHashedAttributes) {
-					seenStates.add(SeenStates.SEEN_UNSAFE_HASHED_ATTR);
+				} else if (se == KeywordSource.UnsafeHashes) {
+					seenStates.add(SeenStates.SEEN_UNSAFE_HASHES);
 				} else if (se == KeywordSource.ReportSample) {
 					seenStates.add(SeenStates.SEEN_REPORT_SAMPLE);
 				} else if (se == KeywordSource.UnsafeAllowRedirects) {
@@ -489,8 +508,8 @@ public class Parser {
 				parseException = true;
 			}
 		}
-		if (seenStates.contains(SeenStates.SEEN_UNSAFE_HASHED_ATTR) && !seenStates.contains(SeenStates.SEEN_HASH)) {
-			this.warn(this.tokens[0], unsafeHashedWithoutHashWarningMessage);
+		if (seenStates.contains(SeenStates.SEEN_UNSAFE_HASHES) && !seenStates.contains(SeenStates.SEEN_HASH)) {
+			this.warn(this.tokens[0], unsafeHashesWithoutHashWarningMessage);
 		}
 		if (parseException) {
 			throw INVALID_SOURCE_LIST;
@@ -532,8 +551,8 @@ public class Parser {
 			case "'unsafe-redirect'":
 				this.warn(token, "'unsafe-redirect' has been removed from CSP as of version 2.0.");
 				return KeywordSource.UnsafeRedirect;
-			case "'unsafe-hashed-attributes'":
-				return KeywordSource.UnsafeHashedAttributes;
+			case "'unsafe-hashes'":
+				return KeywordSource.UnsafeHashes;
 			case "'report-sample'":
 				return KeywordSource.ReportSample;
 			case "'unsafe-allow-redirects'":
@@ -595,6 +614,8 @@ public class Parser {
 						this.info(token, strictDynamicWarningMessage);
 					}
 					return new SchemeSource(token.value.substring(0, token.value.length() - 1));
+				} else if (token.value.equalsIgnoreCase("'unsafe-hashed-attributes'")) {
+					this.warn(token, "The CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes' (June 2018).");
 				} else {
 					Matcher matcher = Constants.hostSourcePattern.matcher(token.value);
 					if (matcher.find()) {

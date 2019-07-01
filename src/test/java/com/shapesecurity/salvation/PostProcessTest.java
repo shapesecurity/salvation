@@ -20,11 +20,11 @@ public class PostProcessTest extends CSPTest {
 
 		p = parse("script-src 'unsafe-eval' 'nonce-123'; style-src 'unsafe-eval' 'nonce-123';");
 		p.postProcessOptimisation();
-		assertEquals("default-src 'unsafe-eval' 'nonce-123'", p.show());
+		assertEquals("default-src 'nonce-123' 'unsafe-eval'", p.show());
 
 		p = parse("script-src 'unsafe-eval' 'nonce-123'; style-src 'unsafe-eval';");
 		p.postProcessOptimisation();
-		assertEquals("script-src 'unsafe-eval' 'nonce-123'; style-src 'unsafe-eval'", p.show());
+		assertEquals("script-src 'nonce-123' 'unsafe-eval'; style-src 'unsafe-eval'", p.show());
 
 		p = parse("script-src 'self'; style-src 'self';");
 		p.postProcessOptimisation();

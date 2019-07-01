@@ -117,11 +117,35 @@ public class ParserTest extends CSPTest {
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
+		p = parse("script-src-elem a");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("script-src-attr a");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
 		p = parse("style-src http://*.example.com:*");
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
+		p = parse("style-src-elem http://*.example.com:*");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-attr http://*.example.com:*");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
 		p = parse("style-src samba://*.example.com");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-elem samba://*.example.com");
+		assertNotNull("policy should not be null", p);
+		assertEquals("directive count", 1, p.getDirectives().size());
+
+		p = parse("style-src-attr samba://*.example.com");
 		assertNotNull("policy should not be null", p);
 		assertEquals("directive count", 1, p.getDirectives().size());
 
@@ -356,6 +380,111 @@ public class ParserTest extends CSPTest {
 		assertEquals("policy origin", "http://qwe.zz", a.getOrigin().show());
 	}
 
+	@Test()
+	public void testScriptSrcElemAndAttrPolicies() {
+		Policy p = parse("script-src-elem a; script-src-attr a");
+		assertEquals("script-src-elem a; script-src-attr a", p.show());
+
+		p = parse("script-src-elem a; script-src-attr a; worker-src a; script-src b");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src-elem a; script-src-attr a; worker-src a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src-elem a 'unsafe-inline'; script-src-attr a 'unsafe-inline'; worker-src a");
+		assertEquals("worker-src a; script-src a 'unsafe-inline'", p.show());
+
+		p = parse("script-src-elem a 'unsafe-eval'; script-src-attr a 'unsafe-eval'; worker-src a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src a 'unsafe-eval'; script-src-attr b; script-src-elem b; worker-src c");
+		assertEquals("script-src b 'unsafe-eval'; worker-src c", p.show());
+
+		p = parse("script-src-elem a; script-src-elem a");
+		assertEquals("script-src-elem a", p.show());
+
+		p = parse("script-src-attr a; script-src-attr a");
+		assertEquals("script-src-attr a", p.show());
+
+		p = parse("script-src a; script-src-elem a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src a; script-src-attr a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src b; script-src-elem a; script-src-attr a");
+		assertEquals("script-src a; worker-src b", p.show());
+
+		p = parse("script-src b; worker-src a; script-src-elem a; script-src-attr a");
+		assertEquals("script-src a", p.show());
+
+		p = parse("script-src; worker-src; script-src-elem; script-src-attr");
+		assertEquals("script-src", p.show());
+
+		p = parse("worker-src; script-src-elem; script-src-attr");
+		assertEquals("script-src", p.show());
+
+		p = parse("worker-src; script-src-elem a; script-src-attr b");
+		assertEquals("worker-src; script-src-elem a; script-src-attr b", p.show());
+
+		p = parse("script-src a; worker-src b; script-src-elem c; script-src-attr d");
+		assertEquals("script-src a; worker-src b; script-src-elem c; script-src-attr d", p.show());
+
+		p = parse("default-src a; script-src-elem c; script-src-attr d");
+		assertEquals("default-src a; script-src-elem c; script-src-attr d", p.show());
+
+		p = parse("default-src a; script-src-elem a; script-src-attr a");
+		assertEquals("default-src a", p.show());
+	}
+
+	@Test()
+	public void testWorkerSrcOptimisation() {
+		Policy p = parse("worker-src a; child-src a");
+		assertEquals("child-src a", p.show());
+	}
+
+	@Test()
+	public void testStyleSrcElemAndAttrPolicies() {
+		Policy p = parse("style-src-elem a; style-src-attr a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src-elem a; style-src-elem a");
+		assertEquals("style-src-elem a", p.show());
+
+		p = parse("style-src-attr a; style-src-attr a");
+		assertEquals("style-src-attr a", p.show());
+
+		p = parse("style-src a; style-src-elem a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src a; style-src-attr a");
+		assertEquals("style-src a", p.show());
+
+		p = parse("style-src b; style-src-elem a; style-src-attr a");
+		assertEquals("style-src a b", p.show());
+
+		p = parse("style-src b; style-src-elem a; style-src-attr a");
+		assertEquals("style-src a b", p.show());
+
+		p = parse("style-src; style-src-elem; style-src-attr");
+		assertEquals("style-src", p.show());
+
+		p = parse("style-src-elem; style-src-attr");
+		assertEquals("style-src", p.show());
+
+		p = parse("style-src-elem a; style-src-attr b");
+		assertEquals("style-src-elem a; style-src-attr b", p.show());
+
+		p = parse("style-src a; style-src-elem c; style-src-attr d");
+		assertEquals("style-src a; style-src-elem c; style-src-attr d", p.show());
+
+		p = parse("default-src a; style-src-elem c; style-src-attr d");
+		assertEquals("default-src a; style-src-elem c; style-src-attr d", p.show());
+
+		p = parse("default-src a; style-src-elem a; style-src-attr a");
+		assertEquals("default-src a", p.show());
+	}
+	
 	@Test()
 	public void testPluginTypesParsing() {
 		ArrayList<Notice> notices = new ArrayList<>();
@@ -947,6 +1076,30 @@ public class ParserTest extends CSPTest {
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 		assertEquals("script-src 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("script-src-elem 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("script-src-elem 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("script-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("script-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("style-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("style-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
+
+		notices.clear();
+		p = parseWithNotices("style-src-attr 'strict-dynamic' 'unsafe-eval'", notices);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(0, notices.size());
+		assertEquals("style-src-attr 'strict-dynamic' 'unsafe-eval'", p.show());
 	}
 
 	@Test
@@ -1081,38 +1234,45 @@ public class ParserTest extends CSPTest {
 		Policy p;
 		ArrayList<Notice> notices = new ArrayList<>();
 		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		assertEquals(0, p.getDirectives().size());
+		assertEquals(2, notices.size());
+		assertEquals("The CSP specification renamed 'unsafe-hashed-attributes' to 'unsafe-hashes' (June 2018).", notices.get(0).message);
+		assertEquals("Expecting source-expression but found \"'unsafe-hashed-attributes'\".", notices.get(1).message);
+
+		notices.clear();
+		p = parseWithNotices("default-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(1, notices.size());
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(0).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(0).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(3, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(2).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(2).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'nonce-123'", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes' 'nonce-123'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(4, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
 		assertEquals("Invalid base64-value (should be multiple of 4 bytes: 3).", notices.get(2).message);
-		assertEquals("The \"'unsafe-hashed-attributes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
+		assertEquals("The \"'unsafe-hashes'\" keyword-source has no effect in source lists that do not contain hash-source in CSP3 and later.", notices.get(3).message);
 
 		notices.clear();
-		p = parseWithNotices("default-src 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("default-src 'unsafe-hashes' 'unsafe-hashes' 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(2, notices.size());
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(0).message);
-		assertEquals("Source list contains duplicate source expression \"'unsafe-hashed-attributes'\". All but the first instance will be ignored.", notices.get(1).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(0).message);
+		assertEquals("Source list contains duplicate source expression \"'unsafe-hashes'\". All but the first instance will be ignored.", notices.get(1).message);
 
 		notices.clear();
 		p = parseWithNotices("default-src 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
@@ -1121,7 +1281,7 @@ public class ParserTest extends CSPTest {
 
 		// while grammar allows this, I am open to throw warnings about directives that don't make sense with 'usnafe-hashed-attributes'
 		notices.clear();
-		p = parseWithNotices("img-src 'unsafe-hashed-attributes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
+		p = parseWithNotices("img-src 'unsafe-hashes' 'sha512-vSsar3708Jvp9Szi2NWZZ02Bqp1qRCFpbcTZPdBhnWgs5WtNZKnvCXdhztmeD2cmW192CF5bDufKRpayrW/isg=='", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
 	}
@@ -1150,6 +1310,12 @@ public class ParserTest extends CSPTest {
 		p = parseWithNotices("img-src 'report-sample'", notices);
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(0, notices.size());
+	}
+
+	@Test
+	public void testExpand() {
+		Policy p = Parser.parse("default-src a; child-src b;", "https://origin.com");
+		assertEquals("default-src a; child-src b", p.show());
 	}
 
 	@Test

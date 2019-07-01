@@ -152,16 +152,24 @@ public class Policy implements Show {
 		// expand child-src
 		if (this.directives.containsKey(ChildSrcDirective.class) && !this.directives.containsKey(FrameSrcDirective.class)) {
 			ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
-			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-			this.directives.put(FrameSrcDirective.class, new FrameSrcDirective(childSources));
+			Set<Directive> expandedDirectives = expandDirective(childSrcDirective);
+			expandedDirectives.forEach(this::insert);
 		}
 
 		// expand script-src
-		if (this.directives.containsKey(ScriptSrcDirective.class) && !this.directives.containsKey(WorkerSrcDirective.class)) {
+		if (this.directives.containsKey(ScriptSrcDirective.class)) {
 			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-			Set<SourceExpression> scriptSources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
-			this.directives.put(WorkerSrcDirective.class, new WorkerSrcDirective(scriptSources));
+			Set<Directive> expandedDirectives = expandDirective(scriptSrcDirective);
+			expandedDirectives.forEach(this::insert);
 		}
+
+		// expand style-src
+		if (this.directives.containsKey(StyleSrcDirective.class)) {
+			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+			Set<Directive> expandedDirectives = expandDirective(styleSrcDirective);
+			expandedDirectives.forEach(this::insert);
+		}
+
 	}
 
 	private <V extends SourceExpression, T extends Directive<V>> void eliminateRedundantSourceExpression(
@@ -177,7 +185,7 @@ public class Policy implements Show {
 		}
 	}
 
-	private void optimise() {
+	public void optimise() {
 		for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
 			Directive<? extends DirectiveValue> directive = entry.getValue();
 			if (directive instanceof SourceListDirective) {
@@ -216,19 +224,74 @@ public class Policy implements Show {
 			}
 		}
 
-		// * remove frame source directive if equivalent to child-src
+		// merge into script-src if script-src-elem and script-src-attr are identical and worker-src is present
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		ScriptSrcAttrDirective scriptSrcAttrDirective = this.getDirectiveByType(ScriptSrcAttrDirective.class);
+		WorkerSrcDirective workerSrcDirective = this.getDirectiveByType(WorkerSrcDirective.class);
+		if (scriptSrcElemDirective != null && scriptSrcAttrDirective != null && workerSrcDirective != null) {
+			Set<SourceExpression> a = scriptSrcElemDirective.values().filter(x -> x != KeywordSource.UnsafeEval).collect(Collectors.toCollection(LinkedHashSet::new));
+			Set<SourceExpression> b = scriptSrcAttrDirective.values().filter(x -> x != KeywordSource.UnsafeEval).collect(Collectors.toCollection(LinkedHashSet::new));
+			if (a.equals(b)) {
+				ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+				Set<SourceExpression> scriptSources = a;
+				if (scriptSrcDirective != null && scriptSrcDirective.contains(KeywordSource.UnsafeEval)) {
+					// unsafe-eval only applies when in script-src, not script-src-elem or script-src-attr.
+					// but if both of those and worker-src are present, script-src has no other effect.
+					scriptSources.add(KeywordSource.UnsafeEval);
+				}
+				scriptSrcDirective = new ScriptSrcDirective(scriptSources);
+				this.directives.put(ScriptSrcDirective.class, scriptSrcDirective);
+				this.directives.remove(ScriptSrcElemDirective.class);
+				this.directives.remove(ScriptSrcAttrDirective.class);
+			}
+		}
+
+		// merge into style-src if style-src-elem and style-src-attr are identical
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		StyleSrcAttrDirective styleSrcAttrDirective = this.getDirectiveByType(StyleSrcAttrDirective.class);
+		if (styleSrcElemDirective != null && styleSrcAttrDirective != null) {
+			Set<SourceExpression> a = styleSrcElemDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			Set<SourceExpression> b = styleSrcAttrDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			if (a.equals(b)) {
+				StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+				Set<SourceExpression> styleSources = a;
+				if (styleSrcDirective != null) {
+					styleSources.addAll(styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new)));
+				}
+				styleSrcDirective = new StyleSrcDirective(styleSources);
+				this.directives.put(StyleSrcDirective.class, styleSrcDirective);
+				this.directives.remove(StyleSrcElemDirective.class);
+				this.directives.remove(StyleSrcAttrDirective.class);
+			}
+		}
+
 		ChildSrcDirective childSrcDirective = this.getDirectiveByType(ChildSrcDirective.class);
 		if (childSrcDirective != null) {
 			Set<SourceExpression> childSources = childSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			// * remove worker source directive if equivalent to child-src
+			this.eliminateRedundantSourceExpression(childSources, WorkerSrcDirective.class);
+			// * remove frame source directive if equivalent to child-src
 			this.eliminateRedundantSourceExpression(childSources, FrameSrcDirective.class);
 		}
 
-		// * remove worker source directive if equivalent to script-src
 		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
 		if (scriptSrcDirective != null) {
 			Set<SourceExpression> scriptSources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			// * remove worker source directive if equivalent to script-src
 			this.eliminateRedundantSourceExpression(scriptSources, WorkerSrcDirective.class);
+			// * remove script-src-elem and script-src-attr directives if equivalent to script-src
+			this.eliminateRedundantSourceExpression(scriptSources, ScriptSrcElemDirective.class);
+			this.eliminateRedundantSourceExpression(scriptSources, ScriptSrcAttrDirective.class);
 		}
+
+		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+		if (styleSrcDirective != null) {
+			Set<SourceExpression> styleSources = styleSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			// * remove style-src-elem and style-src-attr directives if equivalent to script-src
+			this.eliminateRedundantSourceExpression(styleSources, StyleSrcElemDirective.class);
+			this.eliminateRedundantSourceExpression(styleSources, StyleSrcAttrDirective.class);
+		}
+
 
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 
@@ -249,6 +312,7 @@ public class Policy implements Show {
 				defaultSrcDirective = new DefaultSrcDirective(defaultSources);
 				this.directives.put(DefaultSrcDirective.class, defaultSrcDirective);
 			}
+
 
 			// * remove unnecessary default-src directives if all source directives exist
 			if (all(Directive.getFetchDirectives(), this.directives::containsKey)) {
@@ -329,7 +393,8 @@ public class Policy implements Show {
 		if (!(directive instanceof DefaultSrcDirective)) {
 			this.expandDefaultSrc();
 		}
-		this.unionDirectivePrivate(directive);
+		Set<Directive> expandedDirectives = expandDirective(directive);
+		expandedDirectives.forEach(x -> this.unionDirectivePrivate(x));
 		this.optimise();
 	}
 
@@ -341,8 +406,31 @@ public class Policy implements Show {
 		if (!(directive instanceof DefaultSrcDirective)) {
 			this.expandDefaultSrc();
 		}
-		this.intersectDirectivePrivate(directive);
+		Set<Directive> expandedDirectives = expandDirective(directive);
+		expandedDirectives.forEach(x -> this.intersectDirectivePrivate(x));
 		this.optimise();
+	}
+
+	private static Set<Directive> expandDirective(@Nonnull Directive<? extends DirectiveValue> directive) {
+		if (!(directive instanceof FetchDirective)) {
+			return Collections.singleton(directive);
+		}
+		Set<Directive> directives = new LinkedHashSet<>();
+		directives.add(directive);
+		Stream<SourceExpression> stream = (Stream<SourceExpression>) directive.values();
+		Set<SourceExpression> sources = stream.collect(Collectors.toCollection(LinkedHashSet::new));
+		if (directive instanceof ChildSrcDirective) {
+			directives.add(new FrameSrcDirective(sources));
+			directives.add(new WorkerSrcDirective(sources));
+		} else if (directive instanceof ScriptSrcDirective) {
+			directives.add(new ScriptSrcElemDirective(sources));
+			directives.add(new ScriptSrcAttrDirective(sources));
+			directives.add(new WorkerSrcDirective(sources));
+		} else if (directive instanceof StyleSrcDirective) {
+			directives.add(new StyleSrcElemDirective(sources));
+			directives.add(new StyleSrcAttrDirective(sources));
+		}
+		return directives;
 	}
 
 	// union a directive if it does not exist; used for policy manipulation and composition
@@ -371,6 +459,16 @@ public class Policy implements Show {
 			this.resolveSelf();
 			this.optimise();
 		}
+	}
+
+	// differs from the above in that it will override things
+	public void addDirectives(@Nonnull Iterable<Directive<? extends DirectiveValue>> directives) {
+		for (Directive<? extends DirectiveValue> d : directives) {
+			this.directives.put(d.getClass(), d);
+		}
+		this.expandDefaultSrc();
+		this.resolveSelf();
+		this.optimise();
 	}
 
 	@Nonnull
@@ -421,7 +519,7 @@ public class Policy implements Show {
 	}
 
 	private boolean defaultsAllowAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-		if (!this.defaultsHaveUnsafeHashedAttributes()) {
+		if (!this.defaultsHaveUnsafeHashes()) {
 			return false;
 		}
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
@@ -477,12 +575,12 @@ public class Policy implements Show {
 		return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeInline);
 	}
 
-	private boolean defaultsHaveUnsafeHashedAttributes() {
+	private boolean defaultsHaveUnsafeHashes() {
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 		if (defaultSrcDirective == null) {
 			return false;
 		}
-		return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeHashedAttributes);
+		return defaultSrcDirective.values().anyMatch(x -> x == KeywordSource.UnsafeHashes);
 	}
 
 	private boolean defaultsHaveNonceSource() {
@@ -601,33 +699,66 @@ public class Policy implements Show {
 		if (this.allowsUnsafeInlineStyle()) {
 			return true;
 		}
-		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-		if (styleSrcDirective == null) {
-			return this.defaultsAllowHash(algorithm, hashValue);
+
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		if (styleSrcElemDirective != null) {
+			return styleSrcElemDirective.matchesHash(algorithm, hashValue);
 		}
-		return styleSrcDirective.matchesHash(algorithm, hashValue);
+
+		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+		if (styleSrcDirective != null) {
+			return styleSrcDirective.matchesHash(algorithm, hashValue);
+		}
+
+		return this.defaultsAllowHash(algorithm, hashValue);
+
 	}
 
 	public boolean allowsScriptWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
 		if (this.allowsUnsafeInlineScript()) {
 			return true;
 		}
-		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-		if (scriptSrcDirective == null) {
-			return this.defaultsAllowHash(algorithm, hashValue);
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		if (scriptSrcElemDirective != null) {
+			return scriptSrcElemDirective.matchesHash(algorithm, hashValue);
 		}
-		return scriptSrcDirective.matchesHash(algorithm, hashValue);
+
+		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+		if (scriptSrcDirective != null) {
+			return scriptSrcDirective.matchesHash(algorithm, hashValue);
+		}
+
+		return this.defaultsAllowHash(algorithm, hashValue);
 	}
 
-	public boolean allowsAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
-		if (!this.haveUnsafeHashedAttributes()) {
+	public boolean allowsScriptAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+		if (!this.haveUnsafeScriptHashes()) {
 			return false;
 		}
-		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-		if (scriptSrcDirective == null) {
-			return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
+		ScriptSrcAttrDirective scriptSrcAttrDirective = this.getDirectiveByType(ScriptSrcAttrDirective.class);
+		if (scriptSrcAttrDirective == null) {
+			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+			if (scriptSrcDirective == null) {
+				return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
+			}
+			return scriptSrcDirective.matchesHash(algorithm, hashValue);
 		}
-		return scriptSrcDirective.matchesHash(algorithm, hashValue);
+		return scriptSrcAttrDirective.matchesHash(algorithm, hashValue);
+	}
+
+	public boolean allowsStyleAttributeWithHash(@Nonnull HashAlgorithm algorithm, @Nonnull Base64Value hashValue) {
+		if (!this.haveUnsafeStyleHashes()) {
+			return false;
+		}
+		StyleSrcAttrDirective styleSrcAttrDirective = this.getDirectiveByType(StyleSrcAttrDirective.class);
+		if (styleSrcAttrDirective == null) {
+			StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+			if (styleSrcDirective == null) {
+				return this.defaultsAllowAttributeWithHash(algorithm, hashValue);
+			}
+			return styleSrcDirective.matchesHash(algorithm, hashValue);
+		}
+		return styleSrcAttrDirective.matchesHash(algorithm, hashValue);
 	}
 
 	public boolean allowsUnsafeInlineScript() {
@@ -638,9 +769,16 @@ public class Policy implements Show {
 
 	}
 
-	public boolean haveUnsafeHashedAttributes() {
-		return containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeHashedAttributes) ||
-				defaultsHaveUnsafeHashedAttributes();
+	public boolean haveUnsafeScriptHashes() {
+		return containsSourceExpression(ScriptSrcAttrDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
+				containsSourceExpression(ScriptSrcDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
+				defaultsHaveUnsafeHashes();
+	}
+
+	public boolean haveUnsafeStyleHashes() {
+		return containsSourceExpression(StyleSrcAttrDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
+				containsSourceExpression(StyleSrcDirective.class, x -> x == KeywordSource.UnsafeHashes) ||
+				defaultsHaveUnsafeHashes();
 	}
 
 	public <T extends SourceListDirective> boolean containsSourceExpression(Class<T> type, @Nonnull Predicate<SourceExpression> predicate) {
@@ -678,11 +816,16 @@ public class Policy implements Show {
 		if (this.allowsUnsafeInlineScript()) {
 			return true;
 		}
-		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
-		if (scriptSrcDirective == null) {
-			return this.defaultsAllowNonce(nonce);
+		ScriptSrcElemDirective scriptSrcElemDirective = this.getDirectiveByType(ScriptSrcElemDirective.class);
+		if (scriptSrcElemDirective != null) {
+			return scriptSrcElemDirective.matchesNonce(nonce);
 		}
-		return scriptSrcDirective.matchesNonce(nonce);
+
+		ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+		if (scriptSrcDirective != null) {
+			return scriptSrcDirective.matchesNonce(nonce);
+		}
+		return this.defaultsAllowNonce(nonce);
 	}
 
 	public boolean allowsScriptWithNonce(@Nonnull Base64Value nonce) {
@@ -693,11 +836,16 @@ public class Policy implements Show {
 		if (this.allowsUnsafeInlineStyle()) {
 			return true;
 		}
-		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
-		if (styleSrcDirective == null) {
-			return this.defaultsAllowNonce(nonce);
+		StyleSrcElemDirective styleSrcElemDirective = this.getDirectiveByType(StyleSrcElemDirective.class);
+		if (styleSrcElemDirective != null) {
+			return styleSrcElemDirective.matchesNonce(nonce);
 		}
-		return styleSrcDirective.matchesNonce(nonce);
+
+		StyleSrcDirective styleSrcDirective = this.getDirectiveByType(StyleSrcDirective.class);
+		if (styleSrcDirective != null) {
+			return styleSrcDirective.matchesNonce(nonce);
+		}
+		return this.defaultsAllowNonce(nonce);
 	}
 
 	public boolean allowsStyleWithNonce(@Nonnull Base64Value nonce) {
@@ -873,5 +1021,11 @@ public class Policy implements Show {
 			}
 		}
 		return false;
+	}
+
+	private void insert(@Nonnull Directive x) {
+		if (this.getDirectiveByType(x.getClass()) == null) {
+			this.directives.put(x.getClass(), x);
+		}
 	}
 }

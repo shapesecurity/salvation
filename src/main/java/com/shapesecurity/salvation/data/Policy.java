@@ -111,6 +111,16 @@ public class Policy implements Show {
 	}
 
 	private void expandDefaultSrc() {
+		// This is a special case because worker-src falls back to child-src before script-src,
+		// but child-src does _not_ fall back to script-src.
+		// Hence this logic needs to happen before expanding anything into child-src, to ensure that
+		// if script-src is present and child-src is not, worker-src comes from script-src rather than default-src.
+		if (this.directives.containsKey(ScriptSrcDirective.class) && !this.directives.containsKey(ChildSrcDirective.class) && !this.directives.containsKey(WorkerSrcDirective.class)) {
+			ScriptSrcDirective scriptSrcDirective = this.getDirectiveByType(ScriptSrcDirective.class);
+			Set<SourceExpression> sources = scriptSrcDirective.values().collect(Collectors.toCollection(LinkedHashSet::new));
+			this.directives.put(WorkerSrcDirective.class, new WorkerSrcDirective(sources));
+		}
+
 		DefaultSrcDirective defaultSrcDirective = this.getDirectiveByType(DefaultSrcDirective.class);
 		Set<SourceExpression> defaultSources;
 		if (defaultSrcDirective != null) {

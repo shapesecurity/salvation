@@ -29,13 +29,22 @@ public class PolicyMergeTest extends CSPTest {
 		p1.union(p2);
 		assertEquals("default-src aaa https://origin2.com", p1.show());
 
-		p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a; ", "https://origin1.com");
+		p1 = Parser.parse("default-src d; connect-src a; script-src a; media-src a;", "https://origin1.com");
 		p2 = Parser
 				.parse("default-src; img-src b; style-src b; font-src b; child-src b; object-src b; manifest-src b; prefetch-src b;", "https://origin2.com");
 		p1.union(p2);
 		assertEquals(
-				"connect-src a; script-src a; media-src a; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b; prefetch-src d b",
+				"connect-src a; script-src a; media-src a; worker-src a b; style-src d b; img-src d b; child-src d b; font-src d b; object-src d b; manifest-src d b; prefetch-src d b",
 				p1.show());
+
+		p1 = Parser.parse("default-src aaa; script-src bbb", "https://origin1.com");
+		Set<SourceExpression> set = new LinkedHashSet<>();
+		set.add(new HostSource(null, "ccc", -1, null));
+		ScriptSrcDirective scriptSrcDirective = new ScriptSrcDirective(set);
+		p1.unionDirective(scriptSrcDirective);
+		assertEquals(
+			"default-src aaa; script-src bbb ccc",
+			p1.show());
 	}
 
 	@Test

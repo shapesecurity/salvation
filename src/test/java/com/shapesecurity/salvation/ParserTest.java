@@ -810,6 +810,18 @@ public class ParserTest extends CSPTest {
 	}
 
 	@Test
+	public void testWhitespace() {
+		Token[] tokens = Tokeniser.tokenise("some-directive-name\t\n\f\r a");
+
+		assertEquals(2, tokens.length);
+		assertTrue(tokens[0] instanceof DirectiveNameToken);
+		assertEquals("some-directive-name", tokens[0].value);
+		assertEquals(DirectiveNameToken.DirectiveNameSubtype.Unrecognised, ((DirectiveNameToken) tokens[0]).subtype);
+		assertTrue(tokens[1] instanceof DirectiveValueToken);
+		assertEquals("\t\n\f\r a", tokens[1].value);
+	}
+
+	@Test
 	public void testUnknownTokens() {
 		ArrayList<Notice> notices = new ArrayList();
 		Policy p = parseWithNotices("img-src √", notices);

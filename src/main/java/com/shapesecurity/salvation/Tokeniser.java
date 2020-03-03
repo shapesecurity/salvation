@@ -40,7 +40,7 @@ public class Tokeniser {
 	}
 
 	private static boolean isWhitespace(char ch) {
-		return ch == ' ' || ch == '\t';
+		return ch == '\t' || ch == '\n' || ch == '\f' || ch == '\r' || ch == ' ';
 	}
 
 	protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {

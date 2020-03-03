@@ -19,8 +19,8 @@ import com.shapesecurity.salvation.tokens.Token;
 import com.shapesecurity.salvation.tokens.UnknownToken;
 
 public class Tokeniser {
-	private static final Pattern WSP = Pattern.compile("[ \t]+");
-	private static final Pattern NotWSP = Pattern.compile("[^ \t]+");
+	private static final Pattern WSP = Pattern.compile("[\t\n\f\r ]+");
+	private static final Pattern NotWSP = Pattern.compile("[^\t\n\f\r ]+");
 	private static final Pattern directiveSeparator = Pattern.compile(";");
 	private static final Pattern policySeparator = Pattern.compile(",");
 	private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");

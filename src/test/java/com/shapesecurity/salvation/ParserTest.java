@@ -818,7 +818,7 @@ public class ParserTest extends CSPTest {
 		assertEquals("some-directive-name", tokens[0].value);
 		assertEquals(DirectiveNameToken.DirectiveNameSubtype.Unrecognised, ((DirectiveNameToken) tokens[0]).subtype);
 		assertTrue(tokens[1] instanceof DirectiveValueToken);
-		assertEquals("\t\n\f\r a\t\n\f\r ", tokens[1].value);
+		assertEquals("\n\f\r a\t\n\f\r ", tokens[1].value);
 	}
 
 	@Test

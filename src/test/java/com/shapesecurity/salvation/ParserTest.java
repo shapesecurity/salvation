@@ -231,11 +231,11 @@ public class ParserTest extends CSPTest {
 		assertEquals("directive-name, path-part", "base-uri */abc", parseAndShow("base-uri */abc"));
 
 		notices.clear();
-		p = parseWithNotices("base-uri *\n", notices);
+		p = parseWithNotices("base-uri *\0", notices);
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals(
-				"Expecting directive-value but found U+000A (\n). Non-ASCII and non-printable characters must be percent-encoded.",
+				"Expecting source-expression but found \"*\0\".",
 				notices.get(0).message);
 
 		assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
@@ -585,9 +585,8 @@ public class ParserTest extends CSPTest {
 
 		notices.clear();
 		parseWithNotices("report-to д", notices);
-		assertEquals(2, notices.size());
-		assertEquals("The report-to directive must contain exactly one RFC 7230 token.", notices.get(0).message);
-		assertEquals("Expecting directive-value but found U+0434 (д). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
+		assertEquals(1, notices.size());
+		assertEquals("Expecting RFC 7230 token but found \"д\".", notices.get(0).message);
 
 		notices.clear();
 		parseWithNotices("report-to a b", notices);
@@ -601,7 +600,7 @@ public class ParserTest extends CSPTest {
 
 		p = parse("report-to        a");
 		q = parse("report-to a; ");
-		assertFalse("report-to equals", p.equals(q));
+		assertTrue("report-to equals", p.equals(q));
 	}
 
 	@Test
@@ -646,14 +645,13 @@ public class ParserTest extends CSPTest {
 				notices.get(0).message);
 
 		notices.clear();
-		p = parseWithNotices("sandbox a!*\n", notices);
+		p = parseWithNotices("sandbox a!*\0", notices);
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(2, notices.size());
 		assertEquals(
 				"The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation.",
 				notices.get(0).message);
-		assertEquals("Expecting directive-value but found U+000A (\n"
-				+ "). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
+		assertEquals("Expecting RFC 7230 token but found \"a!*\0\".", notices.get(1).message);
 
 		notices.clear();
 		p = parseWithNotices("sandbox a!*^:", notices);
@@ -806,7 +804,19 @@ public class ParserTest extends CSPTest {
 		assertEquals("some-directive-name", tokens[0].value);
 		assertEquals(DirectiveNameToken.DirectiveNameSubtype.Unrecognised, ((DirectiveNameToken) tokens[0]).subtype);
 		assertTrue(tokens[1] instanceof DirectiveValueToken);
-		assertEquals("  a  ", tokens[1].value);
+		assertEquals("a", tokens[1].value);
+	}
+
+	@Test
+	public void testWhitespace() {
+		Token[] tokens = Tokeniser.tokenise("\t\n\f\r some-directive-name\t\n\f\r a\t\n\f\r ");
+
+		assertEquals(2, tokens.length);
+		assertTrue(tokens[0] instanceof DirectiveNameToken);
+		assertEquals("some-directive-name", tokens[0].value);
+		assertEquals(DirectiveNameToken.DirectiveNameSubtype.Unrecognised, ((DirectiveNameToken) tokens[0]).subtype);
+		assertTrue(tokens[1] instanceof DirectiveValueToken);
+		assertEquals("a", tokens[1].value);
 	}
 
 	@Test
@@ -816,7 +826,7 @@ public class ParserTest extends CSPTest {
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals(
-				"Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded.",
+				"Expecting source-expression but found \"√\".",
 				notices.get(0).message);
 
 		notices.clear();
@@ -824,7 +834,7 @@ public class ParserTest extends CSPTest {
 		assertEquals(1, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals(
-				"Expecting directive-value but found U+221A (√). Non-ASCII and non-printable characters must be percent-encoded.",
+				"Expecting source-expression but found \"√\".",
 				notices.get(0).message);
 
 		notices.clear();
@@ -838,18 +848,14 @@ public class ParserTest extends CSPTest {
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals(
-				"Expecting directive-value but found U+1D306 (𝌆). Non-ASCII and non-printable characters must be percent-encoded.",
+				"Expecting source-expression but found \"\uD834\uDF06\".",
 				notices.get(0).message);
 
 		notices.clear();
 		p = parseWithNotices("plugin-types х/п", notices);
 		assertEquals(0, p.getDirectives().size());
-		assertEquals(2, notices.size());
-		assertEquals("The media-type-list must contain at least one media-type.", notices.get(0).message);
-		assertEquals(
-				"Expecting directive-value but found U+0445 (х). Non-ASCII and non-printable characters must be percent-encoded.",
-				notices.get(1).message);
-
+		assertEquals(1, notices.size());
+		assertEquals("Expecting media-type but found \"х/п\".", notices.get(0).message);
 	}
 
 
@@ -923,9 +929,8 @@ public class ParserTest extends CSPTest {
 
 		notices.clear();
 		p = parseWithNotices("referrer   no-referrer  ", notices);
-		assertEquals(0, p.getDirectives().size());
-		assertEquals(2, notices.size());
-		assertEquals("Expecting referrer directive value but found \"  no-referrer  \".", notices.get(1).message);
+		assertEquals(1, p.getDirectives().size());
+		assertEquals(1, notices.size());
 
 		notices.clear();
 		p = parseWithNotices("referrer aaa", notices);

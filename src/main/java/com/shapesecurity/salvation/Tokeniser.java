@@ -19,12 +19,12 @@ import com.shapesecurity.salvation.tokens.Token;
 import com.shapesecurity.salvation.tokens.UnknownToken;
 
 public class Tokeniser {
-	private static final Pattern WSP = Pattern.compile("[ \t]+");
-	private static final Pattern NotWSP = Pattern.compile("[^ \t]+");
+	private static final Pattern WSP = Pattern.compile("[\t\n\f\r ]+");
+	private static final Pattern NotWSP = Pattern.compile("[^\t\n\f\r ]+");
 	private static final Pattern directiveSeparator = Pattern.compile(";");
 	private static final Pattern policySeparator = Pattern.compile(",");
 	private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
-	private static final Pattern directiveValuePattern = Pattern.compile("[ \\t!-+--:<-~]+");
+	private static final Pattern directiveValuePattern = Pattern.compile("[\t\n\f\r !-+--:<-~]+");
 	private static final Pattern notSeparator = Pattern.compile("[^;,]+");
 	@Nonnull
 	protected ArrayList<Token> tokens;
@@ -40,7 +40,7 @@ public class Tokeniser {
 	}
 
 	private static boolean isWhitespace(char ch) {
-		return ch == ' ' || ch == '\t';
+		return ch == '\t' || ch == '\n' || ch == '\f' || ch == '\r' || ch == ' ';
 	}
 
 	protected boolean eat(@Nonnull Function<String, Token> ctor, @Nonnull Pattern pattern) {
@@ -67,7 +67,7 @@ public class Tokeniser {
 	}
 
 	private boolean eatDirectiveValue() {
-		return this.eat(DirectiveValueToken::new, Tokeniser.directiveValuePattern);
+		return this.eat(s -> new DirectiveValueToken(trimRHSWS(s)), Tokeniser.notSeparator);
 	}
 
 	private boolean eatUntilSeparator() {
@@ -82,10 +82,13 @@ public class Tokeniser {
 		return false;
 	}
 
-	private void eatWhitespace() {
+	private boolean eatWhitespace() {
+		boolean found = false;
 		while (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
 			++this.index;
+			found = true;
 		}
+		return found;
 	}
 
 	private boolean hasNext() {
@@ -108,7 +111,7 @@ public class Tokeniser {
 				this.eatUntilSeparator();
 				continue;
 			}
-			if (!this.eatSingleWhitespace()) {
+			if (!this.eatWhitespace()) {
 				this.eatUntilSeparator();
 				continue;
 			}

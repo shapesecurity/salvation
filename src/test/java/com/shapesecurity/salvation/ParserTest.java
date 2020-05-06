@@ -231,11 +231,11 @@ public class ParserTest extends CSPTest {
 		assertEquals("directive-name, path-part", "base-uri */abc", parseAndShow("base-uri */abc"));
 
 		notices.clear();
-		p = parseWithNotices("base-uri *\n", notices);
+		p = parseWithNotices("base-uri *\0", notices);
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(1, notices.size());
 		assertEquals(
-				"Expecting directive-value but found U+000A (\n). Non-ASCII and non-printable characters must be percent-encoded.",
+				"Expecting directive-value but found U+0000 (\0). Non-ASCII and non-printable characters must be percent-encoded.",
 				notices.get(0).message);
 
 		assertEquals("directive-name, full host source", "base-uri https://a.com:888/ert",
@@ -646,13 +646,13 @@ public class ParserTest extends CSPTest {
 				notices.get(0).message);
 
 		notices.clear();
-		p = parseWithNotices("sandbox a!*\n", notices);
+		p = parseWithNotices("sandbox a!*\0", notices);
 		assertEquals(0, p.getDirectives().size());
 		assertEquals(2, notices.size());
 		assertEquals(
 				"The sandbox directive should contain only allow-forms, allow-modals, allow-pointer-lock, allow-popups, allow-popups-to-escape-sandbox, allow-same-origin, allow-scripts, or allow-top-navigation.",
 				notices.get(0).message);
-		assertEquals("Expecting directive-value but found U+000A (\n"
+		assertEquals("Expecting directive-value but found U+0000 (\0"
 				+ "). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
 
 		notices.clear();

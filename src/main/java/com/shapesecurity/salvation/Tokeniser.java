@@ -24,7 +24,7 @@ public class Tokeniser {
 	private static final Pattern directiveSeparator = Pattern.compile(";");
 	private static final Pattern policySeparator = Pattern.compile(",");
 	private static final Pattern directiveNamePattern = Pattern.compile("[a-zA-Z0-9-]+");
-	private static final Pattern directiveValuePattern = Pattern.compile("[ \\t!-+--:<-~]+");
+	private static final Pattern directiveValuePattern = Pattern.compile("[\t\n\f\r !-+--:<-~]+");
 	private static final Pattern notSeparator = Pattern.compile("[^;,]+");
 	@Nonnull
 	protected ArrayList<Token> tokens;

@@ -224,7 +224,7 @@ public class LocationTest extends CSPTest {
 
 		notices.clear();
 		ParserWithLocation.parse("referrer абц no-referrer", "https://origin", notices);
-		assertEquals(3, notices.size());
+		assertEquals(2, notices.size());
 		assertNotNull(notices.get(0).startLocation);
 		assertEquals(1, notices.get(0).startLocation.line);
 		assertEquals(1, notices.get(0).startLocation.column);
@@ -236,22 +236,13 @@ public class LocationTest extends CSPTest {
 		assertEquals("Warning: The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).toString());
 		assertNotNull(notices.get(1).startLocation);
 		assertEquals(1, notices.get(1).startLocation.line);
-		assertEquals(1, notices.get(1).startLocation.column);
-		assertEquals(0, notices.get(1).startLocation.offset);
+		assertEquals(10, notices.get(1).startLocation.column);
+		assertEquals(9, notices.get(1).startLocation.offset);
 		assertNotNull(notices.get(1).endLocation);
 		assertEquals(1, notices.get(1).endLocation.line);
-		assertEquals(9, notices.get(1).endLocation.column);
-		assertEquals(8, notices.get(1).endLocation.offset);
-		assertEquals("Error: The referrer directive must contain exactly one referrer directive value.", notices.get(1).toString());
-		assertNotNull(notices.get(2).startLocation);
-		assertEquals(1, notices.get(2).startLocation.line);
-		assertEquals(10, notices.get(2).startLocation.column);
-		assertEquals(9, notices.get(2).startLocation.offset);
-		assertNotNull(notices.get(2).endLocation);
-		assertEquals(1, notices.get(2).endLocation.line);
-		assertEquals(25, notices.get(2).endLocation.column);
-		assertEquals(24, notices.get(2).endLocation.offset);
-		assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(2).message);
+		assertEquals(25, notices.get(1).endLocation.column);
+		assertEquals(24, notices.get(1).endLocation.offset);
+		assertEquals("Error: Expecting referrer directive value but found \"абц no-referrer\".", notices.get(1).toString());
 
 		notices.clear();
 		ParserWithLocation.parse("referrer no-referrer абц", "https://origin", notices);
@@ -267,13 +258,13 @@ public class LocationTest extends CSPTest {
 		assertEquals("The referrer directive was an experimental directive that was proposed but never added to the CSP specification. Support for this directive will be removed. See Referrer Policy specification.", notices.get(0).message);
 		assertNotNull(notices.get(1).startLocation);
 		assertEquals(1, notices.get(1).startLocation.line);
-		assertEquals(22, notices.get(1).startLocation.column);
-		assertEquals(21, notices.get(1).startLocation.offset);
+		assertEquals(10, notices.get(1).startLocation.column);
+		assertEquals(9, notices.get(1).startLocation.offset);
 		assertNotNull(notices.get(1).endLocation);
 		assertEquals(1, notices.get(1).endLocation.line);
 		assertEquals(25, notices.get(1).endLocation.column);
 		assertEquals(24, notices.get(1).endLocation.offset);
-		assertEquals("Expecting directive-value but found U+0430 (а). Non-ASCII and non-printable characters must be percent-encoded.", notices.get(1).message);
+		assertEquals("Expecting referrer directive value but found \"no-referrer абц\".", notices.get(1).message);
 	}
 
 	@Test
@@ -345,23 +336,34 @@ public class LocationTest extends CSPTest {
 
 		notices.clear();
 		ParserWithLocation.parse("require-sri-for     абц ert", "https://origin", notices);
-		assertEquals(2, notices.size());
+		assertEquals(3, notices.size());
 		assertNotNull(notices.get(0).startLocation);
 		assertEquals(1, notices.get(0).startLocation.line);
-		assertEquals(1, notices.get(0).startLocation.column);
-		assertEquals(0, notices.get(0).startLocation.offset);
+		assertEquals(21, notices.get(0).startLocation.column);
+		assertEquals(20, notices.get(0).startLocation.offset);
 		assertNotNull(notices.get(0).endLocation);
 		assertEquals(1, notices.get(0).endLocation.line);
-		assertEquals(16, notices.get(0).endLocation.column);
-		assertEquals(15, notices.get(0).endLocation.offset);
+		assertEquals(24, notices.get(0).endLocation.column);
+		assertEquals(23, notices.get(0).endLocation.offset);
+		assertEquals("Warning: The require-sri-for directive should contain only \"script\", \"style\" tokens.", notices.get(0).toString());
 		assertNotNull(notices.get(1).startLocation);
 		assertEquals(1, notices.get(1).startLocation.line);
 		assertEquals(21, notices.get(1).startLocation.column);
 		assertEquals(20, notices.get(1).startLocation.offset);
 		assertNotNull(notices.get(1).endLocation);
 		assertEquals(1, notices.get(1).endLocation.line);
-		assertEquals(28, notices.get(1).endLocation.column);
-		assertEquals(27, notices.get(1).endLocation.offset);
+		assertEquals(24, notices.get(1).endLocation.column);
+		assertEquals(23, notices.get(1).endLocation.offset);
+		assertEquals("Error: Expecting RFC 7230 token but found \"абц\".", notices.get(1).toString());
+		assertNotNull(notices.get(2).startLocation);
+		assertEquals(1, notices.get(2).startLocation.line);
+		assertEquals(25, notices.get(2).startLocation.column);
+		assertEquals(24, notices.get(2).startLocation.offset);
+		assertNotNull(notices.get(2).endLocation);
+		assertEquals(1, notices.get(2).endLocation.line);
+		assertEquals(28, notices.get(2).endLocation.column);
+		assertEquals(27, notices.get(2).endLocation.offset);
+		assertEquals("Warning: The require-sri-for directive should contain only \"script\", \"style\" tokens.", notices.get(2).toString());
 	}
 
 
@@ -405,8 +407,8 @@ public class LocationTest extends CSPTest {
 		assertEquals(1, notices.size());
 		assertNotNull(notices.get(0).startLocation);
 		assertEquals(1, notices.get(0).startLocation.line);
-		assertEquals(13, notices.get(0).startLocation.column);
-		assertEquals(12, notices.get(0).startLocation.offset);
+		assertEquals(11, notices.get(0).startLocation.column);
+		assertEquals(10, notices.get(0).startLocation.offset);
 
 	}
 

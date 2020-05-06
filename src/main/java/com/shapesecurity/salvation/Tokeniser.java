@@ -67,7 +67,7 @@ public class Tokeniser {
 	}
 
 	private boolean eatDirectiveValue() {
-		return this.eat(DirectiveValueToken::new, Tokeniser.directiveValuePattern);
+		return this.eat(s -> new DirectiveValueToken(trimRHSWS(s)), Tokeniser.notSeparator);
 	}
 
 	private boolean eatUntilSeparator() {
@@ -82,10 +82,13 @@ public class Tokeniser {
 		return false;
 	}
 
-	private void eatWhitespace() {
+	private boolean eatWhitespace() {
+		boolean found = false;
 		while (this.hasNext() && Tokeniser.isWhitespace(this.sourceText.charAt(this.index))) {
 			++this.index;
+			found = true;
 		}
+		return found;
 	}
 
 	private boolean hasNext() {
@@ -108,7 +111,7 @@ public class Tokeniser {
 				this.eatUntilSeparator();
 				continue;
 			}
-			if (!this.eatSingleWhitespace()) {
+			if (!this.eatWhitespace()) {
 				this.eatUntilSeparator();
 				continue;
 			}

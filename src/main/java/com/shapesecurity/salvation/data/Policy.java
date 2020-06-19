@@ -201,7 +201,7 @@ public class Policy implements Show {
 			if (directive instanceof SourceListDirective) {
 				SourceListDirective sourceListDirective = (SourceListDirective) directive;
 				Optional<SourceExpression> star =
-						sourceListDirective.values().filter(x -> x instanceof HostSource && ((HostSource) x).isWildcard())
+						sourceListDirective.values().filter(x -> x instanceof HostSource && ((HostSource) x).isTLDWildcard())
 								.findAny();
 				if (star.isPresent()) {
 					Set<SourceExpression> newSources = sourceListDirective.values()

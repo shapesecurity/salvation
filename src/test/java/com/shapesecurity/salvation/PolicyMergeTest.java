@@ -729,6 +729,60 @@ public class PolicyMergeTest extends CSPTest {
 	}
 
 	@Test
+	public void testUnionTLDWildcard() {
+		Policy p = parse("default-src *");
+		Policy q = parse("default-src http://b.c.atest.com");
+		p.union(q);
+		assertEquals("default-src *", p.show());
+
+		p = parse("default-src *");
+		q = parse("default-src http://*.c.atest.com");
+		p.union(q);
+		assertEquals("default-src *", p.show());
+	}
+
+	@Test
+	public void testUnionSubdomainWildcard() {
+		Policy p = parse("default-src http://*.atest.com");
+		Policy q = parse("default-src http://b.c.atest.com");
+		p.union(q);
+		assertEquals("default-src http://*.atest.com", p.show());
+
+		p = parse("default-src http://*.b.atest.com");
+		q = parse("default-src http://x.b.atest.com");
+		p.union(q);
+		assertEquals("default-src http://*.b.atest.com", p.show());
+
+		p = parse("default-src https://*.b.atest.com:8443");
+		q = parse("default-src https://x.b.atest.com:8443");
+		p.union(q);
+		assertEquals("default-src https://*.b.atest.com:8443", p.show());
+
+		p = parse("default-src https://*.b.atest.com:8443/a");
+		q = parse("default-src https://x.b.atest.com:8443/a");
+		p.union(q);
+		assertEquals("default-src https://*.b.atest.com:8443/a", p.show());
+	}
+
+	@Test
+	public void testUnionFails() {
+		Policy p = parse("default-src https://*.atest.com");
+		Policy q = parse("default-src http://b.c.atest.com");
+		p.union(q);
+		assertEquals("default-src https://*.atest.com http://b.c.atest.com", p.show());
+
+		p = parse("default-src http://*.atest.com:80");
+		q = parse("default-src http://b.c.atest.com:8080");
+		p.union(q);
+		assertEquals("default-src http://*.atest.com http://b.c.atest.com:8080", p.show());
+
+		p = parse("default-src http://*.atest.com/a");
+		q = parse("default-src http://b.c.atest.com/a/b");
+		p.union(q);
+		assertEquals("default-src http://*.atest.com/a http://b.c.atest.com/a/b", p.show());
+	}
+
+	@Test
 	public void testMergeCommutativity() {
 		String[] policies = new String[] {
 			"script-src 'self'",

@@ -432,7 +432,7 @@ public class Parser {
 
 	private void warnFutureDirective(DirectiveNameToken token) {
 		this.warn(token, "The " + token.value
-				+ " directive is an experimental directive that will be likely added to the CSP specification.");
+				+ " directive is an experimental directive that will likely be added to the CSP specification.");
 	}
 
 	private void enforceMissingDirectiveValue(@Nonnull Token directiveNameToken) throws DirectiveParseException {

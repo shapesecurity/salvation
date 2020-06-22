@@ -1023,6 +1023,22 @@ public class Policy implements Show {
 		return formActionDirective.matchesSource(this.origin, destination);
 	}
 
+	public boolean allowsBaseUri(@Nonnull GUID destination) {
+		BaseUriDirective baseUriDirective = this.getDirectiveByType(BaseUriDirective.class);
+		if (baseUriDirective == null) {
+			return true;
+		}
+		return baseUriDirective.matchesSource(this.origin, destination);
+	}
+
+	public boolean allowsBaseUri(@Nonnull URI destination) {
+		BaseUriDirective baseUriDirective = this.getDirectiveByType(BaseUriDirective.class);
+		if (baseUriDirective == null) {
+			return true;
+		}
+		return baseUriDirective.matchesSource(this.origin, destination);
+	}
+
 	public boolean hasSomeEffect() {
 		for (Map.Entry<Class<?>, Directive<? extends DirectiveValue>> entry : this.directives.entrySet()) {
 			Directive<? extends DirectiveValue> directive = entry.getValue();

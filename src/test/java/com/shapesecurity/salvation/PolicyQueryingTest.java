@@ -469,6 +469,36 @@ public class PolicyQueryingTest extends CSPTest {
 	}
 
 	@Test
+	public void testAllowsBaseUri() {
+		Policy p;
+
+		p = Parser.parse("", "https://abc.com");
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("https://abc.com")));
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("ftp://cde.com")));
+
+		p = Parser.parse("base-uri 'none'", "https://abc.com");
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("ftp://cde.com")));
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("https://abc.com")));
+
+		p = Parser.parse("base-uri 'self'", "https://abc.com");
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("ftp://cde.com")));
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("https://abc.com")));
+
+		p = Parser.parse("base-uri https:", "https://abc.com");
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("ftp://cde.com")));
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("http://cde.com")));
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("http://abc.com")));
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("https://abc.com")));
+
+		p = Parser.parse("base-uri http://example.com https:", "https://abc.com");
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("ftp://cde.com")));
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("http://cde.com")));
+		assertFalse("base uri is not allowed", p.allowsBaseUri(URI.parse("http://abc.com")));
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("https://example.com")));
+		assertTrue("base uri is allowed", p.allowsBaseUri(URI.parse("http://example.com")));
+	}
+
+	@Test
 	public void testHosts() {
 		Policy p;
 

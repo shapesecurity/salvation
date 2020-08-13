@@ -1,6 +1,6 @@
 sudo: false
 language: java
 before_script:
-  - curl https://raw.githubusercontent.com/shapesecurity/CLA/master/cla-travis.sh | bash
+  - curl https://raw.githubusercontent.com/shapesecurity/CLA/HEAD/cla-travis.sh | bash
 jdk:
   - openjdk8

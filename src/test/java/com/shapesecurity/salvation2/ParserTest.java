@@ -206,7 +206,7 @@ public class ParserTest extends TestBase {
 
 		roundTrips(
 				"report-uri a a",
-				e(Policy.Severity.Warning, "The report-uri directive has ben deprecated in favor of the new report-to directive", 0, -1),
+				e(Policy.Severity.Warning, "The report-uri directive has been deprecated in favor of the new report-to directive", 0, -1),
 				e(Policy.Severity.Info, "Duplicate report-to URI; are you sure you intend to get multiple copies of each report?", 0, 1)
 		);
 
@@ -265,8 +265,8 @@ public class ParserTest extends TestBase {
 
 		roundTrips(
 				"report-uri http://example.com; report-uri http://example.com",
-				e(Policy.Severity.Warning, "The report-uri directive has ben deprecated in favor of the new report-to directive", 0, -1),
-				e(Policy.Severity.Warning, "The report-uri directive has ben deprecated in favor of the new report-to directive", 1, -1),
+				e(Policy.Severity.Warning, "The report-uri directive has been deprecated in favor of the new report-to directive", 0, -1),
+				e(Policy.Severity.Warning, "The report-uri directive has been deprecated in favor of the new report-to directive", 1, -1),
 				e(Policy.Severity.Warning, "Duplicate directive report-uri", 1, -1)
 		);
 
@@ -601,7 +601,7 @@ public class ParserTest extends TestBase {
 
 			roundTrips(
 					"report-uri",
-					e(Policy.Severity.Warning, "The report-uri directive has ben deprecated in favor of the new report-to directive", 0, -1),
+					e(Policy.Severity.Warning, "The report-uri directive has been deprecated in favor of the new report-to directive", 0, -1),
 					e(Policy.Severity.Error, "The report-uri value requires at least one value", 0, -1)
 			);
 

@@ -130,6 +130,10 @@ public class Policy {
 
 			String remainingToken = strippedLeadingAndTrailingWhitespace.substring(directiveName.length());
 
+			if (remainingToken.length() > 0 && !containsLeadingWhitespace(remainingToken)) {
+				throw new IllegalArgumentException("directive value requires leading ascii whitespace");
+			}
+
 			List<String> directiveValues = Utils.splitOnAsciiWhitespace(remainingToken);
 
 			policy.add(directiveName, directiveValues, directiveErrorConsumer);
@@ -1081,6 +1085,11 @@ public class Policy {
 
 	private static String stripTrailingWhitespace(String string) {
 		return string.replaceAll("[" + Constants.WHITESPACE_CHARS + "]+$", "");
+	}
+
+	private static boolean containsLeadingWhitespace(String string) {
+		Matcher matcher = Pattern.compile("[" + Constants.WHITESPACE_CHARS + "]+").matcher(string);
+		return matcher.find() && matcher.start() == 0;
 	}
 
 	@Nonnull

@@ -253,7 +253,7 @@ public class Policy {
 			}
 			case "report-uri": {
 				// https://w3c.github.io/webappsec-csp/#directive-report-uri
-				directiveErrorConsumer.add(Severity.Warning,"The report-uri directive has ben deprecated in favor of the new report-to directive", -1);
+				directiveErrorConsumer.add(Severity.Warning,"The report-uri directive has been deprecated in favor of the new report-to directive", -1);
 
 				ReportUriDirective thisDirective = new ReportUriDirective(values, directiveErrorConsumer);
 				if (this.reportUri == null) {

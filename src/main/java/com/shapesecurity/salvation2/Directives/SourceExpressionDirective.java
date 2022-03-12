@@ -11,6 +11,12 @@ import java.util.Locale;
 import java.util.Optional;
 
 public class SourceExpressionDirective extends HostSourceDirective {
+	private static final String REPORT_SAMPLE = "'report-sample'";
+	private static final String UNSAFE_INLINE = "'unsafe-inline'";
+	private static final String STRICT_DYNAMIC = "'strict-dynamic'";
+	private static final String UNSAFE_ALLOW_REDIRECTS = "'unsafe-allow-redirects'";
+	private static final String UNSAFE_EVAL = "'unsafe-eval'";
+	private static final String UNSAFE_HASHES = "'unsafe-hashes'";
 	private boolean unsafeInline = false;
 	private boolean unsafeEval = false;
 	private boolean strictDynamic = false;
@@ -31,42 +37,42 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			// The CSP grammar uses ABNF grammars, whose strings are case-insensitive: https://tools.ietf.org/html/rfc5234
 			String lowcaseToken = token.toLowerCase(Locale.ENGLISH); // This needs to be ASCII-lowercase, so that `'strIct-dynamic''` still parses in Turkey
 			switch (lowcaseToken) {
-				case "'unsafe-inline'":
+				case UNSAFE_INLINE:
 					if (!this.unsafeInline) {
 						this.unsafeInline = true;
 					} else {
 						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'unsafe-inline'", index);
 					}
 					break;
-				case "'unsafe-eval'":
+				case UNSAFE_EVAL:
 					if (!this.unsafeEval) {
 						this.unsafeEval = true;
 					} else {
 						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'unsafe-eval'", index);
 					}
 					break;
-				case "'strict-dynamic'":
+				case STRICT_DYNAMIC:
 					if (!this.strictDynamic) {
 						this.strictDynamic = true;
 					} else {
 						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'strict-dynamic'", index);
 					}
 					break;
-				case "'unsafe-hashes'":
+				case UNSAFE_HASHES:
 					if (!this.unsafeHashes) {
 						this.unsafeHashes = true;
 					} else {
 						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'unsafe-hashes'", index);
 					}
 					break;
-				case "'report-sample'":
+				case REPORT_SAMPLE:
 					if (!this.reportSample) {
 						this.reportSample = true;
 					} else {
 						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'report-sample'", index);
 					}
 					break;
-				case "'unsafe-allow-redirects'":
+				case UNSAFE_ALLOW_REDIRECTS:
 					if (!this.unsafeAllowRedirects) {
 						this.unsafeAllowRedirects = true;
 					} else {
@@ -160,9 +166,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (unsafeInline) {
-			this.addValue("'unsafe-inline'");
+			this.addValue(UNSAFE_INLINE);
 		} else {
-			this.removeValueIgnoreCase("'unsafe-inline'");
+			this.removeValueIgnoreCase(UNSAFE_INLINE);
 		}
 		this.unsafeInline = unsafeInline;
 	}
@@ -177,9 +183,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (unsafeEval) {
-			this.addValue("'unsafe-eval'");
+			this.addValue(UNSAFE_EVAL);
 		} else {
-			this.removeValueIgnoreCase("'unsafe-eval'");
+			this.removeValueIgnoreCase(UNSAFE_EVAL);
 		}
 		this.unsafeEval = unsafeEval;
 	}
@@ -194,9 +200,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (strictDynamic) {
-			this.addValue("'strict-dynamic'");
+			this.addValue(STRICT_DYNAMIC);
 		} else {
-			this.removeValueIgnoreCase("'strict-dynamic'");
+			this.removeValueIgnoreCase(STRICT_DYNAMIC);
 		}
 		this.strictDynamic = strictDynamic;
 	}
@@ -211,9 +217,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (unsafeHashes) {
-			this.addValue("'unsafe-hashes'");
+			this.addValue(UNSAFE_HASHES);
 		} else {
-			this.removeValueIgnoreCase("'unsafe-hashes'");
+			this.removeValueIgnoreCase(UNSAFE_HASHES);
 		}
 		this.unsafeHashes = unsafeHashes;
 	}
@@ -228,9 +234,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (reportSample) {
-			this.addValue("'report-sample'");
+			this.addValue(REPORT_SAMPLE);
 		} else {
-			this.removeValueIgnoreCase("'report-sample'");
+			this.removeValueIgnoreCase(REPORT_SAMPLE);
 		}
 		this.reportSample = reportSample;
 	}
@@ -245,9 +251,9 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			return;
 		}
 		if (unsafeAllowRedirects) {
-			this.addValue("'unsafe-allow-redirects'");
+			this.addValue(UNSAFE_ALLOW_REDIRECTS);
 		} else {
-			this.removeValueIgnoreCase("'unsafe-allow-redirects'");
+			this.removeValueIgnoreCase(UNSAFE_ALLOW_REDIRECTS);
 		}
 		this.unsafeAllowRedirects = unsafeAllowRedirects;
 	}

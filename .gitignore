@@ -9,3 +9,9 @@ build
 npm-debug.log
 key.pem
 cert.pem
+
+# Eclipse
+# -------
+*.classpath
+*.project
+*.settings

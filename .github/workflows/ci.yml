@@ -1,0 +1,43 @@
+name: Java CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency: 
+  group:  ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [8, 11]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: CLA Check
+        if: github.event_name == 'pull_request'
+        env:
+          TRAVIS_COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+        run: curl https://raw.githubusercontent.com/shapesecurity/CLA/HEAD/cla-travis.sh | bash
+      - name: Setup Java
+        if: success()
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: ${{ matrix.java }}
+          cache: 'maven'
+      - name: CI
+        if: success()
+        run: |
+          java -Xmx32m -version
+          javac -J-Xmx32m -version
+          mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          mvn test -B

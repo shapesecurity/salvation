@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 public class SandboxDirective extends Directive {
-
+	private static final String ALLOW_DOWNLOADS = "allow-downloads";
 	private boolean allowDownloads = false;
 	private boolean allowForms = false;
 	private boolean allowModals = false;
@@ -30,7 +30,7 @@ public class SandboxDirective extends Directive {
 			// HTML attribute keywords are ascii-case-insensitive: https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#keywords-and-enumerated-attributes
 			String lowcaseToken = token.toLowerCase(Locale.ENGLISH);
 			switch (lowcaseToken) {
-				case "allow-downloads":
+				case ALLOW_DOWNLOADS:
 					if (!this.allowDownloads) {
 						this.allowDownloads = true;
 					} else {
@@ -142,9 +142,9 @@ public class SandboxDirective extends Directive {
 			return;
 		}
 		if (allowDownloads) {
-			this.addValue("allow-downloads");
+			this.addValue(ALLOW_DOWNLOADS);
 		} else {
-			this.removeValueIgnoreCase("allow-downloads");
+			this.removeValueIgnoreCase(ALLOW_DOWNLOADS);
 		}
 		this.allowDownloads = allowDownloads;
 	}

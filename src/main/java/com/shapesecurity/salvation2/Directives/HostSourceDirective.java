@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public abstract class HostSourceDirective extends Directive {
+	private static final String NONE_SRC = "'none'";
+	private static final String SELF_SRC = "'self'";
 	protected List<Scheme> schemes = new ArrayList<>();
 	protected List<Host> hosts = new ArrayList<>();
 	protected boolean star = false;
@@ -27,7 +29,7 @@ public abstract class HostSourceDirective extends Directive {
 	@Override
 	protected void addValue(String value) {
 		if (this.none != null) {
-			super.removeValueIgnoreCase("'none'"); // super so as to not immediately add it back
+			super.removeValueIgnoreCase(NONE_SRC); // super so as to not immediately add it back
 			this.none = null;
 		}
 		super.addValue(value);
@@ -37,8 +39,8 @@ public abstract class HostSourceDirective extends Directive {
 	protected void removeValueIgnoreCase(String value) {
 		super.removeValueIgnoreCase(value);
 		if (this.values.isEmpty()) {
-			this.values.add("'none'");
-			this.none = "'none'";
+			this.values.add(NONE_SRC);
+			this.none = NONE_SRC;
 		}
 	}
 
@@ -52,13 +54,13 @@ public abstract class HostSourceDirective extends Directive {
 		}
 		this.values = copy;
 		if (this.values.isEmpty()) {
-			this.values.add("'none'");
-			this.none = "'none'";
+			this.values.add(NONE_SRC);
+			this.none = NONE_SRC;
 		}
 	}
 
 	void _addHostOrSchemeDuringConstruction(String token, String lowcaseToken, String kind, int index, DirectiveErrorConsumer errors) {
-		if (lowcaseToken.equals("'none'")) {
+		if (lowcaseToken.equals(NONE_SRC)) {
 			if (this.none == null) {
 				this.none = token;
 			}
@@ -69,7 +71,7 @@ public abstract class HostSourceDirective extends Directive {
 			} else {
 				errors.add(Policy.Severity.Warning, "Duplicate " + kind + " *", index);
 			}
-		} else if (lowcaseToken.equals("'self'")) {
+		} else if (lowcaseToken.equals(SELF_SRC)) {
 			if (!this.self) {
 				this.self = true;
 			} else {
@@ -142,9 +144,9 @@ public abstract class HostSourceDirective extends Directive {
 			return;
 		}
 		if (self) {
-			this.addValue("'self'");
+			this.addValue(SELF_SRC);
 		} else {
-			this.removeValueIgnoreCase("'self'");
+			this.removeValueIgnoreCase(SELF_SRC);
 		}
 		this.self = self;
 	}

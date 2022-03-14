@@ -6,12 +6,30 @@ on:
       - main
   pull_request:
 
-concurrency: 
+concurrency:
   group:  ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
+  pre:
+    name: Prerequisites
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Enforce CLA signature
+        if: github.event_name == 'pull_request'
+        env:
+          COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
+        run: curl https://raw.githubusercontent.com/shapesecurity/CLA/HEAD/cla-check.sh | bash
+
   build:
+    name: Build
+    needs: pre
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,20 +38,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: CLA Check
-        if: github.event_name == 'pull_request'
-        env:
-          TRAVIS_COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
-        run: curl https://raw.githubusercontent.com/shapesecurity/CLA/HEAD/cla-travis.sh | bash
+
       - name: Setup Java
-        if: success()
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
           cache: 'maven'
+
       - name: CI
         if: success()
         run: |

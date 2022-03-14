@@ -30,7 +30,7 @@ jobs:
   build:
     name: Build
     needs: pre
-    if: always() && (needs.pre.result == 'success' || needs.pre.result == 'skipped')
+    if: success()
     runs-on: ubuntu-latest
     strategy:
       matrix:

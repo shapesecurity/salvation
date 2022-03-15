@@ -27,9 +27,6 @@ jobs:
           COMMIT_RANGE: ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}
         run: curl https://raw.githubusercontent.com/shapesecurity/CLA/HEAD/cla-check.sh | bash
 
-      - name: test
-        run: false
-
   build:
     name: Build
     needs: pre

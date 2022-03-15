@@ -49,7 +49,6 @@ jobs:
           cache: 'maven'
 
       - name: CI
-        if: success()
         run: |
           java -Xmx32m -version
           javac -J-Xmx32m -version

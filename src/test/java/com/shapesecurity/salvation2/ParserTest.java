@@ -407,6 +407,13 @@ public class ParserTest extends TestBase {
 		);
 	}
 
+	@Test(expected = IllegalArgumentException.class)
+	public void testIllegalLackOfWhitespace() {
+		roundTrips(
+				"default-src'self'"
+		);
+	}
+
 	@Test
 	public void testNone() {
 		// This asserts that it serializes to the same, uppercased, value

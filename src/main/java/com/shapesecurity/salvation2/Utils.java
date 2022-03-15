@@ -44,4 +44,8 @@ public class Utils {
 			return s;
 		}
 	}
+	
+	private Utils() {
+		// Utility class
+	}
 }

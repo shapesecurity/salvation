@@ -22,11 +22,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -66,7 +65,7 @@ public class Policy {
 	private boolean upgradeInsecureRequests = false;
 
 	@Nonnull
-	private final Map<FetchDirectiveKind, SourceExpressionDirective> fetchDirectives = new HashMap<>();
+	private final EnumMap<FetchDirectiveKind, SourceExpressionDirective> fetchDirectives = new EnumMap<>(FetchDirectiveKind.class);
 
 	private Policy() {
 		// pass
@@ -236,7 +235,7 @@ public class Policy {
 			case "report-to": {
 				// https://w3c.github.io/webappsec-csp/#directive-report-to
 				if (this.reportTo == null) {
-					if (values.size() == 0) {
+					if (values.isEmpty()) {
 						directiveErrorConsumer.add(Severity.Error, "The report-to directive requires a value", -1);
 					} else if (values.size() == 1) {
 						String token = values.get(0);
@@ -257,7 +256,7 @@ public class Policy {
 			}
 			case "report-uri": {
 				// https://w3c.github.io/webappsec-csp/#directive-report-uri
-				directiveErrorConsumer.add(Severity.Warning,"The report-uri directive has ben deprecated in favor of the new report-to directive", -1);
+				directiveErrorConsumer.add(Severity.Warning,"The report-uri directive has been deprecated in favor of the new report-to directive", -1);
 
 				ReportUriDirective thisDirective = new ReportUriDirective(values, directiveErrorConsumer);
 				if (this.reportUri == null) {
@@ -990,11 +989,7 @@ public class Policy {
 	private static boolean hostPartMatches(String A, String B) {
 		if (A.startsWith("*")) {
 			String remaining = A.substring(1);
-			if (B.toLowerCase(Locale.ENGLISH).endsWith(remaining.toLowerCase(Locale.ENGLISH))) {
-				return true;
-			} else {
-				return false;
-			}
+			return B.toLowerCase(Locale.ENGLISH).endsWith(remaining.toLowerCase(Locale.ENGLISH));
 		}
 
 		if (!A.equalsIgnoreCase(B)) {
@@ -1057,12 +1052,12 @@ public class Policy {
 			pathListA.remove(pathListA.size() - 1);
 		}
 
-		Iterator it1 = pathListA.iterator();
-		Iterator it2 = pathListB.iterator();
+		Iterator<String> it1 = pathListA.iterator();
+		Iterator<String> it2 = pathListB.iterator();
 
 		while (it1.hasNext()) {
-			String a = Utils.decodeString((String) it1.next());
-			String b = Utils.decodeString((String) it2.next());
+			String a = Utils.decodeString(it1.next());
+			String b = Utils.decodeString(it2.next());
 			if (!a.equals(b)) {
 				return false;
 			}

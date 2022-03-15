@@ -47,5 +47,9 @@ public class Constants {
 	public static final Pattern IPv6addressWithOptionalBracket = Pattern.compile("^(?:\\[" + IPv6address + "\\]|" + IPv6address + ")$");
 
 	// https://infra.spec.whatwg.org/#ascii-whitespace
-	public static String WHITESPACE_CHARS = "\t\n\f\r ";
+	public static final String WHITESPACE_CHARS = "\t\n\f\r ";
+	
+	private Constants() {
+		// Utility class
+	}
 }

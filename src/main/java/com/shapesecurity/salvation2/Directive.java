@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 
 public class Directive {
+	public static Predicate<String> IS_DIRECTIVE_NAME = Pattern.compile("^[A-Za-z0-9\\-]+$").asPredicate();
 	public static Predicate<String> containsNonDirectiveCharacter = Pattern.compile("[" + Constants.WHITESPACE_CHARS + ",;]").asPredicate();
 	protected List<String> values;
 

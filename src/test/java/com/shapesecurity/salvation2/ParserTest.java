@@ -221,23 +221,23 @@ public class ParserTest extends TestBase {
 		);
 
 		roundTrips(
-			"&",
-			e(Policy.Severity.Error, "Directive name & contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+				"&",
+				e(Policy.Severity.Error, "Directive name & contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
 		);
 
 		roundTrips(
-			"default-src'self'",
-			e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+				"default-src'self'",
+				e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
 		);
 
 		roundTrips(
-			"default-src'self' a",
-			e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+				"default-src'self' a",
+				e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
 		);
 
 		roundTrips(
-			"default-src'self'a",
-			e(Policy.Severity.Error, "Directive name default-src'self'a contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+				"default-src'self'a",
+				e(Policy.Severity.Error, "Directive name default-src'self'a contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
 		);
 	}
 

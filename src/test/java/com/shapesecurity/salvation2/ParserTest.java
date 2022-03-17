@@ -140,6 +140,11 @@ public class ParserTest extends TestBase {
 		);
 
 		roundTrips(
+				"default-src 'self'a",
+				e(Policy.Severity.Error, "Unrecognized source-expression 'self'a", 0, 0)
+		);
+
+		roundTrips(
 				"default-src 'sha257-000'",
 				e(Policy.Severity.Error, "'sha...' source-expression uses an unrecognized algorithm or does not match the base64-value grammar (or is missing its trailing \"'\")", 0, 0)
 		);

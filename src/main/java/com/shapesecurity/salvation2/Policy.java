@@ -291,7 +291,7 @@ public class Policy {
 			}
 			default: {
 				if (!Directive.IS_DIRECTIVE_NAME.test(name)) {
-					directiveErrorConsumer.add(Severity.Error, "Directive name " + name + " contains characters outside the range  ALPHA / DIGIT / \"-\"", -1);
+					directiveErrorConsumer.add(Severity.Error, "Directive name " + name + " contains characters outside the range ALPHA / DIGIT / \"-\"", -1);
 					newDirective = new Directive(values);
 					break;
 				}

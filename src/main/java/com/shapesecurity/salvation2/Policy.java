@@ -123,15 +123,11 @@ public class Policy {
 				++index[0];
 				continue;
 			}
-			String directiveName = collect(strippedLeadingAndTrailingWhitespace, "[^'" + Constants.WHITESPACE_CHARS + "]+");
+			String directiveName = collect(strippedLeadingAndTrailingWhitespace, "[^" + Constants.WHITESPACE_CHARS + "]+");
 
 			// Note: we do not lowercase directive names or skip duplicates during parsing, to allow round-tripping even invalid policies
 
 			String remainingToken = strippedLeadingAndTrailingWhitespace.substring(directiveName.length());
-
-			if (remainingToken.length() > 0 && !containsLeadingWhitespace(remainingToken)) {
-				throw new IllegalArgumentException("directive value requires leading ascii whitespace");
-			}
 
 			List<String> directiveValues = Utils.splitOnAsciiWhitespace(remainingToken);
 
@@ -150,6 +146,8 @@ public class Policy {
 	// We do not provide a generic method for updating an existing directive in-place. Just remove the existing one and add it back.
 	public Directive add(String name, List<String> values, Directive.DirectiveErrorConsumer directiveErrorConsumer) {
 		enforceAscii(name);
+
+		// the parser will never hit these errors by construction, but use of the manipulation APIs can
 		if (Directive.containsNonDirectiveCharacter.test(name)) {
 			throw new IllegalArgumentException("directive names must not contain whitespace, ',', or ';'");
 		}
@@ -292,6 +290,11 @@ public class Policy {
 				break;
 			}
 			default: {
+				if (!Directive.IS_DIRECTIVE_NAME.test(name)) {
+					directiveErrorConsumer.add(Severity.Error, "Directive name " + name + " contains characters outside the range ALPHA / DIGIT / \"-\"", -1);
+					newDirective = new Directive(values);
+					break;
+				}
 				FetchDirectiveKind fetchDirectiveKind = FetchDirectiveKind.fromString(lowcaseDirectiveName);
 				if (fetchDirectiveKind != null) {
 					SourceExpressionDirective thisDirective = new SourceExpressionDirective(values, directiveErrorConsumer);

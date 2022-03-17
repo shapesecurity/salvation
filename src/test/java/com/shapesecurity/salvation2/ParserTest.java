@@ -135,13 +135,13 @@ public class ParserTest extends TestBase {
 		);
 
 		roundTrips(
-				"&",
-				e(Policy.Severity.Warning, "Unrecognized directive &", 0, -1)
+				"default-src 'not-keyword'",
+				e(Policy.Severity.Error, "Unrecognized source-expression 'not-keyword'", 0, 0)
 		);
 
 		roundTrips(
-				"default-src 'not-keyword'",
-				e(Policy.Severity.Error, "Unrecognized source-expression 'not-keyword'", 0, 0)
+				"default-src 'self'a",
+				e(Policy.Severity.Error, "Unrecognized source-expression 'self'a", 0, 0)
 		);
 
 		roundTrips(
@@ -223,6 +223,26 @@ public class ParserTest extends TestBase {
 		roundTrips(
 				"upgrade-insecure-requests a",
 				e(Policy.Severity.Error, "The upgrade-insecure-requests directive does not support values", 0, 0)
+		);
+
+		roundTrips(
+				"&",
+				e(Policy.Severity.Error, "Directive name & contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+		);
+
+		roundTrips(
+				"default-src'self'",
+				e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+		);
+
+		roundTrips(
+				"default-src'self' a",
+				e(Policy.Severity.Error, "Directive name default-src'self' contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
+		);
+
+		roundTrips(
+				"default-src'self'a",
+				e(Policy.Severity.Error, "Directive name default-src'self'a contains characters outside the range ALPHA / DIGIT / \"-\"", 0, -1)
 		);
 	}
 
@@ -404,13 +424,6 @@ public class ParserTest extends TestBase {
 		serializesTo(
 				"default-src\na;\rscript-src\fb",
 				"default-src a; script-src b"
-		);
-	}
-
-	@Test(expected = IllegalArgumentException.class)
-	public void testIllegalLackOfWhitespace() {
-		roundTrips(
-				"default-src'self'"
 		);
 	}
 

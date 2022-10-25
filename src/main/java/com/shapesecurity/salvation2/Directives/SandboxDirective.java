@@ -6,6 +6,7 @@ import com.shapesecurity.salvation2.Policy;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 public class SandboxDirective extends Directive {
 	
@@ -46,7 +47,7 @@ public class SandboxDirective extends Directive {
 		}
 	}
 	
-	private final EnumSet<Value> activeKeywords = EnumSet.noneOf(Value.class);
+	private final EnumSet<Value> activeValues = EnumSet.noneOf(Value.class);
 
 	public SandboxDirective(List<String> values, DirectiveErrorConsumer errors) {
 		super(values);
@@ -64,7 +65,7 @@ public class SandboxDirective extends Directive {
 				}
 			} else {
 				if(!isActive(value)) {
-					activeKeywords.add(value);
+					activeValues.add(value);
 				} else {
 					errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword " + value.getKeyword(), index);
 				}
@@ -78,7 +79,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowDownloads(boolean allowDownloads) {
-		changeValue(Value.AllowDownloads, allowDownloads);
+		setValue(Value.AllowDownloads, allowDownloads);
 	}
 	
 	public boolean allowForms() {
@@ -86,7 +87,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowForms(boolean allowForms) {
-		changeValue(Value.AllowForms, allowForms);
+		setValue(Value.AllowForms, allowForms);
 	}
 	
 	public boolean allowModals() {
@@ -94,14 +95,14 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowModals(boolean allowModals) {
-		changeValue(Value.AllowModals, allowModals);
+		setValue(Value.AllowModals, allowModals);
 	}
 	public boolean allowOrientationLock() {
 		return isActive(Value.AllowOrientationLock);
 	}
 	
 	public void setAllowOrientationLock(boolean allowOrientationLock) {
-		changeValue(Value.AllowOrientationLock, allowOrientationLock);
+		setValue(Value.AllowOrientationLock, allowOrientationLock);
 	}
 	
 	public boolean allowPointerLock() {
@@ -109,7 +110,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowPointerLock(boolean allowPointerLock) {
-		changeValue(Value.AllowPointerLock, allowPointerLock);
+		setValue(Value.AllowPointerLock, allowPointerLock);
 	}
 	
 	public boolean allowPopups() {
@@ -117,7 +118,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowPopups(boolean allowPopups) {
-		changeValue(Value.AllowPopups, allowPopups);
+		setValue(Value.AllowPopups, allowPopups);
 	}
 	
 	public boolean allowPopupsToEscapeSandbox() {
@@ -125,7 +126,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowPopupsToEscapeSandbox(boolean allowPopupsToEscapeSandbox) {
-		changeValue(Value.AllowPopupsToEscapeSandbox, allowPopupsToEscapeSandbox);
+		setValue(Value.AllowPopupsToEscapeSandbox, allowPopupsToEscapeSandbox);
 	}
 	
 	public boolean allowPresentation() {
@@ -133,7 +134,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowPresentation(boolean allowPresentation) {
-		changeValue(Value.AllowPresentation, allowPresentation);
+		setValue(Value.AllowPresentation, allowPresentation);
 	}
 	
 	public boolean allowSameOrigin() {
@@ -141,7 +142,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowSameOrigin(boolean allowSameOrigin) {
-		changeValue(Value.AllowSameOrigin, allowSameOrigin);
+		setValue(Value.AllowSameOrigin, allowSameOrigin);
 	}
 	
 	public boolean allowScripts() {
@@ -149,7 +150,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowScripts(boolean allowScripts) {
-		changeValue(Value.AllowScripts, allowScripts);
+		setValue(Value.AllowScripts, allowScripts);
 	}
 	
 	public boolean allowStorageAccessByUserActivation() {
@@ -157,7 +158,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowStorageAccessByUserActivation(boolean allowStorageAccessByUserActivation) {
-		changeValue(Value.AllowStorageAccessByUserActivation, allowStorageAccessByUserActivation);
+		setValue(Value.AllowStorageAccessByUserActivation, allowStorageAccessByUserActivation);
 	}
 	
 	public boolean allowTopNavigation() {
@@ -165,7 +166,7 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowTopNavigation(boolean allowTopNavigation) {
-		changeValue(Value.AllowTopNavigation, allowTopNavigation);
+		setValue(Value.AllowTopNavigation, allowTopNavigation);
 	}
 	
 	public boolean allowTopNavigationByUserActivation() {
@@ -173,24 +174,28 @@ public class SandboxDirective extends Directive {
 	}
 	
 	public void setAllowTopNavigationByUserActivation(boolean allowTopNavigationByUserActivation) {
-		changeValue(Value.AllowTopNavigationByUserActivation, allowTopNavigationByUserActivation);
+		setValue(Value.AllowTopNavigationByUserActivation, allowTopNavigationByUserActivation);
 	}
 	
-	private void changeValue(Value value, boolean activate) {
-		if(isActive(value) == activate) {
+	public void setValue(Value value, boolean allow) {
+		if(isActive(value) == allow) {
 			return;
 		}
 		
-		if(activate) {
+		if(allow) {
 			this.addValue(value.keyword);
-			activeKeywords.add(value);
+			activeValues.add(value);
 		} else {
 			this.removeValueIgnoreCase(value.keyword);
-			activeKeywords.remove(value);
+			activeValues.remove(value);
 		}
 	}
 	
-	private boolean isActive(Value value) {
-		return activeKeywords.contains(value);
+	public boolean isActive(Value value) {
+		return activeValues.contains(value);
+	}
+	
+	public Set<Value> getActiveValues() {
+		return EnumSet.copyOf(activeValues);
 	}
 }

@@ -3,24 +3,50 @@ package com.shapesecurity.salvation2.Directives;
 import com.shapesecurity.salvation2.Directive;
 import com.shapesecurity.salvation2.Policy;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
 public class SandboxDirective extends Directive {
-	private static final String ALLOW_DOWNLOADS = "allow-downloads";
-	private boolean allowDownloads = false;
-	private boolean allowForms = false;
-	private boolean allowModals = false;
-	private boolean allowOrientationLock = false;
-	private boolean allowPointerLock = false;
-	private boolean allowPopups = false;
-	private boolean allowPopupsToEscapeSandbox = false;
-	private boolean allowPresentation = false;
-	private boolean allowSameOrigin = false;
-	private boolean allowScripts = false;
-	private boolean allowStorageAccessByUserActivation = false;
-	private boolean allowTopNavigation = false;
-	private boolean allowTopNavigationByUserActivation = false;
+	
+	public enum Value
+	{
+		AllowDownloads("allow-downloads"),
+		AllowForms("allow-forms"),
+		AllowModals("allow-modals"),
+		AllowOrientationLock("allow-orientation-lock"),
+		AllowPointerLock("allow-pointer-lock"),
+		AllowPopups("allow-popups"),
+		AllowPopupsToEscapeSandbox("allow-popups-to-escape-sandbox"),
+		AllowPresentation("allow-presentation"),
+		AllowSameOrigin("allow-same-origin"),
+		AllowScripts("allow-scripts"),
+		AllowStorageAccessByUserActivation("allow-storage-access-by-user-activation"),
+		AllowTopNavigation("allow-top-navigation"),
+		AllowTopNavigationByUserActivation("allow-top-navigation-by-user-activation");
+		
+		public final String keyword;
+		
+		Value(String keyword) {
+			this.keyword = keyword;
+		}
+		
+		public String getKeyword()
+		{
+			return keyword;
+		}
+		
+		public static Value fromString(String keyword) {
+			for(Value k : Value.values()) {
+				if(k.getKeyword().equals(keyword)) {
+					return k;
+				}
+			}
+			return null;
+		}
+	}
+	
+	private final EnumSet<Value> activeKeywords = EnumSet.noneOf(Value.class);
 
 	public SandboxDirective(List<String> values, DirectiveErrorConsumer errors) {
 		super(values);
@@ -29,327 +55,142 @@ public class SandboxDirective extends Directive {
 		for (String token : values) {
 			// HTML attribute keywords are ascii-case-insensitive: https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#keywords-and-enumerated-attributes
 			String lowcaseToken = token.toLowerCase(Locale.ENGLISH);
-			switch (lowcaseToken) {
-				case ALLOW_DOWNLOADS:
-					if (!this.allowDownloads) {
-						this.allowDownloads = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-downloads", index);
-					}
-					break;
-				case "allow-forms":
-					if (!this.allowForms) {
-						this.allowForms = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-forms", index);
-					}
-					break;
-				case "allow-modals":
-					if (!this.allowModals) {
-						this.allowModals = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-modals", index);
-					}
-					break;
-				case "allow-orientation-lock":
-					if (!this.allowOrientationLock) {
-						this.allowOrientationLock = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-orientation-lock", index);
-					}
-					break;
-				case "allow-pointer-lock":
-					if (!this.allowPointerLock) {
-						this.allowPointerLock = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-pointer-lock", index);
-					}
-					break;
-				case "allow-popups":
-					if (!this.allowPopups) {
-						this.allowPopups = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-popups", index);
-					}
-					break;
-				case "allow-popups-to-escape-sandbox":
-					if (!this.allowPopupsToEscapeSandbox) {
-						this.allowPopupsToEscapeSandbox = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-popups-to-escape-sandbox", index);
-					}
-					break;
-				case "allow-presentation":
-					if (!this.allowPresentation) {
-						this.allowPresentation = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-presentation", index);
-					}
-					break;
-				case "allow-same-origin":
-					if (!this.allowSameOrigin) {
-						this.allowSameOrigin = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-same-origin", index);
-					}
-					break;
-				case "allow-scripts":
-					if (!this.allowScripts) {
-						this.allowScripts = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-scripts", index);
-					}
-					break;
-				case "allow-storage-access-by-user-activation":
-					if (!this.allowStorageAccessByUserActivation) {
-						this.allowStorageAccessByUserActivation = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-storage-access-by-user-activation", index);
-					}
-					break;
-				case "allow-top-navigation":
-					if (!this.allowTopNavigation) {
-						this.allowTopNavigation = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-top-navigation", index);
-					}
-					break;
-				case "allow-top-navigation-by-user-activation":
-					if (!this.allowTopNavigationByUserActivation) {
-						this.allowTopNavigationByUserActivation = true;
-					} else {
-						errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword allow-top-navigation-by-user-activation", index);
-					}
-					break;
-				default:
-					if (token.startsWith("'")) {
-						errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token + " - note that sandbox keywords do not have \"'\"s", index);
-					} else {
-						errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token, index);
-					}
+			Value value = Value.fromString(lowcaseToken);
+			if(value == null) {
+				if (token.startsWith("'")) {
+					errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token + " - note that sandbox keywords do not have \"'\"s", index);
+				} else {
+					errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token, index);
+				}
+			} else {
+				if(!isActive(value)) {
+					activeKeywords.add(value);
+				} else {
+					errors.add(Policy.Severity.Warning, "Duplicate sandbox keyword " + value.getKeyword(), index);
+				}
 			}
 			++index;
 		}
 	}
-
-
+	
 	public boolean allowDownloads() {
-		return this.allowDownloads;
+		return isActive(Value.AllowDownloads);
 	}
-
+	
 	public void setAllowDownloads(boolean allowDownloads) {
-		if (this.allowDownloads == allowDownloads) {
-			return;
-		}
-		if (allowDownloads) {
-			this.addValue(ALLOW_DOWNLOADS);
-		} else {
-			this.removeValueIgnoreCase(ALLOW_DOWNLOADS);
-		}
-		this.allowDownloads = allowDownloads;
+		changeValue(Value.AllowDownloads, allowDownloads);
 	}
-
-
+	
 	public boolean allowForms() {
-		return this.allowForms;
+		return isActive(Value.AllowForms);
 	}
-
+	
 	public void setAllowForms(boolean allowForms) {
-		if (this.allowForms == allowForms) {
-			return;
-		}
-		if (allowForms) {
-			this.addValue("allow-forms");
-		} else {
-			this.removeValueIgnoreCase("allow-forms");
-		}
-		this.allowForms = allowForms;
+		changeValue(Value.AllowForms, allowForms);
 	}
-
-
+	
 	public boolean allowModals() {
-		return this.allowModals;
+		return isActive(Value.AllowModals);
 	}
-
+	
 	public void setAllowModals(boolean allowModals) {
-		if (this.allowModals == allowModals) {
-			return;
-		}
-		if (allowModals) {
-			this.addValue("allow-modals");
-		} else {
-			this.removeValueIgnoreCase("allow-modals");
-		}
-		this.allowModals = allowModals;
+		changeValue(Value.AllowModals, allowModals);
 	}
-
-
 	public boolean allowOrientationLock() {
-		return this.allowOrientationLock;
+		return isActive(Value.AllowOrientationLock);
 	}
-
+	
 	public void setAllowOrientationLock(boolean allowOrientationLock) {
-		if (this.allowOrientationLock == allowOrientationLock) {
-			return;
-		}
-		if (allowOrientationLock) {
-			this.addValue("allow-orientation-lock");
-		} else {
-			this.removeValueIgnoreCase("allow-orientation-lock");
-		}
-		this.allowOrientationLock = allowOrientationLock;
+		changeValue(Value.AllowOrientationLock, allowOrientationLock);
 	}
-
-
+	
 	public boolean allowPointerLock() {
-		return this.allowPointerLock;
+		return isActive(Value.AllowPointerLock);
 	}
-
+	
 	public void setAllowPointerLock(boolean allowPointerLock) {
-		if (this.allowPointerLock == allowPointerLock) {
-			return;
-		}
-		if (allowPointerLock) {
-			this.addValue("allow-pointer-lock");
-		} else {
-			this.removeValueIgnoreCase("allow-pointer-lock");
-		}
-		this.allowPointerLock = allowPointerLock;
+		changeValue(Value.AllowPointerLock, allowPointerLock);
 	}
-
-
+	
 	public boolean allowPopups() {
-		return this.allowPopups;
+		return isActive(Value.AllowPopups);
 	}
-
+	
 	public void setAllowPopups(boolean allowPopups) {
-		if (this.allowPopups == allowPopups) {
-			return;
-		}
-		if (allowPopups) {
-			this.addValue("allow-popups");
-		} else {
-			this.removeValueIgnoreCase("allow-popups");
-		}
-		this.allowPopups = allowPopups;
+		changeValue(Value.AllowPopups, allowPopups);
 	}
-
-
+	
 	public boolean allowPopupsToEscapeSandbox() {
-		return this.allowPopupsToEscapeSandbox;
+		return isActive(Value.AllowPopupsToEscapeSandbox);
 	}
-
+	
 	public void setAllowPopupsToEscapeSandbox(boolean allowPopupsToEscapeSandbox) {
-		if (this.allowPopupsToEscapeSandbox == allowPopupsToEscapeSandbox) {
-			return;
-		}
-		if (allowPopupsToEscapeSandbox) {
-			this.addValue("allow-popups-to-escape-sandbox");
-		} else {
-			this.removeValueIgnoreCase("allow-popups-to-escape-sandbox");
-		}
-		this.allowPopupsToEscapeSandbox = allowPopupsToEscapeSandbox;
+		changeValue(Value.AllowPopupsToEscapeSandbox, allowPopupsToEscapeSandbox);
 	}
-
-
+	
 	public boolean allowPresentation() {
-		return this.allowPresentation;
+		return isActive(Value.AllowPresentation);
 	}
-
+	
 	public void setAllowPresentation(boolean allowPresentation) {
-		if (this.allowPresentation == allowPresentation) {
-			return;
-		}
-		if (allowPresentation) {
-			this.addValue("allow-presentation");
-		} else {
-			this.removeValueIgnoreCase("allow-presentation");
-		}
-		this.allowPresentation = allowPresentation;
+		changeValue(Value.AllowPresentation, allowPresentation);
 	}
-
-
+	
 	public boolean allowSameOrigin() {
-		return this.allowSameOrigin;
+		return isActive(Value.AllowSameOrigin);
 	}
-
+	
 	public void setAllowSameOrigin(boolean allowSameOrigin) {
-		if (this.allowSameOrigin == allowSameOrigin) {
-			return;
-		}
-		if (allowSameOrigin) {
-			this.addValue("allow-same-origin");
-		} else {
-			this.removeValueIgnoreCase("allow-same-origin");
-		}
-		this.allowSameOrigin = allowSameOrigin;
+		changeValue(Value.AllowSameOrigin, allowSameOrigin);
 	}
-
-
+	
 	public boolean allowScripts() {
-		return this.allowScripts;
+		return isActive(Value.AllowScripts);
 	}
-
+	
 	public void setAllowScripts(boolean allowScripts) {
-		if (this.allowScripts == allowScripts) {
-			return;
-		}
-		if (allowScripts) {
-			this.addValue("allow-scripts");
-		} else {
-			this.removeValueIgnoreCase("allow-scripts");
-		}
-		this.allowScripts = allowScripts;
+		changeValue(Value.AllowScripts, allowScripts);
 	}
-
-
+	
 	public boolean allowStorageAccessByUserActivation() {
-		return this.allowStorageAccessByUserActivation;
+		return isActive(Value.AllowStorageAccessByUserActivation);
 	}
-
+	
 	public void setAllowStorageAccessByUserActivation(boolean allowStorageAccessByUserActivation) {
-		if (this.allowStorageAccessByUserActivation == allowStorageAccessByUserActivation) {
-			return;
-		}
-		if (allowStorageAccessByUserActivation) {
-			this.addValue("allow-storage-access-by-user-activation");
-		} else {
-			this.removeValueIgnoreCase("allow-storage-access-by-user-activation");
-		}
-		this.allowStorageAccessByUserActivation = allowStorageAccessByUserActivation;
+		changeValue(Value.AllowStorageAccessByUserActivation, allowStorageAccessByUserActivation);
 	}
-
-
+	
 	public boolean allowTopNavigation() {
-		return this.allowTopNavigation;
+		return isActive(Value.AllowTopNavigation);
 	}
-
+	
 	public void setAllowTopNavigation(boolean allowTopNavigation) {
-		if (this.allowTopNavigation == allowTopNavigation) {
-			return;
-		}
-		if (allowTopNavigation) {
-			this.addValue("allow-top-navigation");
-		} else {
-			this.removeValueIgnoreCase("allow-top-navigation");
-		}
-		this.allowTopNavigation = allowTopNavigation;
+		changeValue(Value.AllowTopNavigation, allowTopNavigation);
 	}
-
-
+	
 	public boolean allowTopNavigationByUserActivation() {
-		return this.allowTopNavigationByUserActivation;
+		return isActive(Value.AllowTopNavigationByUserActivation);
 	}
-
+	
 	public void setAllowTopNavigationByUserActivation(boolean allowTopNavigationByUserActivation) {
-		if (this.allowTopNavigationByUserActivation == allowTopNavigationByUserActivation) {
+		changeValue(Value.AllowTopNavigationByUserActivation, allowTopNavigationByUserActivation);
+	}
+	
+	private void changeValue(Value value, boolean activate) {
+		if(isActive(value) == activate) {
 			return;
 		}
-		if (allowTopNavigationByUserActivation) {
-			this.addValue("allow-top-navigation-by-user-activation");
+		
+		if(activate) {
+			this.addValue(value.keyword);
+			activeKeywords.add(value);
 		} else {
-			this.removeValueIgnoreCase("allow-top-navigation-by-user-activation");
+			this.removeValueIgnoreCase(value.keyword);
+			activeKeywords.remove(value);
 		}
-		this.allowTopNavigationByUserActivation = allowTopNavigationByUserActivation;
+	}
+	
+	private boolean isActive(Value value) {
+		return activeKeywords.contains(value);
 	}
 }

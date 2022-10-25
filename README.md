@@ -83,7 +83,7 @@ policy.add("sandbox", Collections.emptyList(), Directive.DirectiveErrorConsumer.
 policy.sandbox().get().setAllowScripts(true);
 
 // or you can use the lower-level APIs to manipulate values directly 
-policy.sandbox().get().addValue("allow-something-new");
+policy.sandbox().get().setValue(SandboxDirective.Value.AllowPopupsToEscapeSandbox, false);
 
 // "sandbox allow-scripts allow-something-new"
 System.out.println(policy.toString());

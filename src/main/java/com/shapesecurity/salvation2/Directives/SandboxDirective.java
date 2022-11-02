@@ -58,7 +58,7 @@ public class SandboxDirective extends Directive {
 			String lowcaseToken = token.toLowerCase(Locale.ENGLISH);
 			Value value = Value.fromString(lowcaseToken);
 			if(value == null) {
-				if (token.startsWith("'")) {
+				if (token.startsWith("'") || token.startsWith("\"")) {
 					errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token + " - note that sandbox keywords do not have \"'\"s", index);
 				} else {
 					errors.add(Policy.Severity.Error, "Unrecognized sandbox keyword " + token, index);

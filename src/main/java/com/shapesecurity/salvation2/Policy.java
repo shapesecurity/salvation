@@ -57,6 +57,8 @@ public class Policy {
 
 	private PluginTypesDirective pluginTypes;
 
+	private FetchDirectiveKind prefetchSrc;
+
 	private RFC7230Token reportTo;
 
 	private ReportUriDirective reportUri;
@@ -220,7 +222,9 @@ public class Policy {
 				break;
 			}
 			case "plugin-types": {
-				// https://w3c.github.io/webappsec-csp/#directive-plugin-types
+				// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy/plugin-types
+				directiveErrorConsumer.add(Severity.Warning,"The plugin-types directive has been deprecated", -1);
+
 				PluginTypesDirective thisDirective = new PluginTypesDirective(values, directiveErrorConsumer);
 				if (this.pluginTypes == null) {
 					this.pluginTypes = thisDirective;
@@ -297,6 +301,9 @@ public class Policy {
 				}
 				FetchDirectiveKind fetchDirectiveKind = FetchDirectiveKind.fromString(lowcaseDirectiveName);
 				if (fetchDirectiveKind != null) {
+					if (FetchDirectiveKind.PrefetchSrc == fetchDirectiveKind) {
+						directiveErrorConsumer.add(Severity.Warning,"The prefetch-src directive has been deprecated", -1);
+					}
 					SourceExpressionDirective thisDirective = new SourceExpressionDirective(values, directiveErrorConsumer);
 					if (this.fetchDirectives.containsKey(fetchDirectiveKind)) {
 						wasDupe = true;
@@ -447,6 +454,10 @@ public class Policy {
 
 	public Optional<PluginTypesDirective> pluginTypes() {
 		return Optional.ofNullable(this.pluginTypes);
+	}
+
+	public Optional<FetchDirectiveKind> prefetchSrc() {
+		return Optional.ofNullable(this.prefetchSrc);
 	}
 
 	public Optional<RFC7230Token> reportTo() {

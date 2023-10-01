@@ -1,5 +1,6 @@
 package com.shapesecurity.salvation2;
 
+import com.shapesecurity.salvation2.Policy.PolicyErrorConsumer;
 import com.shapesecurity.salvation2.Directives.FrameAncestorsDirective;
 import com.shapesecurity.salvation2.Directives.PluginTypesDirective;
 import com.shapesecurity.salvation2.Directives.ReportUriDirective;
@@ -82,7 +83,7 @@ public class HighLevelPolicyManipulationTest extends TestBase {
 
 			for (SourceDirectiveKind kind : directives) {
 				String none = "'NoNe'";
-				Policy p = Policy.parseSerializedCSP(kind.repr + " " + none, throwIfPolicyError);
+				Policy p = Policy.parseSerializedCSP(kind.repr + " " + none, PolicyErrorConsumer.ignored);
 				SourceExpressionDirective d = kind.get.apply(p);
 
 
@@ -583,7 +584,7 @@ public class HighLevelPolicyManipulationTest extends TestBase {
 	@Test
 	public void testPluginTypesDirective() {
 		inTurkey(() -> {
-			Policy p = Policy.parseSerializedCSP("plugin-types", throwIfPolicyError);
+			Policy p = Policy.parseSerializedCSP("plugin-types", Policy.PolicyErrorConsumer.ignored);
 			PluginTypesDirective d = p.pluginTypes().get();
 
 			assertTrue(d.getMediaTypes().isEmpty());

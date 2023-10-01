@@ -1,5 +1,6 @@
 package com.shapesecurity.salvation2;
 
+import com.shapesecurity.salvation2.Policy.PolicyErrorConsumer;
 import com.shapesecurity.salvation2.URLs.GUID;
 import com.shapesecurity.salvation2.URLs.URI;
 import com.shapesecurity.salvation2.URLs.URLWithScheme;
@@ -85,7 +86,7 @@ public class QueryingTest extends TestBase {
 		assertFalse("resource is not allowed", p.allowsManifestFromSource(URI.parseURI("http://www.def.am:555").orElse(null)));
 		assertFalse("resource is not allowed", p.allowsManifestFromSource(URI.parseURI("https://someco.net").orElse(null)));
 
-		p = parse("prefetch-src https://prefetchy.com http://prefetchy.org", URI.parseURI("https://abc.com").orElse(null));
+		p = parse("prefetch-src https://prefetchy.com http://prefetchy.org", URI.parseURI("https://abc.com").orElse(null), PolicyErrorConsumer.ignored);
 		assertTrue("resource is allowed", p.allowsPrefetchFromSource(URI.parseURI("https://prefetchy.com").orElse(null)));
 		assertFalse("resource is not allowed", p.allowsPrefetchFromSource(URI.parseURI("https://prefetchy.com:555").orElse(null)));
 		assertFalse("resource is not allowed", p.allowsPrefetchFromSource(URI.parseURI("http://www.def.am:555").orElse(null)));
@@ -216,14 +217,14 @@ public class QueryingTest extends TestBase {
 
 	@Test
 	public void testAllowsPlugin() {
-		assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("A/b")));
-		assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("a/B")));
-		assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("A/B")));
-		assertTrue("plugin is allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("a/b")));
-		assertTrue("plugin is not allowed", parse("default-src 'none'").allowsPlugin(MediaType.parseMediaType("z/b"))); // NB changed
-		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("z/b")));
-		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("a/d")));
-		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d").allowsPlugin(MediaType.parseMediaType("/b")));
+		assertTrue("plugin is allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("A/b")));
+		assertTrue("plugin is allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("a/B")));
+		assertTrue("plugin is allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("A/B")));
+		assertTrue("plugin is allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("a/b")));
+		assertTrue("plugin is not allowed", parse("default-src 'none'", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("z/b"))); // NB changed
+		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("z/b")));
+		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("a/d")));
+		assertFalse("plugin is not allowed", parse("plugin-types a/b c/d", PolicyErrorConsumer.ignored).allowsPlugin(MediaType.parseMediaType("/b")));
 	}
 
 	@Test
@@ -1390,7 +1391,7 @@ public class QueryingTest extends TestBase {
 		assertTrue(p.allowsFrameAncestor(Optional.of(URI.parseURI("http://example.com").orElse(null)), Optional.empty()));
 		assertTrue(p.allowsFrameAncestor(Optional.of(URI.parseURI("http://example.com/foo").orElse(null)), Optional.of(URI.parseURI("http://example.com").orElse(null))));
 
-		p = parse("plugin-types a/b");
+		p = parse("plugin-types a/b", PolicyErrorConsumer.ignored);
 		assertFalse(p.allowsPlugin(Optional.empty()));
 		assertTrue(p.allowsPlugin(Optional.of(MediaType.parseMediaType("a/b").get())));
 
@@ -1480,11 +1481,19 @@ public class QueryingTest extends TestBase {
 		return Policy.parseSerializedCSP(policy, throwIfPolicyError);
 	}
 
+	private Policy parse(String policy, PolicyErrorConsumer errorConsumer) {
+		return Policy.parseSerializedCSP(policy, errorConsumer);
+	}
+
 	private PolicyInOrigin parse(String policy, String origin) {
 		return new PolicyInOrigin(Policy.parseSerializedCSP(policy, throwIfPolicyError), URI.parseURI(origin).orElse(null));
 	}
 
 	private PolicyInOrigin parse(String policy, URLWithScheme origin) {
 		return new PolicyInOrigin(Policy.parseSerializedCSP(policy, throwIfPolicyError), origin);
+	}
+
+	private PolicyInOrigin parse(String policy, URLWithScheme origin, PolicyErrorConsumer errorConsumer) {
+		return new PolicyInOrigin(Policy.parseSerializedCSP(policy, errorConsumer), origin);
 	}
 }

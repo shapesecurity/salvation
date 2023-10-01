@@ -2,6 +2,8 @@ package com.shapesecurity.salvation2;
 
 import org.junit.Test;
 
+import com.shapesecurity.salvation2.Policy.PolicyErrorConsumer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -174,7 +176,7 @@ public class LowLevelPolicyManipulationTest extends TestBase {
 		assertFalse(p.navigateTo().isPresent());
 		assertEquals("", p.toString());
 
-		p = Policy.parseSerializedCSP("plugin-types a/b", throwIfPolicyError);
+		p = Policy.parseSerializedCSP("plugin-types a/b", PolicyErrorConsumer.ignored);
 		assertTrue(p.pluginTypes().isPresent());
 		assertTrue(p.remove("plugin-types"));
 		assertFalse(p.remove("plugin-types"));

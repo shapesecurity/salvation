@@ -66,6 +66,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.teavm</groupId>
+            <artifactId>teavm-jso</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.teavm</groupId>
+            <artifactId>teavm-jso-apis</artifactId>
+            <version>0.9.2</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
             <version>2.0.1</version>
@@ -86,13 +96,13 @@
                 <artifactId>teavm-maven-plugin</artifactId>
                 <version>0.9.2</version>
                 <dependencies>
-                    <!-- This dependency is required by TeaVM to emulate subset of Java class library -->
                     <dependency>
-                      <groupId>org.teavm</groupId>
-                      <artifactId>teavm-classlib</artifactId>
-                      <version>0.9.2</version>
+                        <groupId>org.teavm</groupId>
+                        <artifactId>teavm-classlib</artifactId>
+                        <version>0.9.2</version>
                     </dependency>
-                  </dependencies>
+
+                </dependencies>
                 <executions>
                     <execution>
                         <goals>
@@ -100,7 +110,9 @@
                         </goals>
                         <phase>process-classes</phase>
                         <configuration>
-                          <mainClass>com.shapesecurity.salvation2.Main</mainClass>
+                            <mainClass>com.shapesecurity.salvation2.Salvation2</mainClass>
+                            <minifying>false</minifying>
+                            <classesToPreserve>com.shapesecurity.salvation2.Policy</classesToPreserve>
                         </configuration>
                     </execution>
                 </executions>

@@ -8,26 +8,43 @@ public class Salvation2 {
 		initParseSingle();
 	}
 
-	public static void parseSerializedCSPList(String policyText) {
+	public static String parseSerializedCSPList(String policyText) {
+		StringBuilder errorMessages = new StringBuilder();
 		Policy.parseSerializedCSPList(policyText, (severity, message, policyIndex, directiveIndex, valueIndex) -> {
-			System.err.println(severity.name() + " at directive " + directiveIndex + (valueIndex == -1 ? "" : " at value " + valueIndex) + ": " + message);
+			errorMessages.append(severity.name())
+				.append(" at directive ")
+				.append(directiveIndex)
+				.append(valueIndex == -1 ? "" : " at value " + valueIndex)
+				.append(": ")
+				.append(message)
+				.append("\n");
 		});
+		return errorMessages.toString().trim();
 	}
 
-	public static void parseSerializedCSP(String policyText) {
+	public static String parseSerializedCSP(String policyText) {
+		StringBuilder errorMessages = new StringBuilder();
+
 		Policy.parseSerializedCSP(policyText, (severity, message, directiveIndex, valueIndex) -> {
-			System.err.println(severity.name() + " at directive " + directiveIndex + (valueIndex == -1 ? "" : " at value " + valueIndex) + ": " + message);
+			errorMessages.append(severity.name())
+				.append(" at directive ")
+				.append(directiveIndex)
+				.append(valueIndex == -1 ? "" : " at value " + valueIndex)
+				.append(": ")
+				.append(message)
+				.append("\n");
 		});
+		return errorMessages.toString().trim();
 	}
 	@JSBody(params={}, script=
 		"(exports || window).parseSerializedCSPList = (policyText) => {\n" +
-		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSPList(Ljava/lang/String;)V').invoke(policyText)\n" +
+		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSPList(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 		"}")
 	static native void initParseList();
 
 	@JSBody(params={}, script=
 		"(exports || window).parseSerializedCSP = (policyText) => {\n" +
-			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSP(Ljava/lang/String;)V').invoke(policyText)\n" +
+			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSP(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 			"}")
 	static native void initParseSingle();
 }

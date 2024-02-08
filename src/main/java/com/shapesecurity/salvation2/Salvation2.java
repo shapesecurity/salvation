@@ -36,13 +36,14 @@ public class Salvation2 {
 		});
 		return errorMessages.toString().trim();
 	}
-	@JSBody(params={}, script=
+
+	@JSBody(params = {}, script =
 		"(exports || window).parseSerializedCSPList = (policyText) => {\n" +
 		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSPList(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 		"}")
 	static native void initParseList();
 
-	@JSBody(params={}, script=
+	@JSBody(params = {}, script =
 		"(exports || window).parseSerializedCSP = (policyText) => {\n" +
 			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSP(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 			"}")

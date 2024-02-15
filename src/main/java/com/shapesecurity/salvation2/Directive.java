@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 
 
 public class Directive {
-	// Removed .asPredicate() usage to be compatible with TeaVM
 	public static Predicate<String> IS_DIRECTIVE_NAME = s -> Pattern.compile("^[A-Za-z0-9\\-]+$").matcher(s).matches();
 	public static Predicate<String> containsNonDirectiveCharacter =  s -> Pattern.compile("[" + Constants.WHITESPACE_CHARS + ",;]").matcher(s).matches();
 	protected List<String> values;

@@ -9,7 +9,6 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class Utils {
-	// Removed .asPredicate() usage to be compatible with TeaVM
 	public static final Predicate<String> IS_BASE64_VALUE = s -> Pattern.compile("[a-zA-Z0-9+/\\-_]+=?=?").matcher(s).matches();
 	// https://infra.spec.whatwg.org/#split-on-ascii-whitespace
 	static List<String> splitOnAsciiWhitespace(String input) {

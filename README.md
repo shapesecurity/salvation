@@ -95,3 +95,17 @@ System.out.println(policy.toString());
 ```java
 policy.toString();
 ```
+
+## Transpiling to JavaScript
+To reduce the overhead of running this library, it will now automatically be transpiled to JS as part of the compile goal by using [TeaVM](https://teavm.org/). It can then be placed on any webpage to be used as static JavaScript, thus alleviating the need for a JRE.
+
+The transpiled code will be placed in `target/javascript` as `salvation-v${project.version}.min.js`.
+
+If you experience errors relating to TeaVM transpiling, check the [supported TeaVM classes](https://teavm.org/jcl-report/recent/jcl.html). 
+
+### Using the JavaScript
+
+First run `mvn clean install` to build the JS file. Then include `salvation-vX.X.X.min.js` in your webpage.
+To use the parsing functions in on the webpage run `window.main()` to initialize them. From then on, `window.parseSerializedCSPList()` and `window.parseSerializedCSP()` will be available.
+
+`parseSerializedCSP()` and `parseSerializedCSPList()` will return strings containing the parsing results. If there are multiple results, they will be separated by a newline. This is simply because TeaVM requires a lot of extra work for it to be able to return JS objects.

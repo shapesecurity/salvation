@@ -113,6 +113,7 @@
                             <minifying>true</minifying>
                             <sourceMapsGenerated>false</sourceMapsGenerated>
                             <sourceFilesCopied>false</sourceFilesCopied>
+                            <targetFileName>salvation-v${project.version}.min.js</targetFileName>
                         </configuration>
                     </execution>
                 </executions>

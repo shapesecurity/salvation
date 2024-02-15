@@ -9,8 +9,10 @@ import java.util.regex.Pattern;
 
 
 public class Directive {
-	public static Predicate<String> IS_DIRECTIVE_NAME = s -> Pattern.compile("^[A-Za-z0-9\\-]+$").matcher(s).matches();
-	public static Predicate<String> containsNonDirectiveCharacter =  s -> Pattern.compile("[" + Constants.WHITESPACE_CHARS + ",;]").matcher(s).matches();
+	private static final Pattern DIRECTIVE_NAME_PATTERN = Pattern.compile("^[A-Za-z0-9\\-]+$");
+	public static Predicate<String> IS_DIRECTIVE_NAME = s -> DIRECTIVE_NAME_PATTERN.matcher(s).matches();
+	private static final Pattern NON_DIRECTIVE_CHAR_PATTERN = Pattern.compile("[" + Constants.WHITESPACE_CHARS + ",;]");
+	public static Predicate<String> containsNonDirectiveCharacter =  s -> NON_DIRECTIVE_CHAR_PATTERN.matcher(s).matches();
 	protected List<String> values;
 
 	protected static DirectiveErrorConsumer wrapManipulationErrorConsumer(ManipulationErrorConsumer errors) {

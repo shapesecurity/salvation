@@ -8,7 +8,7 @@ public class Salvation2 {
 		initParseSingle();
 	}
 
-	public static String parseSerializedCSPList(String policyText) {
+	public static String getErrorsForSerializedCSPList(String policyText) {
 		StringBuilder errorMessages = new StringBuilder();
 		Policy.parseSerializedCSPList(policyText, (severity, message, policyIndex, directiveIndex, valueIndex) -> {
 			errorMessages.append(severity.name())
@@ -22,7 +22,7 @@ public class Salvation2 {
 		return errorMessages.toString().trim();
 	}
 
-	public static String parseSerializedCSP(String policyText) {
+	public static String getErrorsForSerializedCSP(String policyText) {
 		StringBuilder errorMessages = new StringBuilder();
 
 		Policy.parseSerializedCSP(policyText, (severity, message, directiveIndex, valueIndex) -> {
@@ -38,14 +38,14 @@ public class Salvation2 {
 	}
 
 	@JSBody(params = {}, script =
-		"(exports || window).parseSerializedCSPList = (policyText) => {\n" +
-		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSPList(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
+		"(exports || window).getErrorsForSerializedCSPList = (policyText) => {\n" +
+		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.getErrorsForSerializedCSPList(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 		"}")
 	static native void initParseList();
 
 	@JSBody(params = {}, script =
-		"(exports || window).parseSerializedCSP = (policyText) => {\n" +
-			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSP(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
+		"(exports || window).getErrorsForSerializedCSP = (policyText) => {\n" +
+			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.getErrorsForSerializedCSP(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 			"}")
 	static native void initParseSingle();
 }

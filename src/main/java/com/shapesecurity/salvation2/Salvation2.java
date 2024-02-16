@@ -38,13 +38,13 @@ public class Salvation2 {
 	}
 
 	@JSBody(params = {}, script =
-		"(exports || window).getErrorsForSerializedCSPList = (policyText) => {\n" +
+		"(window || globalThis).getErrorsForSerializedCSPList = (policyText) => {\n" +
 		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.getErrorsForSerializedCSPList(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 		"}")
 	static native void initParseList();
 
 	@JSBody(params = {}, script =
-		"(exports || window).getErrorsForSerializedCSP = (policyText) => {\n" +
+		"(window || globalThis).getErrorsForSerializedCSP = (policyText) => {\n" +
 			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.getErrorsForSerializedCSP(Ljava/lang/String;)Ljava/lang/String;').invoke(policyText)\n" +
 			"}")
 	static native void initParseSingle();

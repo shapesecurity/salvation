@@ -1,16 +1,13 @@
+'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const salvation = require('../../../target/javascript/salvation-v3.0.1.min.js');
+const salvation = require('../../../target/javascript/salvation.min.js');
 
 test('salvation initialization', () => {
     assert.notStrictEqual(salvation.main, undefined);
-    try {
-        salvation.main();
-        assert.notStrictEqual(getErrorsForSerializedCSP, undefined);
-        assert.notStrictEqual(getErrorsForSerializedCSPList, undefined);
-    } catch (e) {
-        assert.fail('main function should not throw an exception', e.message);
-    }
+    salvation.main();
+    assert.notStrictEqual(getErrorsForSerializedCSP, undefined);
+    assert.notStrictEqual(getErrorsForSerializedCSPList, undefined);
 });
 
 test('.getErrorsForSerializedCSP() gives no errors for a valid CSP', () => {

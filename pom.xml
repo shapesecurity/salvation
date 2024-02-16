@@ -109,11 +109,11 @@
                         </goals>
                         <phase>process-classes</phase>
                         <configuration>
-                            <mainClass>com.shapesecurity.salvation2.Salvation2</mainClass>
+                            <mainClass>com.shapesecurity.salvation2.JSInterface</mainClass>
                             <minifying>true</minifying>
                             <sourceMapsGenerated>false</sourceMapsGenerated>
                             <sourceFilesCopied>false</sourceFilesCopied>
-                            <targetFileName>salvation-v${project.version}.min.js</targetFileName>
+                            <targetFileName>salvation.min.js</targetFileName>
                         </configuration>
                     </execution>
                 </executions>

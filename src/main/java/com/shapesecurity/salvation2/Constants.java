@@ -6,14 +6,14 @@ import java.util.regex.Pattern;
 public class Constants {
 	// https://tools.ietf.org/html/rfc3986#section-3.1
 	public static final String schemePart = "[a-zA-Z][a-zA-Z0-9+\\-.]*";
-	public static final Pattern schemePattern = Pattern.compile("^(?<scheme>" + Constants.schemePart + ":)");
+	public static final Pattern schemePattern = Pattern.compile("^(" + Constants.schemePart + ":)");
 
 	// https://tools.ietf.org/html/rfc7230#section-3.2.6
 	public static final Pattern rfc7230TokenPattern = Pattern.compile("^[!#$%&'*+\\-.^_`|~0-9a-zA-Z]+$");
 
 	// RFC 2045 appendix A: productions of type and subtype
 	// https://tools.ietf.org/html/rfc2045#section-5.1
-	public static final Pattern mediaTypePattern = Pattern.compile("^(?<type>[a-zA-Z0-9!#$%^&*\\-_+{}|'.`~]+)/(?<subtype>[a-zA-Z0-9!#$%^&*\\-_+{}|'.`~]+)$");
+	public static final Pattern mediaTypePattern = Pattern.compile("^([a-zA-Z0-9!#$%^&*\\-_+{}|'.`~]+)/([a-zA-Z0-9!#$%^&*\\-_+{}|'.`~]+)$");
 	public static final Pattern unquotedKeywordPattern = Pattern.compile("^(?:self|unsafe-inline|unsafe-eval|unsafe-redirect|none|strict-dynamic|unsafe-hashes|report-sample|unsafe-allow-redirects)$");
 
 	// port-part constants
@@ -37,10 +37,8 @@ public class Constants {
 	private static final String queryFragmentPart = "(?:\\?[^#]*)?(?:#.*)?";
 
 	public static final Pattern hostSourcePattern = Pattern.compile(
-			"^(?<scheme>" + schemePart + "://)?(?<host>" + hostPart + ")(?<port>" + portPart + ")?(?<path>" + pathPart
+			"^(" + schemePart + "://)?(" + hostPart + ")(" + portPart + ")?(" + pathPart
 					+ ")?" + queryFragmentPart + "$");
-	//	public static final Pattern relativeReportUriPattern =
-	//			Pattern.compile("^(?<path>" + pathPart + ")" + queryFragmentPart + "$");
 	public static final Pattern IPv4address = Pattern.compile("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
 	public static final Pattern IPV6loopback = Pattern.compile("^[0:]+:1$");
 	public static final String IPv6address = "(?:(?:(?:[0-9A-Fa-f]{1,4}:){6}|::(?:[0-9A-Fa-f]{1,4}:){5}|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}|(?:(?:[0-9A-Fa-f]{1,4}:){0,1}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}|(?:(?:[0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}|(?:(?:[0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}:|(?:(?:[0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})?::)(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))|(?:(?:[0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})?::)";

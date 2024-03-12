@@ -31,11 +31,11 @@ public class Host {
 	public static Optional<Host> parseHost(String value) {
 		Matcher matcher = Constants.hostSourcePattern.matcher(value);
 		if (matcher.find()) {
-			String scheme = matcher.group("scheme");
+			String scheme = matcher.group(1);
 			if (scheme != null) {
 				scheme = scheme.substring(0, scheme.length() - 3).toLowerCase(Locale.ENGLISH);
 			}
-			String portString = matcher.group("port");
+			String portString = matcher.group(3);
 			int port;
 			if (portString == null) {
 				port = Constants.EMPTY_PORT;
@@ -43,8 +43,8 @@ public class Host {
 				port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
 			}
 			// Hosts are only consumed lowercase: https://w3c.github.io/webappsec-csp/#host-part-match
-			String host = matcher.group("host").toLowerCase(Locale.ENGLISH); // There is no possible NPE here; host is not optional
-			String path = matcher.group("path");
+			String host = matcher.group(2).toLowerCase(Locale.ENGLISH); // There is no possible NPE here; host is not optional
+			String path = matcher.group(4);
 
 			// TODO contemplate warning for paths which contain `//`, `/../`, or `/./`, since those will never match an actual request
 			// TODO contemplate warning for ports which are implied by their scheme

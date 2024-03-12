@@ -19,20 +19,20 @@ public class URI extends URLWithScheme {
 		if (!matcher.find()) {
 			return Optional.empty();
 		}
-		String scheme = matcher.group("scheme");
+		String scheme = matcher.group(1);
 		if (scheme == null) {
 			return Optional.empty();
 		}
 		scheme = scheme.substring(0, scheme.length() - 3);
-		String portString = matcher.group("port");
+		String portString = matcher.group(3);
 		int port;
 		if (portString == null) {
 			port = URI.defaultPortForProtocol(scheme.toLowerCase(Locale.ENGLISH));
 		} else {
 			port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
 		}
-		String host = matcher.group("host");
-		String path = matcher.group("path");
+		String host = matcher.group(2);
+		String path = matcher.group(4);
 		if (path == null) {
 			path = "";
 		}

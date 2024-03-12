@@ -17,7 +17,7 @@ public class GUID extends URLWithScheme {
 		if (!matcher.find()) {
 			return Optional.empty();
 		}
-		String scheme = matcher.group("scheme");
+		String scheme = matcher.group(1);
 		scheme = scheme.substring(0, scheme.length() - 1);  // + 1 for the trailing ":"
 		return Optional.of(new GUID(scheme, value.substring(scheme.length() + 1)));
 	}

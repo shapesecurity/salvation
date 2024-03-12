@@ -15,3 +15,7 @@ cert.pem
 *.classpath
 *.project
 *.settings
+
+dist
+.vscode
+docs/public

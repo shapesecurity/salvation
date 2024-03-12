@@ -56,3 +56,15 @@ jobs:
           mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           mvn test -B
       - run: node --test
+  docs-lint:
+    if: |
+      !cancelled() && !failure()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: cd
+        run: cd docs
+      - name: Install dependencies
+        run: npm install
+      - name: Lint
+        run: npm run lint

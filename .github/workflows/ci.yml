@@ -64,4 +64,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: node src/test/javascript/salvation.test.js
+      - run: node --

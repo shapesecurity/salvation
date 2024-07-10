@@ -31,12 +31,10 @@ public class Host {
 	public static Optional<Host> parseHost(String value) {
 		Matcher matcher = Constants.hostSourcePattern.matcher(value);
 		if (matcher.find()) {
-			// Converted to .group(int) for use with TeaVM
 			String scheme = matcher.group(1);
 			if (scheme != null) {
 				scheme = scheme.substring(0, scheme.length() - 3).toLowerCase(Locale.ENGLISH);
 			}
-			// Converted to .group(int) for use with TeaVM
 			String portString = matcher.group(3);
 			int port;
 			if (portString == null) {
@@ -45,7 +43,6 @@ public class Host {
 				port = portString.equals(":*") ? Constants.WILDCARD_PORT : Integer.parseInt(portString.substring(1));
 			}
 			// Hosts are only consumed lowercase: https://w3c.github.io/webappsec-csp/#host-part-match
-			// Converted to .group(int) for use with TeaVM
 			String host = matcher.group(2).toLowerCase(Locale.ENGLISH); // There is no possible NPE here; host is not optional
 			String path = matcher.group(4);
 

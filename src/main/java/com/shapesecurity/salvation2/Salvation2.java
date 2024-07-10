@@ -20,13 +20,13 @@ public class Salvation2 {
 		});
 	}
 	@JSBody(params={}, script=
-		"window.parseSerializedCSPList = (policyText) => {\n" +
+		"(exports || window).parseSerializedCSPList = (policyText) => {\n" +
 		"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSPList(Ljava/lang/String;)V').invoke(policyText)\n" +
 		"}")
 	static native void initParseList();
 
 	@JSBody(params={}, script=
-		"window.parseSerializedCSP = (policyText) => {\n" +
+		"(exports || window).parseSerializedCSP = (policyText) => {\n" +
 			"return javaMethods.get('com.shapesecurity.salvation2.Salvation2.parseSerializedCSP(Ljava/lang/String;)V').invoke(policyText)\n" +
 			"}")
 	static native void initParseSingle();

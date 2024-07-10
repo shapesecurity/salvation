@@ -62,10 +62,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: cd
-        run: cd docs
       - name: Install dependencies
+        working-directory: ./docs
         run: npm install
       - name: Lint
+        working-directory: ./docs
         run: npm run lint
 

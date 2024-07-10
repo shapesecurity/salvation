@@ -9,7 +9,8 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class Utils {
-	public static final Predicate<String> IS_BASE64_VALUE = s -> Pattern.compile("[a-zA-Z0-9+/\\-_]+=?=?").matcher(s).matches();
+	private static final Pattern BASE64_PATTERN = Pattern.compile("[a-zA-Z0-9+/\\-_]+=?=?");
+	public static final Predicate<String> IS_BASE64_VALUE = s -> BASE64_PATTERN.matcher(s).matches();
 	// https://infra.spec.whatwg.org/#split-on-ascii-whitespace
 	static List<String> splitOnAsciiWhitespace(String input) {
 		ArrayList<String> out = new ArrayList<>();

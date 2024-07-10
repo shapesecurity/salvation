@@ -110,9 +110,9 @@
                         <phase>process-classes</phase>
                         <configuration>
                             <mainClass>com.shapesecurity.salvation2.Salvation2</mainClass>
-                            <minifying>false</minifying>
-                            <sourceMapsGenerated>true</sourceMapsGenerated>
-                            <sourceFilesCopied>true</sourceFilesCopied>
+                            <minifying>true</minifying>
+                            <sourceMapsGenerated>false</sourceMapsGenerated>
+                            <sourceFilesCopied>false</sourceFilesCopied>
                         </configuration>
                     </execution>
                 </executions>

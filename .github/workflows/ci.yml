@@ -40,28 +40,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
       - name: Setup Java
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
           java-version: ${{ matrix.java }}
           cache: 'maven'
-
       - name: CI
         run: |
           java -Xmx32m -version
           javac -J-Xmx32m -version
           mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           mvn test -B
-  test-js:
-    name: Test JS
-    needs: build
-    if: |
-      !cancelled() && !failure()
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - run: node --test

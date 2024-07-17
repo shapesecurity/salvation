@@ -18,6 +18,7 @@ jobs:
     if: |
       !cancelled() && !failure()
     needs: build
+    runs-on: ubuntu-latest
     steps:
     - name: Deploy 🚀
       uses: JamesIves/github-pages-deploy-action@4.1.4

@@ -101,7 +101,7 @@ To reduce the overhead of running this library, it will now automatically be tra
 
 The transpiled code will be placed in `target/javascript` as `salvation-v${project.version}.min.js`.
 
-If you experience errors relating to TeaVM transpiling, check the [supported TeaVM classes](https://teavm.org/jcl-report/recent/jcl.html). 
+If you experience errors relating to TeaVM transpiling, check the [supported TeaVM classes](https://teavm.org/jcl-report/recent/jcl.html).
 
 ### Using the JavaScript
 

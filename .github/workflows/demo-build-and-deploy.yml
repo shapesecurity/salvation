@@ -14,14 +14,9 @@ jobs:
       run: |
         npm install
         npm run build
-
-  deploy:
-    if: |
-      !cancelled() && !failure()
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - name: Deploy 🚀
+      if: |
+        !cancelled() && !failure()
       uses: JamesIves/github-pages-deploy-action@4.1.4
       with:
         branch: gh-pages

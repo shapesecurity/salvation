@@ -1,3 +1,4 @@
+# https://shapesecurity.github.io/salvation/index.html
 name: Build and Deploy Demo Site
 on: 
   push:
@@ -8,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout 🛎️
-      uses: actions/checkout@v2.3.1
+      uses: actions/checkout@v4
     - name: Install and Build 🔧 
       working-directory: ./docs
       run: |

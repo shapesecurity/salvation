@@ -11,7 +11,7 @@ jobs:
     - name: Checkout 🛎️
       uses: actions/checkout@v4
     - name: Install and Build 🔧 
-      working-directory: ./docs
+      working-directory: ./demo-site
       run: |
         npm install
         npm run build
@@ -21,4 +21,4 @@ jobs:
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: gh-pages
-        folder: docs/public
+        folder: demo-site/public

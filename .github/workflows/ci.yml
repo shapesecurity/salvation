@@ -56,16 +56,16 @@ jobs:
           mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           mvn test -B
       - run: node --test
-  docs-lint:
+  demo-site-lint:
     if: |
       !cancelled() && !failure()
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
-        working-directory: ./docs
+        working-directory: ./demo-site
         run: npm install
       - name: Lint
-        working-directory: ./docs
+        working-directory: ./demo-site
         run: npm run lint
 

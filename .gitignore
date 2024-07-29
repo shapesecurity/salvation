@@ -18,4 +18,4 @@ cert.pem
 
 dist
 .vscode
-docs/public
+demo-site/public

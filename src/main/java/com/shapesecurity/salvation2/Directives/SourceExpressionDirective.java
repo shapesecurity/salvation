@@ -17,12 +17,14 @@ public class SourceExpressionDirective extends HostSourceDirective {
 	private static final String UNSAFE_ALLOW_REDIRECTS = "'unsafe-allow-redirects'";
 	private static final String UNSAFE_EVAL = "'unsafe-eval'";
 	private static final String UNSAFE_HASHES = "'unsafe-hashes'";
+	private static final String WASM_UNSAFE_EVAL = "'wasm-unsafe-eval'";
 	private boolean unsafeInline = false;
 	private boolean unsafeEval = false;
 	private boolean strictDynamic = false;
 	private boolean unsafeHashes = false;
 	private boolean reportSample = false;
 	private boolean unsafeAllowRedirects = false;
+	private boolean wasmUnsafeEval = false;
 
 	// In practice, these are probably small enough for Lists to be faster than LinkedHashSets
 	private List<Nonce> nonces = new ArrayList<>();
@@ -84,6 +86,13 @@ public class SourceExpressionDirective extends HostSourceDirective {
 					break;
 				case "'unsafe-hashed-attributes'":
 					errors.add(Policy.Severity.Error, "'unsafe-hashed-attributes' was renamed to 'unsafe-hashes' in June 2018", index);
+					break;
+				case WASM_UNSAFE_EVAL:
+					if (!this.wasmUnsafeEval) {
+						this.wasmUnsafeEval = true;
+					} else {
+						errors.add(Policy.Severity.Warning, "Duplicate source-expression 'wasm-unsafe-eval'", index);
+					}
 					break;
 				default:
 					if (lowcaseToken.startsWith("'nonce-")) {
@@ -188,6 +197,23 @@ public class SourceExpressionDirective extends HostSourceDirective {
 			this.removeValueIgnoreCase(UNSAFE_EVAL);
 		}
 		this.unsafeEval = unsafeEval;
+	}
+
+
+	public boolean wasmUnsafeEval() {
+		return this.wasmUnsafeEval;
+	}
+
+	public void setWasmUnsafeEval(boolean wasmUnsafeEval) {
+		if (this.wasmUnsafeEval == wasmUnsafeEval) {
+			return;
+		}
+		if (wasmUnsafeEval) {
+			this.addValue(WASM_UNSAFE_EVAL);
+		} else {
+			this.removeValueIgnoreCase(WASM_UNSAFE_EVAL);
+		}
+		this.wasmUnsafeEval = wasmUnsafeEval;
 	}
 
 
